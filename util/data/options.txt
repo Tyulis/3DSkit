@@ -1,0 +1,73 @@
+Global
+=============
+
+Optional arguments:
+	-h: Shows the short help for options
+	-H: Shows the detailed help of 3DSkit
+;;;;
+	
+Unpacking
+=============
+
+Required arguments:
+	-x: Specify that you want to extract the file
+	OR
+	-t: lists the files contained in an archive
+;;;;
+
+Packing
+=============
+
+Required arguments:
+	-p: Specify that you want to pack a readable file into a 3DS/WiiU file
+	
+	-f [output format]: Output format
+		To get it, look at the extraction console output, which looks likes this:
+			No compression
+			[File format] file found
+			Extracting...
+			(...)
+			Extracted!
+	
+	-o [file name]: Specify the output file name
+	-l OR -b: Specify the endianness of the output file.
+		-l for little and -b for big endian.
+		It is default to little endian.
+		You have to use -l for 3DS files and -b for WiiU files
+;;;;
+
+Specific arguments:
+	-v [version}: Specify the version of output files.
+		These formats need version for packing:
+			GARC, which can use 4 (mainly for 6G Pokémon games), or 6 (mainly for 7G Pokémon games)
+		To get it, look at console output:
+			Extracting...
+			Version: [version]
+			Extacted!
+		If there is not this line, version is not needed
+	-s [swizzle type]: Specify the swizzling type to use on textures.
+		It is used only for textures (BFLIM, BCLIM), and can have these values:
+			0: no swizzling
+			4: Rotate 90º
+			8: Transpose
+		Look at console output to get the swizzling type:
+			(...):
+				Swizzle type: [swizzle type]
+
+Optional arguments:
+	-d: 
+		For packing archives, you can either specify each files like this:
+			python 3DSkit.py -xf SARC -o Help.sarc help/file1 help/file2 help/file3
+		Note that this will take full relative path from 3DSkit.py, so files names will be stored as help/file
+		Or like that:
+			python 3DSkit.py -xdf SARC -o Help.sarc help
+		In that case, the whole specified directory will be packed, and paths will start at the directory, so in this case, file names will be just 'file'
+		The use of this option is VERY recommanded to avoid problems and too long argument lists...
+	
+	-c [compression]:
+		This option specify the compression to use. To get it, look at the extraction console output:
+			Compression: [compression]
+			SARC file found
+			Extracting...
+			(...)
+		If you read 'No compression', this argument is not needed

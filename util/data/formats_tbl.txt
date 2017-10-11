@@ -1,0 +1,68 @@
+Info:
+	X (Extract): 3DSkit can extract these files
+	P (Pack): 3DSkit can create and pack these files from scratch
+	R (Repack): 3DSkit can only repack files which have been extracted by 3DSkit
+	Extensions: Frequent file extensions or names for this format (all formats can sometimes have the .bin extension)
+;;;;
+
+Crosses:
+	x : full support
+	e : experimental / untested
+	p : partial support
+	n : not functional
+	b : bugged
+	  : no support
+	
+Output: Output format at extracting. See the output formats help for informations
+;;;;
+
+Format | X | P | R | Extensions          | Output
+--------------------------------------------------
+ALYT   | p |   | x | .alyt               | files
+BCLYT  | p |   |   | .bclyt              | TX
+BCSAR  | b |   |   | .bcsar              | files
+BFLIM  | b |   |   | .bflim              | PNG
+BFLYT  | x |   | x | .bflyt              | TX
+CBMD   | e |   |   | .bnr banner[.bin]   | files
+DARC   | x | e |   | .arc .bcma (...)    | files
+GARC   | x |   |   | .garc (none)        | files
+GFA    | x |   |   | .gfa                | files
+NDS    | x |   |   | .nds                | files
+SARC   | x | x |   | .sarc .arc .szs     | files
+;;;;
+
+Infos on needed arguments:
+	F : need format: you have to specify the input format with the -f option at extraction
+	B : need byteorder: you have to specify the -l or -b option to extract this format. See the options section of the help for more infos
+	V : need version: you have to specify the file version with the -v option at repacking
+	S : need swizzle: you have to specify the texture swizzling with the -s option at repacking
+	Ext : The format can be detected only with this file extension, so it will not be correctly detected with another, in this case you must use the -f option (see below). If nothing, the extension is not needed.
+More info in the options section of the help
+;;;;
+
+Format | F | B | V | S | Ext    |
+---------------------------------
+ALYT   |   |   |   |   |        |
+BCLYT  |   |   |   |   |        |
+BCSAR  |   |   |   |   |        |
+BCLYT  |   |   |   |   |        |
+BFLIM  |   |   |   | X |        |
+BFLYT  |   |   |   |   |        |
+CBMD   |   |   |   |   |        |
+DARC   |   |   |   |   |        |
+GARC   |   |   | X |   |        |
+GFA    |   | X |   |   |        |
+NDS    |   |   |   |   | .nds   |
+SARC   |   |   |   |   |        |
+
+Compressions:
+
+D: Decompressible
+C: Compressible
+
+Compression | D | C | Extensions
+-------------------------------------------------
+LZ10        | x |   | (none) .cmp .l -_LZ.bin .LZ
+LZ11        | x |   | (none) .cmp .l -_LZ.bin .LZ
+LZH8        | x |   | .cx
+Yaz0        | x |   | .szs
