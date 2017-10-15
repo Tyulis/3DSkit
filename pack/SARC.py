@@ -21,7 +21,7 @@ class SFATnode (object):
 
 
 class packSARC (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, embedded=False):
+	def main(self, filenames, outname, endian, opts={}, embedded=False):
 		self.byteorder = endian
 		self.embedded = embedded  #Used for embedded SARC sections in other files such as ALYT
 		self.hash_multiplier = 0x65

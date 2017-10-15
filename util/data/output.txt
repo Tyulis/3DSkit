@@ -1,7 +1,7 @@
 TXTREE (here noted "TX") is an homemade format to represent tree data. It is used by 3DSkit to represent some information formats (like layouts...) as a readable format
 ;;;;
 
-"files" means that the format is an archive format, and that files are simply extracted.
+"files" means that the format is an archive format, and those files are simply extracted.
 ;;;;
 
 Images are extracted as PNGs

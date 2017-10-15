@@ -36,24 +36,6 @@ Required arguments:
 		You have to use -l for 3DS files and -b for WiiU files
 ;;;;
 
-Specific arguments:
-	-v [version}: Specify the version of output files.
-		These formats need version for packing:
-			GARC, which can use 4 (mainly for 6G Pokémon games), or 6 (mainly for 7G Pokémon games)
-		To get it, look at console output:
-			Extracting...
-			Version: [version]
-			Extacted!
-		If there is not this line, version is not needed
-	-s [swizzle type]: Specify the swizzling type to use on textures.
-		It is used only for textures (BFLIM, BCLIM), and can have these values:
-			0: no swizzling
-			4: Rotate 90º
-			8: Transpose
-		Look at console output to get the swizzling type:
-			(...):
-				Swizzle type: [swizzle type]
-
 Optional arguments:
 	-d: 
 		For packing archives, you can either specify each files like this:
@@ -62,7 +44,7 @@ Optional arguments:
 		Or like that:
 			python 3DSkit.py -xdf SARC -o Help.sarc help
 		In that case, the whole specified directory will be packed, and paths will start at the directory, so in this case, file names will be just 'file'
-		The use of this option is VERY recommanded to avoid problems and too long argument lists...
+		The usage of this option is VERY recommanded to avoid problems and too long argument lists...
 	
 	-c [compression]:
 		This option specify the compression to use. To get it, look at the extraction console output:
@@ -70,4 +52,9 @@ Optional arguments:
 			SARC file found
 			Extracting...
 			(...)
-		If you read 'No compression', this argument is not needed
+		If you read 'No compression', this option is not needed
+	
+	-O(option=value)
+	-O(option1=value1; option2=value2; ...)
+		Use this option to specify format-specific options, like color format to repack BFLIM and BCLIM...
+		These options are specific to the file format, so see supported formats help for more details

@@ -60,7 +60,7 @@ class GroupNode (object):
 
 
 class extractBCSAR (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.make_outdirs(filename)
 		self.byteorder = ENDIANS[rawutil.unpack_from('>H', data, 4)[0]]
 		self.readheader(data)

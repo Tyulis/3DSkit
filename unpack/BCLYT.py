@@ -125,7 +125,7 @@ ORIG_Y = (
 
 
 class extractBCLYT(ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data):
+	def main(self, filename, data, opts={}):
 		outfile = make_outfile(filename, 'tclyt')
 		self.bclyt = data
 		self.readheader()

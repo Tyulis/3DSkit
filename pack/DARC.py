@@ -10,7 +10,7 @@ DARC_TABLE_STRUCT = '#0[3I]'
 
 
 class packDARC (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian):
+	def main(self, filenames, outname, endian, opts={}):
 		self.byteorder = endian
 		self.outname = outname
 		tree = self.make_tree(filenames)

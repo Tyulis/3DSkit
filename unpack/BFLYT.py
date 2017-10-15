@@ -125,7 +125,7 @@ ORIG_Y = (
 
 
 class extractBFLYT(ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data):
+	def main(self, filename, data, opts={}):
 		outfile = make_outfile(filename, 'tflyt')
 		self.bflyt = data
 		self.readheader()

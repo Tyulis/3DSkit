@@ -14,7 +14,7 @@ class GFA_FATnode (object):
 
 
 class extractGFA (rawutil.TypeReader):
-	def __init__(self, filename, data, endian):
+	def __init__(self, filename, data, endian, opts={}):
 		self.byteorder = endian
 		self.outdir = make_outdir(filename)
 		ptr = self.readmeta(data)

@@ -19,7 +19,7 @@ class SFATnode (object):
 
 
 class extractSARC (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.outdir = make_outdir(filename)
 		ptr = self.readheader(data)
 		ptr = self.readSFAT(data, ptr)
@@ -53,8 +53,8 @@ class extractSARC (rawutil.TypeReader):
 	
 	def readSFNT(self, data, ptr):
 		hdr, ptr = self.unpack_from(SFNT_HEADER_STRUCT, data, ptr, getptr=True)
-		magic = hdr[0].decode('ascii')
-		if magic != 'SFNT':
+		magic = hdr[0]
+		if magic != b'SFNT':
 			error('Issue with SFNT: invalid magic %s' % magic)
 		#headerlen = hdr[1]
 		#unknown = hdr[2]
@@ -63,7 +63,7 @@ class extractSARC (rawutil.TypeReader):
 				filename = self.string(data, node.name_offset + ptr)[0]
 				node.name = filename
 				if self.calc_hash(filename) != node.hash:
-					error('File name %s doesn\'t correspond to his hash %08x' % (filename, node.hash))
+					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash))
 			else:
 				node.name = '0x%08x.noname.bin' % node.hash
 			self.nodes[i] = node
@@ -77,7 +77,7 @@ class extractSARC (rawutil.TypeReader):
 	def list(self):
 		print('')
 		for node in self.nodes:
-			print(node.name + (' [fake name]' if not node.has_name else ''))
+			print(node.name + (' [not real name]' if not node.has_name else ''))
 	
 	def calc_hash(self, name):
 		result = 0

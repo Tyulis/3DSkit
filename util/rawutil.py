@@ -5,7 +5,7 @@ import builtins
 import binascii
 from collections import OrderedDict
 
-__version__ = '1.13.30'
+__version__ = '1.13.33'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -43,13 +43,19 @@ class TypeUser (object):
 		self.byteorder = byteorder
 	
 	def pack(self, stct, *data):
-		return pack(self.byteorder + stct, *data)
+		if stct[0] not in ENDIANNAMES.keys():
+			stct = self.byteorder + stct
+		return pack(stct, *data)
 	
 	def unpack(self, stct, data, refdata=()):
-		return unpack(self.byteorder + stct, data, refdata)
+		if stct[0] not in ENDIANNAMES.keys():
+			stct = self.byteorder + stct
+		return unpack(stct, data, refdata)
 	
 	def unpack_from(self, stct, data, offset=0, refdata=(), getptr=False):
-		return unpack_from(self.byteorder + stct, data, offset, refdata, getptr)
+		if stct[0] not in ENDIANNAMES.keys():
+			stct = self.byteorder + stct
+		return unpack_from(stct, data, offset, refdata, getptr)
 
 
 class TypeReader (TypeUser):
@@ -283,6 +289,10 @@ def _calcsize(stct, data):
 
 
 def _pack(stct, data, byteorder):
+	data = list(data)
+	for i in range(len(data)):
+		if isinstance(data[i], str):
+			data[i] = data[i].encode('utf-8')
 	finalstct = ''
 	j = 0
 	while j < len(stct):
@@ -400,7 +410,7 @@ def _pack(stct, data, byteorder):
 			final += _pack(c, datalist, byteorder)
 		elif c == '{':
 			bracklvl = 1
-			while bracklvl != 0:
+			while bracklvl > 0:
 				el = stct[i]
 				i += 1
 				if el == '{':
@@ -408,7 +418,7 @@ def _pack(stct, data, byteorder):
 				elif el == '}':
 					bracklvl -= 1
 				c += el
-				c = c[1:-1]
+			c = c[1:-1]
 			for datalist in data[dataptr]:
 				final += _pack(c, datalist, byteorder)
 			dataptr += 1

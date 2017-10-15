@@ -5,7 +5,7 @@ from util import error, BOMS
 from .SARC import packSARC
 
 class packALYT (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian):
+	def main(self, filenames, outname, endian, opts={}):
 		self.byteorder = endian
 		self.getmeta(filenames)
 		self.repack_ALYT()

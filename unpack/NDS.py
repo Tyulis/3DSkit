@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+#Thanks to gbatek...
 import os
 from util import error, ENDIANS
 from util.fileops import *
@@ -79,7 +81,7 @@ class NitroFATEntry (object):
 		self.end = 0
 
 class extractNDS (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.byteorder = '<'
 		self.outdir = make_outdir(filename)
 		header = data[:0x4000]

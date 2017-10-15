@@ -13,7 +13,7 @@ def make_help():
 		A second part
 	'''
 	h = '''ASMto8F v%s
-		A 3DSkit plugin to convert assembler code into Pokemon R/B 8F code execution setup and items
+		A 3DSkit plugin used as a test for the plugin system. Allow to convert assembler code into Pokemon R/B 8F code execution setup and items
 		How to use:
 			python3 3DSkit.py -g asmto8f [fr | us]
 		fr / us : to use with FR or US version of the game

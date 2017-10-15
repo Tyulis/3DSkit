@@ -29,7 +29,7 @@ class FATBSubEntry (object):
 
 
 class extractGARC (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.outdir = make_outdir(filename)
 		ptr = self.readheader(data)
 		ptr = self.readFATO(data, ptr)

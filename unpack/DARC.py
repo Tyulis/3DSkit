@@ -18,7 +18,7 @@ class DARCTableEntry (object):
 
 
 class extractDARC (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.outdir = make_outdir(filename)
 		ptr = self.readhdr(data)
 		ptr = self.readtable(data, ptr)

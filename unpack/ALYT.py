@@ -12,7 +12,7 @@ ALYT_LTBL_STRUCT = '4s2H /2[I] /2[4H(3I) /1[H]4a /1[H]4a /2[I]]'
 
 
 class extractALYT (rawutil.TypeReader):
-	def __init__(self, filename, data):
+	def __init__(self, filename, data, opts={}):
 		self.outdir = make_outdir(filename)
 		try:
 			os.mkdir(self.outdir + '_alyt_')

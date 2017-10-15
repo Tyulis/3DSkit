@@ -11,18 +11,28 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.14.24'
+__version__ = '1.15.28'
 
 
-def pack_files(filenames, output, compression, format, isbigendian, version, swizzle):
+def parse_opts(s):
+	if s is None:
+		return {}
+	opts = {}
+	s = s.strip('()[]{}')
+	ls = [el.strip() for el in s.split(';')]
+	for opt in ls:
+		name, value = opt.split('=')
+		name = name.strip()
+		value = value.strip()
+		opts[name] = value
+	return opts
+
+
+def pack_files(filenames, output, compression, format, isbigendian, opts):
 	endian = '>' if isbigendian else '<'
-	if format in pack.need_version and version is None:
-		error('You have to specify the file version')
-	if format in pack.need_swizzle and swizzle is None:
-			error('You have to specify the texture swizzling')
 	if format.upper() in pack.formats:
 		print('Packing...')
-		outnames = pack.pack(filenames, output, format, endian, version, swizzle)
+		outnames = pack.pack(filenames, output, format, endian, opts)
 		print('Packed!')
 	else:
 		error('Unknown format for repacking')
@@ -32,7 +42,7 @@ def pack_files(filenames, output, compression, format, isbigendian, version, swi
 		print('Compressed')
 
 
-def extract_files(filename, isbigendian, format):
+def extract_files(filename, isbigendian, format, opts):
 	endian = '>' if isbigendian else '<'
 	content = bread(filename)
 	compression = compress.recognize(content)
@@ -47,7 +57,7 @@ def extract_files(filename, isbigendian, format):
 	if format is not None:
 		print('%s file found' % format)
 		print('Extracting...')
-		unpack.extract(content, filename, format, endian)
+		unpack.extract(content, filename, format, endian, opts)
 		print('Extracted!')
 	else:
 		print('Not a supported format')
@@ -59,7 +69,7 @@ def extract_files(filename, isbigendian, format):
 			print('Wrote decompressed file to %s' % filename)
 
 
-def list_files(filename, isbigendian, format):
+def list_files(filename, isbigendian, format, opts):
 	endian = '>' if isbigendian else '<'
 	content = bread(filename)
 	compression = compress.recognize(filename)
@@ -71,7 +81,7 @@ def list_files(filename, isbigendian, format):
 		print('No compression')
 	format = unpack.recognize(content, filename, format)
 	if format is not None:
-		unpack.list_files(content, filename, format, endian)
+		unpack.list_files(content, filename, format, endian, opts)
 	else:
 		print('Not a supported format')
 
@@ -115,18 +125,18 @@ if __name__ == '__main__':
 	group.add_argument('-b', '--big', help='Big endian (for WiiU files)', action='store_true')
 	parser.add_argument('-o', '--out', help='Output file name (only for repacking)')
 	parser.add_argument('-c', '--compression', help='Output compression type')
-	parser.add_argument('-s', '--swizzle', help='Swizzling type (only for repacking images)')
-	parser.add_argument('-v', '--version', help='Specify the output format for packing some specific formats (see the detailed help, options infos for further information)')
+	parser.add_argument('-O', '--options', help='Format-specific options, see help for details')
 	parser.add_argument('files', help='File to convert name or files to archive names', nargs='*')
 	args = parser.parse_args()
+	opts = parse_opts(args.options)
 	if args.detailed_help:
 		main_help()
 	elif args.list or args.extract:
 		for filename in args.files:
 			if args.list:
-				list_files(filename, args.big, args.format)
+				list_files(filename, args.big, args.format, opts)
 			elif args.extract:
-				extract_files(filename, args.big, args.format)
+				extract_files(filename, args.big, args.format, opts)
 	elif args.pack:
 		files = []
 		basedir = os.getcwd()
@@ -147,7 +157,7 @@ if __name__ == '__main__':
 							files.append(os.path.join(path, filename))
 				else:
 					files.append(file)
-		pack_files(files, args.out, args.compression, args.format.upper(), args.big, args.version, args.swizzle)
+		pack_files(files, args.out, args.compression, args.format.upper(), args.big, opts)
 		os.chdir(basedir)
 	elif args.decompress:
 		for filename in args.files:

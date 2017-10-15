@@ -104,3 +104,14 @@ v1.14.24:
 v1.14.25:
 	Fixed some bugs in color packing by rawutil
 	Fixed some bugs in pack.BFLYT (mat1 offsets table length calculation issue, thanks to ericjwg, and materials offsets mismatch)
+v1.14.26:
+	Fixed a huge bug with {} structures packing in rawutil
+	Fixed a stupid error in unpack.SARC
+
+v1.15.26:
+	Completely rewrote unpack.BFLIM for uncompressed textures, now wirks fine
+v1.15.27:
+	Fixed ETC1 decompression in unpack.BFLIM, now full support of these files
+v1.15.28:
+	Changed format-specific options system, now use -O option, see detailed help
+	Fixed a little problem in rawutil

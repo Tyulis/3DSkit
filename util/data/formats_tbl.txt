@@ -18,10 +18,10 @@ Output: Output format at extracting. See the output formats help for information
 
 Format | X | P | R | Extensions          | Output
 --------------------------------------------------
-ALYT   | p |   | x | .alyt               | files
+ALYT   | x |   | x | .alyt               | files
 BCLYT  | p |   |   | .bclyt              | TX
 BCSAR  | b |   |   | .bcsar              | files
-BFLIM  | b |   |   | .bflim              | PNG
+BFLIM  | x |   |   | .bflim              | PNG
 BFLYT  | x |   | x | .bflyt              | TX
 CBMD   | e |   |   | .bnr banner[.bin]   | files
 DARC   | x | e |   | .arc .bcma (...)    | files
@@ -33,27 +33,16 @@ SARC   | x | x |   | .sarc .arc .szs     | files
 
 Infos on needed arguments:
 	F : need format: you have to specify the input format with the -f option at extraction
-	B : need byteorder: you have to specify the -l or -b option to extract this format. See the options section of the help for more infos
-	V : need version: you have to specify the file version with the -v option at repacking
-	S : need swizzle: you have to specify the texture swizzling with the -s option at repacking
+	B : need byteorder: you have to specify the -l or -b option to extract this format (defaults to little endian). See the options section of the help for more infos
 	Ext : The format can be detected only with this file extension, so it will not be correctly detected with another, in this case you must use the -f option (see below). If nothing, the extension is not needed.
 More info in the options section of the help
 ;;;;
 
-Format | F | B | V | S | Ext    |
----------------------------------
-ALYT   |   |   |   |   |        |
-BCLYT  |   |   |   |   |        |
-BCSAR  |   |   |   |   |        |
-BCLYT  |   |   |   |   |        |
-BFLIM  |   |   |   | X |        |
-BFLYT  |   |   |   |   |        |
-CBMD   |   |   |   |   |        |
-DARC   |   |   |   |   |        |
-GARC   |   |   | X |   |        |
-GFA    |   | X |   |   |        |
-NDS    |   |   |   |   | .nds   |
-SARC   |   |   |   |   |        |
+Format | F | B | Ext    | Comment
+--------------------------------------------------
+GFA    |   | X |        |
+NDS    |   |   | .nds   |
+;;;;
 
 Compressions:
 
@@ -66,3 +55,20 @@ LZ10        | x |   | (none) .cmp .l -_LZ.bin .LZ
 LZ11        | x |   | (none) .cmp .l -_LZ.bin .LZ
 LZH8        | x |   | .cx
 Yaz0        | x |   | .szs
+ETC1        | x |   | Texture compression in B?LIM
+;;;;
+
+Format-Specific options
+	Specify these options with the -O option (see options help)
+
+At extraction:
+	None
+At packing:
+	BFLIM:
+		format: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4
+		Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format  of original without any problem, for example for ETC1, not supported at packing. Defaults to RGBA8
+		
+		swizzle: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
+	
+	GARC: (Actually not implemented)
+		version: Specify the file version. Can be 4 or 6, see console output at extraction
