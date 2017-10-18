@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import os
 import argparse
-
+#-pf BFLIM -o test.bflim -O(swizzle=8;format=RGBA8) test/0/timg/CommonPokeList_Plate_BG_01.png
 import pack
 import unpack
 import compress
@@ -11,7 +11,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.15.28'
+__version__ = '1.15.29'
 
 
 def parse_opts(s):
@@ -45,14 +45,18 @@ def pack_files(filenames, output, compression, format, isbigendian, opts):
 def extract_files(filename, isbigendian, format, opts):
 	endian = '>' if isbigendian else '<'
 	content = bread(filename)
-	compression = compress.recognize(content)
-	if compression is not None:
-		print('Compression: %s' % compression)
-		print('Decompression...')
-		content = compress.decompress(content, compression)
-		print('Decompressed!')
+	format = unpack.recognize(content, filename, format)
+	if format not in unpack.SKIP_DECOMPRESSION:
+		compression = compress.recognize(content)
+		if compression is not None:
+			print('Compression: %s' % compression)
+			print('Decompression...')
+			content = compress.decompress(content, compression)
+			print('Decompressed!')
+		else:
+			print('No compression')
 	else:
-		print('No compression')
+		print('%s file: decompression skipped' % format)
 	format = unpack.recognize(content, filename, format)
 	if format is not None:
 		print('%s file found' % format)

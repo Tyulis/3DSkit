@@ -130,7 +130,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
 				tilepos = int(((ytile * 64 * tiles_x) + (xtile * 64)) * self.pxsize)
-				tile = data[tilepos:tilepos + 64]
+				tile = data[tilepos:int(tilepos + 64 * self.pxsize)]
 				self.extract_tile(tile, xtile, ytile)
 				
 		img = self.deswizzle(img)
@@ -140,11 +140,11 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		for ysub in range(2):
 			for xsub in range(2):
 				subpos = int(((ysub * 32) + (xsub * 16)) * self.pxsize)
-				sub = tile[subpos:subpos + 16]
+				sub = tile[subpos:int(subpos + 16 * self.pxsize)]
 				for ygroup in range(2):
 					for xgroup in range(2):
 						grppos = int(((ygroup * 8) + (xgroup * 4)) * self.pxsize)
-						grp = sub[grppos:grppos + 4]
+						grp = sub[grppos:int(grppos + 4 * self.pxsize)]
 						if self.pxsize == 0.5:
 							for ypix in range(2):
 								xpix = grp[ypix:ypix + 1]
@@ -164,6 +164,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 									rgba = self.getpixel(pixel)
 									outpos_y = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
 									outpos_x = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
+									if outpos_y >= self.height or outpos_x >= self.width:
+										continue
 									self.pixels[outpos_x, outpos_y] = rgba
 									#assert rgba[3] == 0
 									
@@ -172,7 +174,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			l = self.unpack_from('B', data, ptr)[0]
 			px = (l, l, l, 255)
 		elif self.format == A8:
-			px = (0, 0, 0) + self.unpack_from('B', data, ptr)
+			px = [0, 0, 0] + self.unpack_from('B', data, ptr)
 		elif self.format == LA4:
 			la = self.unpack_from('B', data, ptr)[0]
 			l = (la >> 4) * 0x11
@@ -183,12 +185,12 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			px = (l, l, l, a)
 		elif self.format == RGB565:
 			val = self.unpack_from('H', data, ptr)[0]
-			r = (val >> 11)
-			g = ((val & 0b0000011111100000) >> 5)
-			b = (val & 0b0000000000011111)
+			r = (val >> 11) * 8
+			g = ((val & 0b0000011111100000) >> 5) * 4
+			b = (val & 0b0000000000011111) * 8
 			px = (r, g, b, 255)
 		elif self.format == RGB8:
-			px = self.unpack_from('3B', data, ptr) + (255,)
+			px = self.unpack_from('3B', data, ptr) + [255]
 		elif self.format == RGBA5551:
 			val = self.unpack_from('H', data, ptr)[0]
 			r = (val >> 11) * 8
@@ -203,7 +205,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			r = (rg >> 4) * 0x11
 			g = (rg & 0x0F) * 0x11
 			b = (ba >> 4) * 0x11
-			a = (ba & 0x01) * 0x11
+			a = (ba & 0x0F) * 0x11
 			px = (r, g, b, a)
 		elif self.format == L4:
 			val = self.unpack_from('B', data, ptr)[0]
@@ -217,7 +219,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			px = (0, 0, 0, a)
 		else:
 			error('Unsupported texture format')
-		return px
+		return tuple(px)
 		
 	def deswizzle(self, img):
 		if self.swizzle == 4:

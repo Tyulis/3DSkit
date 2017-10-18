@@ -28,6 +28,8 @@ SUPPORTED = (
 	'ALYT', 'BCLYT', 'BCSAR', 'BFLIM', 'BFLYT', 'CBMD', 'DARC', 'GARC', 'GFA', 'NDS', 'SARC'
 )
 
+SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM')
+
 def recognize(cnt, filename='', format=None):
 	if format is not None:
 		if format in SUPPORTED:

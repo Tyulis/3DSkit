@@ -115,3 +115,5 @@ v1.15.27:
 v1.15.28:
 	Changed format-specific options system, now use -O option, see detailed help
 	Fixed a little problem in rawutil
+v1.15.29:
+	Fixed some bugs in RGBA5551, RGB565 and RGB8 packing and unpacking in BFLIM
