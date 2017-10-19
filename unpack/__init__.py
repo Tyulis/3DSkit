@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from util.fileops import bread
 from ._formats import *
 

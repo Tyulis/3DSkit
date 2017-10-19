@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import os
 import sys
 
@@ -30,6 +31,7 @@ SUPPORTED = (
 
 SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM')
 
+
 def recognize(cnt, filename='', format=None):
 	if format is not None:
 		if format in SUPPORTED:
@@ -52,6 +54,7 @@ def recognize(cnt, filename='', format=None):
 			return EXTS[e]
 			sys.stdout.write('From extension: ')
 	return None
+
 
 def get_ext(data):
 	format = recognize(data)

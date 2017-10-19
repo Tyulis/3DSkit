@@ -15,6 +15,7 @@ def decompress(cnt, format):
 	func = eval('mod.%s.decompress%s' % (format, format))
 	return func(cnt)
 
+
 def compress(cnt, format):
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.compress%s' % (format, format))

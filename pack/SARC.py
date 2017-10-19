@@ -36,7 +36,7 @@ class packSARC (ClsFunc, TypeWriter):
 			if filename.endswith('.noname.bin'):
 				node.has_name = 0
 				node.name = b''
-				node.hash = int(filename.lstrip('0x').replace('.noname.bin',''), 16)
+				node.hash = int(filename.lstrip('0x').replace('.noname.bin', ''), 16)
 			else:
 				node.has_name = 1
 				node.name = filename

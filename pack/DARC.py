@@ -24,7 +24,7 @@ class packDARC (ClsFunc, TypeWriter):
 		return hdr + final
 	
 	def make_tree(self, filenames):
-		tree = {'.':{}}
+		tree = {'.': {}}
 		for name in filenames:
 			pointed = tree['.']
 			path = name.split(os.path.sep)

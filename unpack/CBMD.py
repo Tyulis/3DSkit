@@ -23,6 +23,7 @@ OUT_NAMES = (
 	'USA-PT.cgfx'
 )
 
+
 class extractCBMD (ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, opts={}):
 		self.byteorder = '<'  #exists only on 3ds

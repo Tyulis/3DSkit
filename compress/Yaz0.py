@@ -5,6 +5,7 @@ import util.rawutil as rawutil
 
 Yaz0_HEADER_STRUCT = '4sI(2I)'
 
+
 class decompressYaz0 (ClsFunc, rawutil.TypeReader):
 	def main(self, content):
 		self.byteorder = '>'

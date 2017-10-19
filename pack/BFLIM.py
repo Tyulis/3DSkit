@@ -110,43 +110,28 @@ class packBFLIM(ClsFunc, TypeWriter):
 		tiles_y = math.ceil(dataheight / 8)
 		final = bytearray(datawidth * dataheight)
 		tilelen = 64 * self.pxsize
-		#pos = 0
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
-				tile = self.pack_tile(pixels, xtile, ytile, width, height)
-				pos = ((ytile * tiles_x) + xtile) * tilelen
-				final[pos:pos + tilelen] = tile
-				#pos += tilelen
+				for ysub in range(2):
+					for xsub in range(2):
+						for ygroup in range(2):
+							for xgroup in range(2):
+								for ypix in range(2):
+									for xpix in range(2):
+										posy = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
+										posx = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
+										if posx >= width:
+											rgba = (0, 0, 0, 0)
+										elif posy >= height:
+											rgba = (0, 0, 0, 0)
+										else:
+											rgba = pixels[posx, posy]
+										packed = self.pack_pixel(rgba)
+										finalx = (xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64))
+										finaly = ((ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * width * 8))
+										pos = (finalx + finaly) * self.pxsize
+										final[pos:pos + self.pxsize] = packed
 		return final
-	
-	def pack_tile(self, pixels, xtile, ytile, width, height):
-		sublen = 16 * self.pxsize
-		grouplen = 4 * self.pxsize
-		tile = bytearray(64 * self.pxsize)
-		for ysub in range(2):
-			for xsub in range(2):
-				sub = bytearray(16 * self.pxsize)
-				for ygroup in range(2):
-					for xgroup in range(2):
-						group = bytearray(4 * self.pxsize)
-						for ypix in range(2):
-							for xpix in range(2):
-								posy = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
-								posx = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
-								if posx >= width:
-									rgba = (0, 0, 0, 0)
-								elif posy >= height:
-									rgba = (0, 0, 0, 0)
-								else:
-									rgba = pixels[posx, posy]
-								packed = self.pack_pixel(rgba)
-								pos = ((ypix * 2) + xpix) * self.pxsize
-								group[pos:pos + self.pxsize] = packed
-						pos = ((ygroup * 8) + (xgroup * 4)) * self.pxsize
-						sub[pos:pos + grouplen] = group
-				pos = ((ysub * 32) + (xsub * 16)) * self.pxsize
-				tile[pos:pos + sublen] = sub
-		return tile
 
 	def pack_pixel(self, rgba):
 		r, g, b, a = rgba

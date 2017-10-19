@@ -21,6 +21,7 @@ class FATBEntry (object):
 		self.subentries = []
 		self.isfolder = False
 
+
 class FATBSubEntry (object):
 	def __init__(self):
 		self.start = 0
@@ -106,8 +107,10 @@ class extractGARC (rawutil.TypeReader):
 		for i, entry in enumerate(self.fatb):
 			if entry.isfolder:
 				outpath = self.outdir + str(i) + os.path.sep
-				try: os.mkdir(outpath)
-				except: pass
+				try:
+					os.mkdir(outpath)
+				except:
+					pass
 				os.makedirs(outpath)
 				for j, subentry in enumerate(entry.subentries):
 					start = subentry.start + self.dataoffset

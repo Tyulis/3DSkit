@@ -2,6 +2,7 @@
 from util.funcops import ClsFunc
 import util.rawutil as rawutil
 
+
 class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 	def main(self, content):
 		self.byteorder = '<'

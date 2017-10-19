@@ -1,4 +1,5 @@
-formats=(
+# -*- coding:utf-8 -*-
+formats = (
 	'SARC',
 	'DARC',
 	'BFLYT',
@@ -8,6 +9,7 @@ formats=(
 
 need_version = ('GARC',)
 need_swizzle = ('BFLIM', 'BCLIM')
+
 
 def pack(filenames, outname, format, endian, opts):
 	print('Packing %s' % format)

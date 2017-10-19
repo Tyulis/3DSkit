@@ -80,6 +80,7 @@ class NitroFATEntry (object):
 		self.start = 0
 		self.end = 0
 
+
 class extractNDS (rawutil.TypeReader):
 	def __init__(self, filename, data, opts={}):
 		self.byteorder = '<'
@@ -185,7 +186,7 @@ class extractNDS (rawutil.TypeReader):
 		self.use_bannersav = hdata[7] & 0b00000010
 		self.arm9i = FreeObject()
 		self.arm9i.offset = hdata[8]
-		reserved  = hdata[9]
+		reserved = hdata[9]
 		self.arm9i.ramaddress = hdata[10]
 		self.arm9i.size = hdata[11]
 		self.arm7i = FreeObject()
@@ -229,18 +230,17 @@ class extractNDS (rawutil.TypeReader):
 		reserved3 = hdata[48]  #used to pass arguments for debug. Usually zeros
 		self.rsa_signature = hdata[49]
 		
-	
 	def extract_sections(self, data):
-		self.arm9.data = data[self.arm9.offset : self.arm9.offset + self.arm9.size]
-		self.arm7.data = data[self.arm7.offset : self.arm7.offset + self.arm7.size]
-		self.fat.data = data[self.fat.offset : self.fat.offset + self.fat.size]
-		self.fnt.data = data[self.fnt.offset : self.fnt.offset + self.fnt.size]
+		self.arm9.data = data[self.arm9.offset: self.arm9.offset + self.arm9.size]
+		self.arm7.data = data[self.arm7.offset: self.arm7.offset + self.arm7.size]
+		self.fat.data = data[self.fat.offset: self.fat.offset + self.fat.size]
+		self.fnt.data = data[self.fnt.offset: self.fnt.offset + self.fnt.size]
 		if 'DSI' in self.unitcode:
-			self.arm9i.data = data[self.arm9i.offset : self.arm9i.offset + self.arm9i.size]
-			self.arm7i.data = data[self.arm7i.offset : self.arm7i.offset + self.arm7i.size]
-		self.arm9.overlay = data[self.arm9.overlayoffset : self.arm9.overlayoffset + self.arm9.overlaysize]
-		self.arm7.overlay = data[self.arm7.overlayoffset : self.arm7.overlayoffset + self.arm7.overlaysize]
-		self.icon = data[self.iconoffset : self.iconoffset + 0x23c0]
+			self.arm9i.data = data[self.arm9i.offset: self.arm9i.offset + self.arm9i.size]
+			self.arm7i.data = data[self.arm7i.offset: self.arm7i.offset + self.arm7i.size]
+		self.arm9.overlay = data[self.arm9.overlayoffset: self.arm9.overlayoffset + self.arm9.overlaysize]
+		self.arm7.overlay = data[self.arm7.overlayoffset: self.arm7.overlayoffset + self.arm7.overlaysize]
+		self.icon = data[self.iconoffset: self.iconoffset + 0x23c0]
 	
 	def read_FAT(self):
 		self.files = []
@@ -269,7 +269,7 @@ class extractNDS (rawutil.TypeReader):
 				continue
 			elif type & 0x80:  #subdir
 				namelen = type & 0x7f
-				name = self.fnt.data[ptr : ptr + namelen].decode('ascii')
+				name = self.fnt.data[ptr: ptr + namelen].decode('ascii')
 				ptr += namelen
 				subdir_id, ptr = self.uint16(self.fnt.data, ptr)
 				dir[name] = {}
@@ -277,7 +277,7 @@ class extractNDS (rawutil.TypeReader):
 				self.read_MainFNTEntry(subdir_id, subdir)
 			else:  #file
 				namelen = type & 0x7f
-				name = self.fnt.data[ptr : ptr + namelen].decode('ascii')
+				name = self.fnt.data[ptr: ptr + namelen].decode('ascii')
 				ptr += namelen
 				dir[name] = self.files[actfile]
 				actfile += 1
@@ -312,7 +312,7 @@ class extractNDS (rawutil.TypeReader):
 				makedirs(subdir)
 				self.extractDir(el, subdir)
 			else:
-				filedata = self.data[el.start : el.end]
+				filedata = self.data[el.start: el.end]
 				bwrite(filedata, out + name)
 	
 	def extractIcon(self, data, outdir):

@@ -1,8 +1,10 @@
+# -*- coding:utf-8 -*-
 from util.rawutil import TypeWriter
 from util.fileops import *
 from util.funcops import ClsFunc
 from util import error, BOMS
 from .SARC import packSARC
+
 
 class packALYT (ClsFunc, TypeWriter):
 	def main(self, filenames, outname, endian, opts={}):
