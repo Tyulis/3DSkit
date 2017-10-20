@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 import os
 import argparse
-#-pf BFLIM -o test.bflim -O(swizzle=8;format=RGBA8) test/0/timg/CommonPokeList_Plate_BG_01.png
 import pack
 import unpack
 import compress
@@ -11,7 +10,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.15.30'
+__version__ = '1.16.30'
 
 
 def parse_opts(s):

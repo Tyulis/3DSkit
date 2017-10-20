@@ -119,3 +119,6 @@ v1.15.29:
 	Fixed some bugs in RGBA5551, RGB565 and RGB8 packing and unpacking in BFLIM
 v1.15.30
 	Fixed the last bug in BFLIM packing or non-power of two textures
+
+v1.16.30
+	Added BL archives extraction
