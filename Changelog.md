@@ -122,3 +122,6 @@ v1.15.30
 
 v1.16.30
 	Added BL archives extraction
+v1.16.31
+	Added BL archive repacking
+	Fixed a stupid error in unpack.BL

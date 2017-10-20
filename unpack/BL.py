@@ -32,5 +32,5 @@ class extractBL (ClsFunc, rawutil.TypeReader):
 	def write_files(self, files):
 		for i, filedata in enumerate(files):
 			ext = get_ext(filedata)
-			name = path(self.outdir, '%d%s' % (i, ext))
+			name = path(self.outdir, '%03d%s' % (i, ext))
 			bwrite(filedata, name)

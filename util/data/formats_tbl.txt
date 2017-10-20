@@ -21,8 +21,9 @@ Format | X | P | R | Extensions          | Output
 ALYT   | x |   | x | .alyt               | files
 BCLYT  | p |   |   | .bclyt              | TX
 BCSAR  | b |   |   | .bcsar              | files
-BFLIM  | x |   | x | .bflim              | PNG
+BFLIM  | x | x |   | .bflim              | PNG
 BFLYT  | x |   | x | .bflyt              | TX
+BL     | e |   | e | .bl                 | files
 CBMD   | e |   |   | .bnr banner[.bin]   | files
 DARC   | x | e |   | .arc .bcma (...)    | files
 GARC   | x |   |   | .garc (none)        | files
