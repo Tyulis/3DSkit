@@ -10,7 +10,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.16.31'
+__version__ = '1.16.32'
 
 
 def parse_opts(s):
@@ -115,21 +115,21 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-H', '--detailed_help', help='Detailed help (you should read it the first time you use 3DSkit)', action='store_true')
 	group = parser.add_mutually_exclusive_group()
-	group.add_argument('-t', '--list', help='Lists archives contained files', action='store_true')
-	group.add_argument('-x', '--extract', help='Extract files contained in the archive, decompress the file or convert it to a readable format', action='store_true')
-	group.add_argument('-p', '--pack', help='Pack files into an archive, compress the file, or convert it to a readable format', action='store_true')
+	group.add_argument('-t', '--list', help='Lists the files contained in an archive', action='store_true')
+	group.add_argument('-x', '--extract', help='Extract files contained in the archive /  decompress the file if necessary and convert it to a readable format', action='store_true')
+	group.add_argument('-p', '--pack', help='Pack files into an archive, or convert it to a console format', action='store_true')
 	group.add_argument('-D', '--decompress', help='Decompress the input files', action='store_true')
 	group.add_argument('-C', '--compress', help='Compress the input file', action='store_true')
 	group.add_argument('-g', '--plugin', help='Run a plugin')
-	parser.add_argument('-d', '--dir', help='Use a directory to pack an archive. The root will be the directory', action='store_true')
-	parser.add_argument('-f', '--format', help='Repacking or reconverting format (to repack), or input format (to extract. see the formats section of the help for more infos)')
+	parser.add_argument('-d', '--dir', help='Use a directory to pack an archive. The root will be the directory. Very recommended.', action='store_true')
+	parser.add_argument('-f', '--format', help='Format to repack, or input format (to extract. See the formats section of the help for more infos)')
 	group = parser.add_mutually_exclusive_group()
-	group.add_argument('-l', '--little', help='Little endian (for 3DS files)', action='store_true')
+	group.add_argument('-l', '--little', help='Little endian (for 3DS / NDS files)', action='store_true')
 	group.add_argument('-b', '--big', help='Big endian (for WiiU files)', action='store_true')
 	parser.add_argument('-o', '--out', help='Output file name (only for repacking)')
 	parser.add_argument('-c', '--compression', help='Output compression type')
 	parser.add_argument('-O', '--options', help='Format-specific options, see help for details')
-	parser.add_argument('files', help='File to convert name or files to archive names', nargs='*')
+	parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')
 	args = parser.parse_args()
 	opts = parse_opts(args.options)
 	if args.detailed_help:

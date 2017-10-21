@@ -19,6 +19,7 @@ MAGICS = {
 	b'GFAC': 'GFA',
 	b'CLIM': 'BCLIM',
 	b'CSAR': 'BCSAR',
+	b'CSTM': 'BCSTM',
 	b'BL':   'BL'
 }
 
@@ -26,17 +27,12 @@ EXTS = {
 	'nds': 'NDS'
 }
 
-SUPPORTED = (
-	'ALYT', 'BCLYT', 'BCSAR', 'BFLIM', 'BFLYT', 'CBMD', 'DARC', 'GARC', 'GFA', 'NDS', 'SARC',
-	'BL',
-)
-
 SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM')
 
 
 def recognize(cnt, filename='', format=None):
 	if format is not None:
-		if format in SUPPORTED:
+		if format in MAGICS.values():
 			return format
 		else:
 			print('Unsupported format to extract: %s. Read the formats section of the help for more infos.')

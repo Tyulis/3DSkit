@@ -5,7 +5,7 @@ import builtins
 import binascii
 from collections import OrderedDict
 
-__version__ = '1.13.33'
+__version__ = '1.14.35'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -14,6 +14,8 @@ ENDIANNAMES = {
 	'!': 'big',
 	'<': 'little'
 }
+
+SUBS = {}
 
 
 def lreplace(s, reco, rep):
@@ -37,6 +39,9 @@ def hex(val):
 		return builtins.hex(val).lstrip('0x')
 	else:
 		return binascii.hexlify(bytes(val)).decode('ascii')
+
+def register_sub(sub, rep):
+	SUBS[sub] = rep
 
 class TypeUser (object):
 	def __init__(self, byteorder='@'):
@@ -285,6 +290,7 @@ class FileReader (object):
 
 def _calcsize(stct, data):
 	stct = stct.replace('u', 'hb').replace('U', 'HB')
+	stct = stct.replace('(', '').replace(')', '')
 	return struct.calcsize(stct)
 
 
@@ -429,6 +435,9 @@ def pack(stct, *data):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
+	if len(SUBS) > 0:
+		for sub in SUBS.keys():
+			stct = stct.replace(sub, SUBS[sub])
 	data = list(data)
 	for i, el in enumerate(data):
 		if isinstance(el, str):
@@ -532,8 +541,8 @@ def _unpack(stct, data, byteorder, refdata=(), retused=False):
 				num = int.from_bytes(bnum, endian)
 				final.append(num)
 			else:
-				final += struct.unpack_from(byteorder+c, data, ptr)
-				ptr += _calcsize(byteorder+c, data)
+				final += struct.unpack_from(byteorder + c, data, ptr)
+				ptr += _calcsize(byteorder + c, data)
 		elif c == '$':
 			final.append(data[ptr:])
 			ptr = len(data)
@@ -608,6 +617,9 @@ def unpack(stct, data, refdata=()):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
+	if len(SUBS) > 0:
+		for sub in SUBS.keys():
+			stct = stct.replace(sub, SUBS[sub])
 	unpacked, ptr = _unpack(stct, data, byteorder, refdata)
 	return unpacked
 
@@ -617,8 +629,11 @@ def unpack_from(stct, data, offset=0, refdata=(), getptr=False):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
+	if len(SUBS) > 0:
+		for sub in SUBS.keys():
+			stct = stct.replace(sub, SUBS[sub])
 	unpacked, ptr = _unpack(stct, data, byteorder, refdata)
 	if getptr:
-		return unpacked, ptr+offset
+		return unpacked, ptr + offset
 	else:
 		return unpacked
