@@ -71,6 +71,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		img = Image.open(filename)
 		if 'format' in opts.keys():
 			self.format = FORMATS[opts['format'].upper()]
+			self.strformat = opts['format'].upper()
 		else:
 			self.format = RGBA8
 		img = self.swizzle(img, opts['swizzle'])
@@ -170,4 +171,5 @@ class packBFLIM(ClsFunc, TypeWriter):
 			return self.pack('H', r + g + b + a)
 		elif self.format == RGBA8:
 			return self.pack('4B', r, g, b, a)
-		
+		else:
+			error('Unsupported format %s' % self.strformat, 105)

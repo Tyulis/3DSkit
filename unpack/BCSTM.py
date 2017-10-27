@@ -2,7 +2,7 @@
 from util import error
 import util.rawutil as rawutil
 from util.fileops import *
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 from util.wavy import WAV
 
 rawutil.register_sub('S', '(2H2I)')  #sized refs
@@ -12,7 +12,7 @@ rawutil.register_sub('T', 'I/p1[2HI]')  #ref table
 BCSTM_HEADER_STRUCT = '4s2H 2I2H SSS'
 BCSTM_INFO_STRUCT = '4sI RRR (4B11IR) TT $'
 BCSTM_TRACK_INFO_STRUCT = '2BHR I/p1[B]'
-BCSTM_DSPADPCM_INFO_STRUCT = '(16H) (2B2H) (2B2H) H'
+BCSTM_DSPADPCM_INFO_STRUCT = '8[2h] (2B2h) (2B2h) H'
 BCSTM_IMAADPCM_INFO_STRUCT = '(H2B) (H2B)'
 
 PCM8 = 0
@@ -59,8 +59,8 @@ class DSPADPCMContext (object):
 class DSPADPCMInfo (object):
 	def __init__(self, data):
 		self.param = data[0]
-		self.context = DSPADPCMContext(data[2])
-		self.loopcontext = DSPADPCMContext(data[3])
+		self.context = DSPADPCMContext(data[1])
+		self.loopcontext = DSPADPCMContext(data[2])
 
 
 class IMAADPCMContext (object):
@@ -80,6 +80,8 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		outname = make_outfile(filename, 'wav')
 		self.read_header(data)
 		self.readINFO()
+		self.readSEEK()
+		self.readDATA()
 	
 	def read_header(self, data):
 		bom = rawutil.unpack_from('>H', data, 4)[0]
@@ -87,7 +89,7 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		hdata = self.unpack_from(BCSTM_HEADER_STRUCT, data)
 		magic = hdata[0]
 		if magic != b'CSTM':
-			error('Invalid magic %s' % magic)
+			error('Invalid magic %s, expected CSTM' % byterepr(magic))
 		bom = hdata[1]
 		headerlen = hdata[2]
 		self.version = hdata[3]
@@ -105,12 +107,12 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		data = self.unpack(BCSTM_INFO_STRUCT, self.info)
 		info = self.info
 		streaminforef = Reference(data[2])
-		trackinforef = Reference(data[3]) + streaminforef.offset
-		channelinforef = Reference(data[4]) + streaminforef.offset
+		trackinforef = Reference(data[3]) + 8
+		channelinforef = Reference(data[4]) + 8
 		streaminfo = data[5]
 		self.read_streaminfo(streaminfo)
-		trackinforeftable = [Reference(el) + trackinforef.offset + 4 for el in data[7]]
-		channelinforeftable = [Reference(el) + channelinforef.offset + 4 for el in data[9]]
+		trackinforeftable = [Reference(el) + trackinforef.offset for el in data[7]]
+		channelinforeftable = [Reference(el) + channelinforef.offset for el in data[9]]
 		self.trackinfo = []
 		for ref in trackinforeftable:
 			offset = ref.offset
@@ -122,10 +124,12 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			if offset is not None:
 				adpcminforef = Reference(self.unpack_from('R', self.info, offset)[0])
 				if self.codec == DSPADPCM:
-					adpcminfo = DSPADPCMInfo(self.unpack_from(BCSTM_DSPADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset))
+					rawentry = self.unpack_from(BCSTM_DSPADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset)
+					adpcminfo = DSPADPCMInfo(rawentry)
 					self.channelinfo.append(adpcminfo)
 				elif self.codec == IMAADPCM:
-					adpcminfo = IMAADPCMInfo(self.unpack_from(BCSTM_IMAADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset))
+					rawentry = self.unpack_from(BCSTM_IMAADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset)
+					adpcminfo = IMAADPCMInfo(rawentry)
 					self.channelinfo.append(adpcminfo)
 				else:
 					self.channelinfo.append(None)
@@ -145,3 +149,31 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		self.last_sampleblock_paddedsize = data[12]
 		self.seek_datasize = data[13]
 		self.seek_interval_samplecount = data[14]
+		self.sampledata_ref = Reference(data[15])
+	
+	def readSEEK(self):
+		NotImplemented
+	
+	def readDATA(self):
+		self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
+		data = self.data[self.sampledata_ref.offset + 8:]  #Strips the magic
+		self.channels = [[] for i in range(self.channel_count)]
+		ptr = 0
+		for i in range(self.sampleblock_count):
+			for c in range(channels):
+				block = data[ptr: ptr + self.sampleblock_size]
+				ptr += self.sampleblock_size
+				self.channels[c] += self.decode_block(block, self.channelinfo[c])
+	
+	def decode_block(self, block, info):
+		#Inspirated from vgmstream
+		hist1 = info.context.previous_sample
+		hist2 = info.context.second_previous_sample
+		sample = 0
+		ptr = 0
+		while sample < self.sampleblock_samplecount:
+			header = block[ptr]
+			scale, coef_index = self.nibbles(header)
+			scale = 1 << scale
+			coef1, coef2 = info.param[coef_index]
+			paf

@@ -5,6 +5,7 @@ formats = (
 	'BFLYT',
 	'ALYT',
 	'BFLIM',
+	'BL',
 )
 
 need_version = ('GARC',)

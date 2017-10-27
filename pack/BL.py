@@ -21,7 +21,7 @@ class packBL (ClsFunc, rawutil.TypeWriter):
 			try:
 				num = int(name)
 			except ValueError:
-				error('File name %s does not have the right format. It should be like 003.xxx')
+				error('File name %s does not have the right format. It should be like 003.xxx', 205)
 			content = bread(filenames)
 			contents[num] = content
 		final = b''

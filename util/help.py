@@ -13,6 +13,7 @@ def menu():
 	print('2-Informations on output formats')
 	print('3-Detailed help on program\'s options')
 	print('4-Plugins help')
+	print('5-Error codes list and troubleshooting')
 	print('    Enter Q to quit')
 	print('')
 	opt = input('Your choice: ').lower()
@@ -61,6 +62,8 @@ def main_help():
 		elif opt == '4':
 			plugins_help()
 			continue
+		elif opt == '5':
+			cnt = read(os.path.join('util', 'data', 'errors.txt')).split(';;;;')
 		else:
 			continue
 		for block in cnt:

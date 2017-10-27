@@ -2,6 +2,7 @@
 import os
 from util import error
 from util.fileops import *
+from util.funcops import byterepr
 import util.rawutil as rawutil
 
 GFAC_META_STRUCT = '4s11I/11[4I]/11[n]128a'
@@ -33,7 +34,7 @@ class extractGFA (rawutil.TypeReader):
 		hdata, ptr = self.unpack_from(GFAC_META_STRUCT, data, 0, getptr=True)
 		magic = hdata[0]
 		if magic != b'GFAC':
-			error('Invalid magic: %s' % magic)
+			error('Invalid magic %s, expected GFAC' % byterepr(magic), 301)
 		#unknown = hdata[1]
 		self.version = hdata[2]
 		#headerlen = hdata[3]
@@ -55,7 +56,7 @@ class extractGFA (rawutil.TypeReader):
 		node.hash = entry[0]
 		hash = self.calc_hash(name)
 		if hash != node.hash:
-			error('Invalid file name hash for %s (found %08x, expected %08x)' % (node.name, node.hash, hash))
+			error('Invalid file name hash for %s (found %08x, expected %08x)' % (node.name, node.hash, hash), 305)
 		# node.nameoffset  = entry[1]
 		node.length = entry[2]
 		node.offset = entry[3] - self.dataoffset
@@ -70,7 +71,7 @@ class extractGFA (rawutil.TypeReader):
 		magic, version, comp, self.decsize, compsize = self.unpack_from(GFCP_HEADER_STRUCT, data)
 		data = data[20:]
 		if magic != b'GFCP':
-			error('Invalid GFCP magic: %s' % magic)
+			error('Invalid GFCP magic: %s' % byterepr(magic), 301)
 		if comp in (2, 3):
 			print('\tDecompressing data...')
 			data = self.decompressLZ10(data)

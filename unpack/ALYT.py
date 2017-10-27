@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 from util import error, ENDIANS
+from util.funcops import byterepr
 from util.fileops import *
 import util.rawutil as rawutil
 from unpack.SARC import extractSARC
@@ -27,7 +28,7 @@ class extractALYT (rawutil.TypeReader):
 	def readmeta(self, data):
 		meta, ptr = self.unpack_from(ALYT_META_STRUCT, data, 0, getptr=True)
 		if meta[0] != b'ALYT':
-			error('Invalid magic : %s' % meta[0])
+			error('Invalid magic %s, expected ALYT' % byterepr(meta[0]), 301)
 		self.ltbl = meta[10]
 		self.lmtl = meta[11]
 		self.lfnl = meta[12]

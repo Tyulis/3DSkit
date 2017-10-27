@@ -3,10 +3,10 @@ from util.txtree import dump
 from collections import OrderedDict
 from util import error
 import util.rawutil as rawutil
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 from util.fileops import write, make_outfile
 
-FLYT_HEADER = '4sHHHHIHH'
+FLYT_HEADER = '4s4HI2H'
 WRAPS = (
 	'Near-Clamp',
 	'Near-Repeat',
@@ -135,8 +135,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 		header = self.bflyt[:0x14]
 		self.data = self.bflyt[0x14:]
 		if header[0:4] != b'FLYT':
-			print('Not a valid BFLYT file.')
-			sys.exit(1)
+			error('Invalid magic %s, expected FLYT' % byterepr(header[0:4]), 301)
 		self.byteorder = '<' if header[4:6] == b'\xff\xfe' else '>'
 		self.endianname = 'little' if self.byteorder == '<' else 'big'
 		hdata = self.unpack(FLYT_HEADER, header)

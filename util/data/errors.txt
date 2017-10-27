@@ -1,0 +1,38 @@
+3DSkit uses error codes and messages to specify to the user that an error occured.
+These are the different error codes, and their explaination.
+;;;;
+100: Not implemented or unsupported
+	101: Unsupported format to unpack
+	102: Unsupported format to unpack
+	103: Unrecognized format to unpack
+		Try to precise the format with the -f option. All supported formats are listes in the help.
+	104: The file is uncompressed
+		You tried to decompress with the -D option an uncompressed file, or a file with an unsupported compression
+	105: Unsupported color format
+;;;;
+200: User error
+	201: You have to specify the output file name at packing
+	202: You have to specify the output format at packing
+	203: You have to specify the compression when you use the -c option to compress a file
+	204: The packer needs another input format
+	205: Specified file name has not the right format
+		Do what the program says
+	
+;;;;
+300: Invalid data
+	301: Invalid magic
+		The file has not the correct magic, so it is not the right format
+	302: Invalid section
+		A section present in the input file cannot be packed
+	303: Invalid section
+		A section present in the input file cannot be unpacked
+	304: Unsupported file version
+	305: Hash mismatch
+	306: Invalid header length
+;;;;
+400: Data not found
+	401: _alyt_ folder not found
+		You tried to repack a folder which wasn't an extracted ALYT file
+	402: Needed file not found
+		You tried to pack something without the needed file, or you deleted it
+	

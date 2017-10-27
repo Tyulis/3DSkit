@@ -168,3 +168,7 @@ def toascii(string):
 	s = s.replace('”', '"')
 	s = ''.join([c for c in s if ord(c) < 128])
 	return s
+
+def byterepr(s):
+	final = repr(s)
+	return final[2: -1]  #strips b''

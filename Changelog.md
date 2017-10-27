@@ -162,3 +162,9 @@
 *	v1.16.32
 	*	Added a substructure replacement function in rawutil
 	*	Completed the changelog and the readme
+
+**v1.17**
+
+*	v1.17.32
+	*	Added an error codes system and added the errors help
+	*	Updated the readme

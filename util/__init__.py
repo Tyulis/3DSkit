@@ -10,6 +10,6 @@ ENDIANS = {
 	0xfffe: '<'
 }
 
-def error(msg):
-	print(msg)
-	sys.exit(1)
+def error(msg, errno):
+	print('Error: %s (%d)' % (msg, errno))
+	sys.exit(errno)

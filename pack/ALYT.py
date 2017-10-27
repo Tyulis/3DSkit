@@ -19,7 +19,7 @@ class packALYT (ClsFunc, TypeWriter):
 		self.files = [name for name in filenames if os.path.dirname(name) != '_alyt_']
 		if len(self.files) == len(filenames):
 			#no _alyt_ folder, aborting
-			error('No _alyt_ folder in the specified directory')
+			error('No _alyt_ folder in the specified directory', 401)
 		metadir = '_alyt_' + os.path.sep
 		try:
 			file = metadir + 'LTBL.bin'
@@ -34,7 +34,7 @@ class packALYT (ClsFunc, TypeWriter):
 			self.symtable = [[el] for el in bread(file).splitlines()]
 		except FileNotFoundError:
 			#That's why a temporary file var is used
-			error('No %s file found in the specified directory' % file)
+			error('No %s file found in the specified directory' % file, 402)
 		
 	def repack_ALYT(self):
 		self.ltbloffset = 0x28

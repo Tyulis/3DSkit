@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 import os.path
 from util import error, ENDIANS
-from util.fileops import make_outdir, bread, bwrite, makedirs
+from util.fileops import *
+from util.funcops import byterepr
 import util.rawutil as rawutil
 
 SARC_HEADER_STRUCT = '4s2H3I'
@@ -29,7 +30,7 @@ class extractSARC (rawutil.TypeReader):
 	def readheader(self, data):
 		magic, hdrlen, bom = rawutil.unpack_from('>4s2H', data, 0)
 		if magic != b'SARC':
-			error('Not a valid SARC file.')
+			error('Invalid magic %s, expected SARC' % byterepr(magic), 301)
 		self.byteorder = ENDIANS[bom]
 		hdr, ptr = self.unpack_from(SARC_HEADER_STRUCT, data, 0, getptr=True)
 		#magic = hdr[0]
@@ -44,7 +45,7 @@ class extractSARC (rawutil.TypeReader):
 		sfat, ptr = self.unpack_from(SFAT_STRUCT, data, ptr, getptr=True)
 		magic = sfat[0]
 		if magic != b'SFAT':
-			error('Issue with SFAT: invalid magic %s' % magic.decode('ascii'))
+			error('Issue with SFAT: invalid magic %s' % byterepr(magic), 301)
 		#headerlen = sfat[1]
 		self.node_count = sfat[2]
 		self.hash_multiplier = sfat[3]
@@ -55,7 +56,7 @@ class extractSARC (rawutil.TypeReader):
 		hdr, ptr = self.unpack_from(SFNT_HEADER_STRUCT, data, ptr, getptr=True)
 		magic = hdr[0]
 		if magic != b'SFNT':
-			error('Issue with SFNT: invalid magic %s' % magic)
+			error('Issue with SFNT: invalid magic %s' % byterepr(magic), 301)
 		#headerlen = hdr[1]
 		#unknown = hdr[2]
 		for i, node in enumerate(self.nodes):
@@ -63,7 +64,7 @@ class extractSARC (rawutil.TypeReader):
 				filename = self.string(data, node.name_offset + ptr)[0]
 				node.name = filename
 				if self.calc_hash(filename) != node.hash:
-					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash))
+					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash), 305)
 			else:
 				node.name = '0x%08x.noname.bin' % node.hash
 			self.nodes[i] = node

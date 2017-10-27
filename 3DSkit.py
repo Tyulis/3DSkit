@@ -10,7 +10,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.16.32'
+__version__ = '1.17.32'
 
 
 def parse_opts(s):
@@ -34,7 +34,7 @@ def pack_files(filenames, output, compression, format, isbigendian, opts):
 		outnames = pack.pack(filenames, output, format, endian, opts)
 		print('Packed!')
 	else:
-		error('Unknown format for repacking')
+		error('Unknown format for repacking', 102)
 	if compression is not None:
 		print('Compressîng...')
 		compress.compress(output, compression)
@@ -63,13 +63,13 @@ def extract_files(filename, isbigendian, format, opts):
 		unpack.extract(content, filename, format, endian, opts)
 		print('Extracted!')
 	else:
-		print('Not a supported format')
 		if compression is not None:
 			sname = filename.partition('.')
 			sname[0] += '_dec'
 			filename = ''.join(sname)
 			bwrite(content, filename)
 			print('Wrote decompressed file to %s' % filename)
+			error('Unrecognized format', 103)
 
 
 def list_files(filename, isbigendian, format, opts):
@@ -86,14 +86,14 @@ def list_files(filename, isbigendian, format, opts):
 	if format is not None:
 		unpack.list_files(content, filename, format, endian, opts)
 	else:
-		print('Not a supported format')
+		error('Unrecognized format', 103)
 
 
 def decompress_files(filename):
 	content = bread(filename)
 	compression = compress.recognize(content)
 	if compression is None:
-		error('The file is not compressed')
+		error('The file is not compressed', 104)
 	else:
 		print('Compression: %s' % compression)
 	print('Decompression...')
@@ -144,9 +144,9 @@ if __name__ == '__main__':
 		files = []
 		basedir = os.getcwd()
 		if args.out is None:
-			error('You have to specify the output name')
+			error('You have to specify the output name', 201)
 		if args.format is None:
-			error('You have to specify the output format')
+			error('You have to specify the output format', 202)
 		if args.dir:
 			os.chdir(args.files[0])
 			for path, dirs, filenames in os.walk(os.path.curdir):
@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
 	elif args.compress:
 		if args.compression is None:
-			error('You have to specify the compression type')
+			error('You have to specify the compression type', 203)
 		compress_file(args.files[0], args.out, args.compression)
 	elif args.plugin is not None:
 		plugins.run_plugin(args.plugin, args.files)

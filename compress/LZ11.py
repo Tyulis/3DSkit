@@ -28,7 +28,7 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 	
 	def readhdr(self, content):
 		if content[0] != 0x11:
-			error('Invalid magic')
+			error('Invalid magic 0x%02x, expected 0x11' % content[0], 301)
 		hdr = content[1:4] + b'\x00'
 		self.data = content[4:]
 		self.decsize = self.unpack('I', hdr)[0]

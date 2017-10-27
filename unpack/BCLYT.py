@@ -3,7 +3,7 @@ from util.txtree import dump
 from collections import OrderedDict
 from util import error
 import util.rawutil as rawutil
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 from util.fileops import write, make_outfile
 
 CLYT_HEADER = '4sHHHHIHH'
@@ -135,8 +135,7 @@ class extractBCLYT(ClsFunc, rawutil.TypeReader):
 		header = self.bclyt[:0x14]
 		self.data = self.bclyt[0x14:]
 		if header[0:4] != b'CLYT':
-			print('Not a valid BCLYT file.')
-			sys.exit(1)
+			error('Invalid magic %s, expected CLYT' % byterepr(header[0:4]), 301)
 		self.byteorder = '<' if header[4:6] == b'\xff\xfe' else '>'
 		self.endianname = 'little' if self.byteorder == '<' else 'big'
 		hdata = self.unpack(CLYT_HEADER, header)

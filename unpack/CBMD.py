@@ -2,7 +2,7 @@
 import os
 import compress
 from util import error, ENDIANS
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 from util.fileops import make_outdir, bread, bwrite, makedirs
 import util.rawutil as rawutil
 
@@ -34,7 +34,7 @@ class extractCBMD (ClsFunc, rawutil.TypeReader):
 	def readheader(self, data):
 		hdata = self.unpack_from(CBMD_HEADER_STRUCT, data, 0)
 		if hdata[0] != b'CBMD':
-			error('Invalid magic : %s' % hdata[0])
+			error('Invalid magic %s, expected CBMD' % byterepr(hdata[0]), 301)
 		self.commonoffset = hdata[2]
 		self.regionoffsets = hdata[3]
 		self.cwavoffset = hdata[5]

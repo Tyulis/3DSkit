@@ -46,14 +46,15 @@ Dependencies
 ============
 To access all 3DSkit functionnalities, you need:
 
-*	python3 (tested under python 3.5 and 3.6, but should work with previous versions)
+*	python3 (tested under python 3.5 and 3.6, but it should work with previous versions)
 *	Pillow (Fork of PIL, use sudo apt-get install python3-pil)
 *	struct (it should be installed by default with python)
 
 Contributing
 ============
 
-To submit an issue, don't forget to check i the issue has not been already reported, and fixed (check also in te closed).
+Before submitting an issue, take a look at the program's help (-H option), your problem can be normal, or already explained there.
+Don't forget to check if the issue has not been already reported, or fixed (check also in the closed ones).
 Check also if you have the last commit
 Then, if you really found a new issue, you should precise:
 
@@ -61,4 +62,4 @@ Then, if you really found a new issue, you should precise:
 *	The error output in the console
 *	Attach the concerned file and if possible and necessary, a screenshot of the problem in the game.
 
-Pull requests are grantly appreciated.
+Pull requests are grantly appreciated. You can see a guide for the 3DSkit's developper interface in the program's help (-H option), and a documentation for rawutil in the [rawutil's repo](https://github.com/Tyulis/rawutil)

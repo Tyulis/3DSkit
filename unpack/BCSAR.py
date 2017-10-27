@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 from util import error, ENDIANS
-from util.funcops import getsup
+from util.funcops import getsup, byterepr
 from util.fileops import *
 import util.rawutil as rawutil
 
@@ -78,7 +78,7 @@ class extractBCSAR (rawutil.TypeReader):
 	def readheader(self, data):
 		hdata = self.unpack_from(CSAR_HEADER_STRUCT, data, 0)
 		if hdata[0] != b'CSAR':
-			error('Invalid magic: %s' % hdata[0])
+			error('Invalid magic %s, expected CSAR' % byterepr(hdata[0]), 301)
 		#bom = hdata[1]
 		#headerlen = hdata[2]
 		self.version = hdata[3]
@@ -97,16 +97,16 @@ class extractBCSAR (rawutil.TypeReader):
 				self.file = secdata
 				self.fileoffset = offset
 			else:
-				error('Unsupported partition')
+				error('Unsupported partition 0x%04x' % id, 303)
 
-		bwrite(self.strg, 'STRG')
-		bwrite(self.info, 'INFO')
-		bwrite(self.file, 'FILE')
+		#bwrite(self.strg, 'STRG')
+		#bwrite(self.info, 'INFO')
+		#bwrite(self.file, 'FILE')
 
 	def readSTRG(self):
 		hdata, ptr = self.unpack_from(STRG_HEADER_STRUCT, self.strg, 0, getptr=True)
 		if hdata[0] != b'STRG':
-			error('Invalid STRG magic: %s' % hdata[0])
+			error('Invalid STRG magic: %s' % byterepr(hdata[0]), 301)
 		#strglen = hdata[1]
 		i = 2
 		while i < 6:
@@ -127,7 +127,7 @@ class extractBCSAR (rawutil.TypeReader):
 	def readINFO(self):
 		hdata, ptr = self.unpack_from(INFO_HEADER_STRUCT, self.info, 0, getptr=True)
 		if hdata[0] != b'INFO':
-			error('Invalid INFO magic: %s' % hdata[0])
+			error('Invalid INFO magic: %s' % byterepr(hdata[0]), 301)
 		infolen = hdata[1]
 		infooffsets = [None] * 7
 		i = 2
@@ -149,7 +149,7 @@ class extractBCSAR (rawutil.TypeReader):
 			elif id == 0x2106:
 				infooffsets[6] = offset + 8
 			else:
-				error('Unsupported INFO section %x' % id)
+				error('Unsupported INFO section %x' % id, 303)
 		#unknown = hdata[16]
 		#unknown = hdata[18]
 		infosecs = [None] * 7

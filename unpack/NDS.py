@@ -3,7 +3,7 @@
 import os
 from util import error, ENDIANS
 from util.fileops import *
-from util.funcops import split, FreeObject
+from util.funcops import split, FreeObject, byterepr
 import util.rawutil as rawutil
 from util.txtree import dump
 from util.image2gif import writeGif
@@ -165,13 +165,13 @@ class extractNDS (rawutil.TypeReader):
 	
 	def make_checks(self, data):
 		if self.headerlen != 0x4000:
-			error('Invalid NDS ROM: Invalid header length')
+			error('Invalid NDS ROM: Invalid header length', 306)
 		if self.nintendo_logocrc != 0xcf56:
-			error('Invalid NDS ROM: Invalid Nintendo logo CRC')
+			error('Invalid NDS ROM: Invalid Nintendo logo CRC', 305)
 		if self.crc16(self.nintendo_logo) != self.nintendo_logocrc:
-			error('Invalid NDS ROM: Invalid Nintendo logo')
+			error('Invalid NDS ROM: Invalid Nintendo logo', 301)
 		if self.crc16(data[0:0x15e]) != self.header_crc:
-			error('Invalid NDS ROM: Invalid header checksum')
+			error('Invalid NDS ROM: Invalid header checksum', 305)
 	
 	def read_TWLextheader(self, data):
 		hdata = self.unpack_from(DSI_EXTHEADER_STRUCT, data, 0x180)
@@ -321,7 +321,7 @@ class extractNDS (rawutil.TypeReader):
 		version, ptr = self.uint16(data, 0)
 		crc, ptr = self.uint16(data, ptr)
 		if self.crc16(data[0x0020:0x0840]) != crc:
-			error('Invalid NDS ROM: Invalid icon CRC')
+			error('Invalid NDS ROM: Invalid icon CRC', 305)
 		if version < 0x0103:
 			bitmap, palette = self.unpack_from('512s16[H]', data, 0x20)
 			img = self.extractIconBitmap(bitmap, palette)

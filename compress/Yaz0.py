@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 import util.rawutil as rawutil
 
 Yaz0_HEADER_STRUCT = '4sI(2I)'
@@ -15,7 +15,7 @@ class decompressYaz0 (ClsFunc, rawutil.TypeReader):
 	def readheader(self, data):
 		magic, self.unco_len, unknown = self.unpack_from(Yaz0_HEADER_STRUCT, data, 0)
 		if magic != b'Yaz0':
-			error('Not a valid Yaz0-compressed file')
+			error('Invalid magic %s, expected Yaz0' % byterepr(magic))
 		return data[0x10:]
 	
 	def decompress(self, data):

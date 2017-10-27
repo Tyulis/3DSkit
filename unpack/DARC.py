@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 import os.path
 from util import error, ENDIANS
-from util.fileops import make_outdir, bread, bwrite, makedirs
+from util.fileops import *
+from util.funcops import byterepr
 import util.rawutil as rawutil
 
 DARC_HEADER_STRUCT = '4s4H4I'
@@ -27,7 +28,7 @@ class extractDARC (rawutil.TypeReader):
 	def readhdr(self, data):
 		magic, endian = rawutil.unpack_from('>4sH', data, 0)
 		if magic != b'darc':
-			error('Invalid magic : %s' % magic)
+			error('Invalid magic %s, expected darc' % byterepr(magic), 301)
 		self.byteorder = ENDIANS[endian]
 		hdr, ptr = self.unpack_from(DARC_HEADER_STRUCT, data, 0, getptr=True)
 		#magic=hdr[0]

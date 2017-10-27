@@ -6,11 +6,11 @@ PCM=1
 
 class WAV (object):
 	@classmethod
-	def new(cls, fech=44100, channels=2, format=PCM, bitspersample=16):
+	def new(cls, rate=44100, channels=2, format=PCM, bitspersample=16):
 		ins = cls()
 		ins.samples = []
 		ins.channels = channels
-		ins.fech = fech
+		ins.fech = rate
 		ins.format = format
 		ins.bitspersample = bitspersample
 		return ins

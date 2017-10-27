@@ -6,7 +6,7 @@ import util.rawutil as rawutil
 from util.funcops import ClsFunc
 from util.fileops import read, bwrite
 
-FLYT_HEADER = '%s4sHHHHIHH'
+FLYT_HEADER = '%s4s4H I 2H'
 WRAPS = (
 	'Near-Clamp',
 	'Near-Repeat',
@@ -141,8 +141,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 		filename = filenames[0]
 		tree = load(read(filename))
 		if list(tree.keys())[2] != 'BFLYT':
-			print('This is not a converted BFLYT file')
-			sys.exit(3)
+			error('This is not a converted BFLYT file', 203)
 		self.version = tree['version']
 		self.byteorder = endian
 		self.sections = tree['BFLYT']
@@ -174,8 +173,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 				method = eval('self.pack%s' % magic)
 			except AttributeError:
 				if not safe:
-					print('Invalid section: %s' % magic)
-					sys.exit(4)
+					error('Invalid section: %s' % magic, 302)
 				else:
 					continue
 			if top:
@@ -295,7 +293,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 					matsec += self.uint8(dic['unknown-1'])
 					matsec += self.uint8(dic['unknown-2'])
 				elif itemtype == 'alpha-compare':
-					matsec += self.uint8(ALPHA_COMPARE_CONDITION.index(dic['condition']))
+					matsec += self.uint8(ALPHA_COMPARE_CONDITIONS.index(dic['condition']))
 					matsec += self.uint8(dic['unknown-1'])
 					matsec += self.uint8(dic['unknown-2'])
 					matsec += self.uint8(dic['unknown-3'])

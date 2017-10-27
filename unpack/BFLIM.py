@@ -93,7 +93,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		self.byteorder = ENDIANS[rawutil.unpack_from('>H', hdr, 4)[0]]
 		hdata = self.unpack(BFLIM_FLIM_HDR_STRUCT, hdr)
 		if hdata[0] != b'FLIM':
-			error('Invalid magic: %s' % hdata[0])
+			error('Invalid magic %s, expected FLIM' % byterepr(hdata[0]), 301)
 		#bom = hdata[1]
 		#headerlen = hdata[2]
 		self.version = hdata[3]
@@ -104,7 +104,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 	def readimagheader(self, hdr):
 		hdata = self.unpack(BFLIM_IMAG_HDR_STRUCT, hdr)
 		if hdata[0] != b'imag':
-			error('Invalid magic for imag header: %s' % hdata[0])
+			error('Invalid magic for imag header: %s' % byterepr(hdata[0]), 301)
 		#headerlen = hdata[1] #0x10
 		self.width = hdata[2]
 		self.height = hdata[3]

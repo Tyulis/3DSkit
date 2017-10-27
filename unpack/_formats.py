@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import sys
+from util import error
 
 
 need_endian = (
@@ -35,8 +36,7 @@ def recognize(cnt, filename='', format=None):
 		if format in MAGICS.values():
 			return format
 		else:
-			print('Unsupported format to extract: %s. Read the formats section of the help for more infos.')
-			sys.exit(2)
+			error('Unsupported format to extract: %s. Read the formats section of the help for more infos.', 101)
 	if len(cnt) >= 4:
 		if cnt[0:4] in MAGICS.keys():
 			return MAGICS[cnt[0:4]]
