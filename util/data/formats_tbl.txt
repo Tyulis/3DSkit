@@ -33,7 +33,12 @@ NDS    | x |   |   | .nds                | files
 SARC   | x | x |   | .sarc .arc .szs     | files
 
 There is also:
-	unpack.ExtHeader, to unpack NCCH extended headers (automatic when unpacking an NCCH partition). Needs a specific file name (exheader.bin, extheader.bin or DecryptedExtHeader.bin). Outputs as a TXTree
+	unpack.ExtHeader:
+		Unpacks NCCH extended headers (automatic when unpacking an NCCH partition). Needs a specific file name (exheader.bin, extheader.bin or DecryptedExtHeader.bin) to be recognized. Outputs as a TXTree
+	unpack.ExeFS:
+		Unpack ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
+	unpack.RomFS:
+		Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized
 ;;;;
 
 Infos on needed arguments:
@@ -67,7 +72,8 @@ Format-Specific options
 	Specify these options with the -O option (see options help)
 
 At extraction:
-	None
+	NCCH / ExeFS:
+		dochecks: If "true", checks if the contents hashes match. Defaults to false.
 At packing:
 	BFLIM:
 		format: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4

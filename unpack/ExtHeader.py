@@ -13,7 +13,7 @@ rawutil.register_sub('>', '')
 
 EXTHEADER_MAIN_STRUCT = '512s 512s 256x 256x 512s'
 EXTHEADER_SCI_STRUCT = '8s 5s BH (3I) I (3I) I (3I) I (48Q) (2Q48s)'
-EXTHEADER_ACI_STRUCT = '(QI 4B (16H) (3Q Q) 34[8s] 15s B) ((28I) 16s) (16B)'
+EXTHEADER_ACI_STRUCT = '(QI 4B (16H) (3Q Q) 34[8s] 15s B) ((28I) 16s) (Q 7s B)'
 
 NEW3DS_SYSTEM_MODES = {
 	0: 'Legacy (64MB)',
@@ -34,6 +34,11 @@ RESOURCE_LIMIT_CATEGORIES = {
 	2: 'Lib-Applet',
 	3: 'Other',
 }
+MEMORY_TYPES = {
+	1: 'Application',
+	2: 'System',
+	3: 'Base',
+}
 
 class extractExtHeader (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, opts={}):
@@ -42,9 +47,13 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		self.tree = OrderedDict()
 		self.tree['SCI'] = OrderedDict()
 		self.tree['ACI'] = OrderedDict()
+		self.tree['ACI-limiter'] = OrderedDict()
 		self.split(data)
 		self.extract_sci()
-		self.extract_aci()
+		self.extract_aci(self.aci, self.tree['ACI'])
+		self.extract_aci(self.limit_aci, self.tree['ACI-limiter'])
+		self.tree['AccessDesc-Signature'] = self.accessdesc_signature
+		self.tree['NCCH-Header-public-key'] = self.public_key
 		final = txtree.dump(self.tree)
 		write(final, self.outfile)
 	
@@ -94,15 +103,14 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		sys['Jump-ID'] = rawutil.hex(system_info[1], 16)
 		reserved = system_info[2]
 	
-	def extract_aci(self):
-		root = self.tree['ACI']
+	def extract_aci(self, raw, root):
 		root['ARM11-Local-system-capabilities'] = OrderedDict()
 		arm11_sys = root['ARM11-Local-system-capabilities']
 		root['ARM11-Kernel-capabilities'] = OrderedDict()
 		arm11_kernel = root['ARM11-Kernel-capabilities']
 		root['ARM9-Access-control'] = OrderedDict()
 		arm9_access = root['ARM9-Access-control']
-		data = self.unpack(EXTHEADER_ACI_STRUCT, self.aci)
+		data = self.unpack(EXTHEADER_ACI_STRUCT, raw)
 		arm11_sys['ProgramID'] = rawutil.hex(data[0][0], 16)
 		arm11_sys['Core-version'] = rawutil.hex(data[0][1], 8)
 		flag1, flag2, flag0, priority = data[0][2:6]
@@ -129,6 +137,7 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		reserved = data[0][9]
 		arm11_sys['Resource-limit-category'] = RESOURCE_LIMIT_CATEGORIES[data[0][10]]
 		
+		map_adressrange = []
 		descs = data[1][0]
 		reserved = data[1][1]
 		for desc in descs:
@@ -138,13 +147,24 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 			elif not type & 0b000010000000:
 				arm11_kernel['System-call-mask-table-index'] = (desc & 0x03000000) >> 24
 				arm11_kernel['System-call-mask'] = desc & 0x00ffffff
-			elif not type & 0b000001000000:
-				arm11_kernel['Major-Version'] = (desc & 0xff00) >> 8
-				arm11_kernel['Minor-Version'] = desc & 0xff
 			elif not type & 0b000000100000:
-				arm11_kernel['Handle-Table-size'] = desc & 0x3ffff
+				arm11_kernel['Kernel-Major-Version'] = (desc & 0xff00) >> 8
+				arm11_kernel['Kernel-Minor-Version'] = desc & 0xff
 			elif not type & 0b000000010000:
-				map_adressrange.append(
+				arm11_kernel['Handle-Table-size'] = desc & 0x3ffff
+			elif not type & 0b000000001000:
+				arm11_kernel['Kernel-Flags'] = self.extract_kernelflags(desc)
+			elif not type & 0b000000000110:
+				map_adressrange.append(desc & 0x7ffff)
+			elif not type & 0b000000000001:
+				arm11_kernel['Mapped-Memory-page'] = desc & 0x7ffff
+				arm11_kernel['Mapped-Memory-Read-Only'] = bool(desc & 0x100000)
+			if map_adressrange != []:
+				arm11_kernel['Mapped-Adress-range'] = map_adressrange
+		
+		desc = data[2][0]
+		arm9_access['Accesses'] = self.extract_arm9accesses(desc)
+		arm9_access['ARM9-Descriptor-version'] = data[2][2]
 	
 	def extract_fsaccess(self, flags):
 		perms = []
@@ -193,3 +213,40 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		if flags & 0x200000:
 			perms.append('Seed-DB')
 		return perms
+	
+	def extract_kernelflags(self, desc):
+		flags = OrderedDict()
+		flags['Allow-debug'] = bool(desc & 0x0001)
+		flags['Force-debug'] = bool(desc & 0x0002)
+		flags['Allow-non-alphanum'] = bool(desc & 0x0004)
+		flags['Shared-page-writing'] = bool(desc & 0x0008)
+		flags['Privilege-priority'] = bool(desc & 0x0010)
+		flags['Allow-main()-args'] = bool(desc & 0x0020)
+		flags['Shared-device-memory'] = bool(desc & 0x0040)
+		flags['Runnable-on-sleep'] = bool(desc & 0x0080)
+		flags['Memory-type'] = MEMORY_TYPES[(desc & 0x0f00) >> 8]
+		flags['Special-memory'] = bool(desc & 0x1000)
+		flags['CPU-Core2-access'] = bool(desc & 0x2000)
+		return flags
+	
+	def extract_arm9accesses(self, desc):
+		flags = []
+		if desc & 0x001:
+			flags.append('Mount nand:/')
+		if desc & 0x002:
+			flags.append('Mount nand:/ro/ (write)')
+		if desc & 0x004:
+			flags.append('Mount twln:/')
+		if desc & 0x008:
+			flags.append('Mount wnand:/')
+		if desc & 0x010:
+			flags.append('Mound card SPI')
+		if desc & 0x020:
+			flags.append('Use SDIF3')
+		if desc & 0x040:
+			flags.append('Create seed')
+		if desc & 0x080:
+			flags.append('SD Application')
+		if desc & 0x100:
+			flags.append('Mount sdmc:/ (write)')
+		return flags

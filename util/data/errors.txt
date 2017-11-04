@@ -26,8 +26,10 @@ These are the different error codes, and their explaination.
 	303: Invalid section
 		A section present in the input file cannot be unpacked
 	304: Unsupported file version
+		Really sorry. Try to open a feature request and wait for the support
 	305: Hash mismatch
 	306: Invalid header length
+		You file is invalid.
 ;;;;
 400: Data not found
 	401: _alyt_ folder not found

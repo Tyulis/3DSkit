@@ -17,7 +17,7 @@
 	*	Added unpack.DARC and introduced rawutil
 	*	rawutil is a module based on struct to handle binary data. It can be used as struct with strings as structures (but wit new elements), or as a TypeReader or TypeWriter object
 *	v1.2.2:
-	*	Many fixes in rawutil (TypeReader didn't work)
+	*	Many fixes in rawutil (TypeReader didn't work...)
 *	v1.2.3:
 	*	Fixed some errors in unpack.DARC, like encoding errors, offsets mismatch or issues due to padding
 *	v1.2.4:
@@ -48,7 +48,7 @@
 	*	Added unpack.ALYT
 	*	Removed usage of formats list in unpack module loading
 *	v1.5.9:
-	*	Fixes in filesystem utilities
+	*	Fixes in filesystem utilities (util.fileops)
 	*	Updated rawutil
 
 **v1.6**
@@ -56,7 +56,7 @@
 *	v1.6.9:
 	*	Added unpack.CBMD
 *	v1.6.10:
-		*Added extraction of LTBL section in unpack.ALYT
+	*	Added extraction of LTBL section in unpack.ALYT
 *	v1.6.11:
 	*	Fixed some rawutil issues with int24 and uint24
 
@@ -156,6 +156,7 @@
 
 *	v1.16.30
 	*	Added BL archives extraction
+	*	Added the newmod plugin to replace and extend pluginCompiler
 *	v1.16.31
 	*	Added BL archive repacking
 	*	Fixed a stupid error in unpack.BL
@@ -173,3 +174,7 @@
 	*	Updated the readme
 	*	Improved colors precision for RGB565 and RGBA5551 formats of BFLIM files
 	*	Updated rawutil
+*	v1.17.34
+	*	Added unpack.ExeFS
+	*	Added the dochecks option for unpack.NCCH and unpack.ExeFS to check files and sections hashes
+	*	Small orthographic fixes in the help and the changelog

@@ -25,11 +25,15 @@ MAGICS = {
 	b'NCCH': 'NCCH',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',
-	b'---b': 'NDS',
+	b'---b': 'ExeFS',
+	b'---c': 'RomFS',
+	b'---d': 'NDS',
 }
 
 EXTS = {
-	'nds': 'NDS'
+	'nds': 'NDS',
+	'exefs': 'ExeFS',
+	'romfs': 'RomFS',
 }
 
 SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH')
@@ -43,6 +47,10 @@ def recognize(cnt, filename='', format=None):
 			error('Unsupported format to extract: %s. Read the formats section of the help for more infos.', 101)
 	if filename.lower() in ('extheader.bin', 'exheader.bin', 'decryptedexheader.bin'):
 		return 'ExtHeader'
+	if filename.lower() in ('exefs.bin', 'decryptedexefs.bin'):
+		return 'ExeFS'
+	if filename.lower() in ('romfs.bin', 'decryptedromfs.bin'):
+		return 'RomFS'
 	if len(cnt) >= 4:
 		if cnt[0:4] in MAGICS.keys():
 			return MAGICS[cnt[0:4]]

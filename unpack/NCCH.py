@@ -6,12 +6,14 @@ from util.fileops import *
 import util.rawutil as rawutil
 import util.txtree as txtree
 from collections import OrderedDict
+from hashlib import sha256
 
 from compress.LZ11 import decompressLZ11
 from unpack.ExtHeader import extractExtHeader
+from unpack.ExeFS import extractExeFS
 from unpack.DARC import extractDARC
 
-NCCH_HEADER_STRUCT = '256x 4s IQ2HIQ 16x 32x n16a 32x 2I (8B) 12I 32x32x'
+NCCH_HEADER_STRUCT = '256x 4s IQ2HIQ 16x 32s n16a 32s 2I (8B) 12I 32s32s'
 
 CRYPTO_KEYSLOTS = {
 	0x00: None,
@@ -29,6 +31,9 @@ PLATFORMS = {
 
 class extractNCCH (rawutil.TypeReader):
 	def __init__(self, filename, data, opts={}):
+		self.dochecks = False
+		if 'dochecks' in opts.keys():
+			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
 		self.outdir = make_outdir(filename)
 		self.byteorder = '<'
 		self.readheader(data[0:0x200])
@@ -52,7 +57,7 @@ class extractNCCH (rawutil.TypeReader):
 		self.logo_hash = data[9]
 		self.product_code = data[10].decode('ascii')
 		self.extheader_hash = data[12]
-		self.extheader_size = 2048  #data[13]  #in bytes
+		self.extheader_size = data[13]  #in bytes
 		reserved = data[14]
 		ncchflags = data[15]
 		self.crypto_keyslot = CRYPTO_KEYSLOTS[ncchflags[3]]
@@ -134,10 +139,10 @@ class extractNCCH (rawutil.TypeReader):
 		root['RSA-signature'] = self.rsa_signature
 		root['Hashes'] = OrderedDict()
 		hashes = root['Hashes']
-		hashes['ExeFS'] = self.exefs_hash
-		hashes['RomFS'] = self.romfs_hash
-		hashes['Logo'] = self.logo_hash
-		hashes['ExtHeader'] = self.extheader_hash
+		hashes['ExeFS'] = rawutil.hex(self.exefs_hash)
+		hashes['RomFS'] = rawutil.hex(self.romfs_hash)
+		hashes['Logo'] = rawutil.hex(self.logo_hash)
+		hashes['ExtHeader'] = rawutil.hex(self.extheader_hash)
 		hashes['ID'] = rawutil.hex(self.id_hash, 8)
 		root['Structure'] = OrderedDict()
 		struct = root['Structure']
@@ -158,11 +163,20 @@ class extractNCCH (rawutil.TypeReader):
 		write(final, self.outdir + 'header.txt')
 	
 	def extract_sections(self):
-		extheader = self.data[0x200: 0x200 + self.extheader_size]
+		extheader = self.data[0x200: 0x200 + self.extheader_size * 2]
 		plain = self.data[self.plain_offset: self.plain_offset + self.plain_size]
 		logo = self.data[self.logo_offset: self.logo_offset + self.logo_size]
 		exefs = self.data[self.exefs_offset: self.exefs_offset + self.exefs_size]
 		romfs = self.data[self.romfs_offset: self.romfs_offset + self.romfs_size]
+		if self.dochecks:
+			if sha256(self.data[0x200: 0x200 + self.extheader_size]).digest() != self.extheader_hash:
+				error('Extended header hash mismatch', 305)
+			if sha256(logo).digest() != self.logo_hash and logo != b'':
+				error('Logo hash mismatch', 305)
+			if sha256(exefs[:self.exefs_hashregion_size]).digest() != self.exefs_hash:
+				error('ExeFS hash mismatch', 305)
+			if sha256(romfs[:self.romfs_hashregion_size]).digest() != self.romfs_hash and self.has_romfs:
+				error('RomFS hash mismatch', 305)
 		bwrite(extheader, self.outdir + 'extheader.bin')
 		if len(plain) > 0:
 			bwrite(plain, self.outdir + 'plain.bin')
@@ -180,6 +194,9 @@ class extractNCCH (rawutil.TypeReader):
 		logo_extractor.extract()
 		extheaderpath = self.outdir + 'extheader.bin'
 		extractExtHeader(extheaderpath, bread(extheaderpath))
+		exefspath = self.outdir + 'exefs.bin'
+		exefs_extractor = extractExeFS(exefspath, bread(exefspath), opts={'dochecks': str(self.dochecks)})
+		exefs_extractor.extract()
 
 	def list(self):
 		#Code to list contained files names
