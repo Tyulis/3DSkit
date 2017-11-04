@@ -185,17 +185,17 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			px = (l, l, l, a)
 		elif self.format == RGB565:
 			val = self.unpack_from('H', data, ptr)[0]
-			r = (val >> 11) * 8
-			g = ((val & 0b0000011111100000) >> 5) * 4
-			b = (val & 0b0000000000011111) * 8
+			r = int((val >> 11) * 8.225806451612904)
+			g = int(((val & 0b0000011111100000) >> 5) * 4.0476190476190474)
+			b = int((val & 0b0000000000011111) * 8.225806451612904)
 			px = (r, g, b, 255)
 		elif self.format == RGB8:
 			px = self.unpack_from('3B', data, ptr) + [255]
 		elif self.format == RGBA5551:
 			val = self.unpack_from('H', data, ptr)[0]
-			r = (val >> 11) * 8
-			g = ((val & 0b0000011111000000) >> 6) * 8
-			b = ((val & 0b0000000000111110) >> 1) * 8
+			r = int((val >> 11) * 8.225806451612904)
+			g = int(((val & 0b0000011111000000) >> 6) * 8.225806451612904)
+			b = int(((val & 0b0000000000111110) >> 1) * 8.225806451612904)
 			a = (val & 1) * 255
 			px = (r, g, b, a)
 		elif self.format == RGBA8:

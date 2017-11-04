@@ -28,8 +28,12 @@ CBMD   | e |   |   | .bnr banner[.bin]   | files
 DARC   | x | e |   | .arc .bcma (...)    | files
 GARC   | x |   |   | .garc (none)        | files
 GFA    | x |   |   | .gfa                | files
+NCCH   | x |   |   | .app .cxi .cfa      | sections
 NDS    | x |   |   | .nds                | files
 SARC   | x | x |   | .sarc .arc .szs     | files
+
+There is also:
+	unpack.ExtHeader, to unpack NCCH extended headers (automatic when unpacking an NCCH partition). Needs a specific file name (exheader.bin, extheader.bin or DecryptedExtHeader.bin). Outputs as a TXTree
 ;;;;
 
 Infos on needed arguments:

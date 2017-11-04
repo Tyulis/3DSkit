@@ -8,7 +8,7 @@ class WAV (object):
 	@classmethod
 	def new(cls, rate=44100, channels=2, format=PCM, bitspersample=16):
 		ins = cls()
-		ins.samples = []
+		ins.samples = [[] for i in range(channels)]
 		ins.channels = channels
 		ins.fech = rate
 		ins.format = format
@@ -49,13 +49,13 @@ class WAV (object):
 	
 	def _serialize(self, samples):
 		final = b''
-		#Best optimisation ever.
+		#Best optimisation ever. Totally unreadable.
 		if self.bitspersample == 8:
 			final = b''.join([b''.join([struct.pack('<B', int(e * 127 + 127)) for e in s]) for s in samples])
 		elif self.bitspersample == 16:
 			final = b''.join([b''.join([struct.pack('<h', int(e * 32767)) for e in s]) for s in samples])
 		else:
-			raise ValueError('Not a valid bpsp')
+			raise ValueError('Not a supported bits per sample count')
 		return final
 	
 	def save(self, filename):

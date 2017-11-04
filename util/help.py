@@ -14,6 +14,8 @@ def menu():
 	print('3-Detailed help on program\'s options')
 	print('4-Plugins help')
 	print('5-Error codes list and troubleshooting')
+	print('6-Guide to create new modules and plugins')
+	print('7-Documentation on the 3DSkit\'s developper interface')
 	print('    Enter Q to quit')
 	print('')
 	opt = input('Your choice: ').lower()
@@ -64,6 +66,10 @@ def main_help():
 			continue
 		elif opt == '5':
 			cnt = read(os.path.join('util', 'data', 'errors.txt')).split(';;;;')
+		elif opt == '6':
+			cnt = read(os.path.join('util', 'data', 'contrib.txt')).split(';;;;')
+		elif opt == '7':
+			cnt = read(os.path.join('util', 'data', 'dev.txt')).split(';;;;')
 		else:
 			continue
 		for block in cnt:

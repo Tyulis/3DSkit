@@ -10,7 +10,7 @@ rawutil.register_sub('R', '(2HI)')  #references
 rawutil.register_sub('T', 'I/p1[2HI]')  #ref table
 
 BCSTM_HEADER_STRUCT = '4s2H 2I2H SSS'
-BCSTM_INFO_STRUCT = '4sI RRR (4B11IR) TT $'
+BCSTM_INFO_STRUCT = '4sI RRR (4B11IR) $'
 BCSTM_TRACK_INFO_STRUCT = '2BHR I/p1[B]'
 BCSTM_DSPADPCM_INFO_STRUCT = '8[2h] (2B2h) (2B2h) H'
 BCSTM_IMAADPCM_INFO_STRUCT = '(H2B) (H2B)'
@@ -34,10 +34,11 @@ class SizedRef (object):
 class Reference (object):
 	def __init__(self, data):
 		self.id = data[0]
-		self.offset = self.offset = data[2] if data[2] != 0xffffffff else None
+		self.offset = data[2] if data[2] != 0xffffffff else None
 	
 	def __add__(self, obj):
-		self.offset += obj
+		if self.offset is not None:
+			self.offset += obj
 		return self
 
 
@@ -77,7 +78,7 @@ class IMAADPCMInfo (object):
 
 class extractBCSTM (ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, opts={}):
-		outname = make_outfile(filename, 'wav')
+		self.outname = os.path.splitext(filename)[0]
 		self.read_header(data)
 		self.readINFO()
 		self.readSEEK()
@@ -111,8 +112,26 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		channelinforef = Reference(data[4]) + 8
 		streaminfo = data[5]
 		self.read_streaminfo(streaminfo)
-		trackinforeftable = [Reference(el) + trackinforef.offset for el in data[7]]
-		channelinforeftable = [Reference(el) + channelinforef.offset for el in data[9]]
+		trackinforeftable = []
+		channelinforeftable = []
+		if trackinforef.offset is not None:
+			count, ptr = self.uint32(info, trackinforef.offset)
+			for i in range(count):
+				ref, ptr = self.unpack_from('R', info, ptr, getptr=True)
+				ref = Reference(ref[0])
+				if ref.offset is None:
+					break
+				else:
+					trackinforeftable.append(ref + trackinforef.offset)
+		if channelinforef.offset is not None:
+			count, ptr = self.uint32(info, channelinforef.offset)
+			for i in range(count):
+				ref, ptr = self.unpack_from('R', info, ptr, getptr=True)
+				ref = Reference(ref[0])
+				if ref.offset is None:
+					break
+				else:
+					channelinforeftable.append(ref + channelinforef.offset)
 		self.trackinfo = []
 		for ref in trackinforeftable:
 			offset = ref.offset
@@ -154,26 +173,62 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 	def readSEEK(self):
 		NotImplemented
 	
+	def clamp(self, value):
+		if value < -32767:
+			return -32767
+		elif value > 32767:
+			return 32767
+		else:
+			return value
+	
 	def readDATA(self):
-		self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
+		#self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
 		data = self.data[self.sampledata_ref.offset + 8:]  #Strips the magic
-		self.channels = [[] for i in range(self.channel_count)]
 		ptr = 0
+		channels = [[] for i in range(self.channel_count)]
 		for i in range(self.sampleblock_count):
-			for c in range(channels):
+			for c in range(self.channel_count):
 				block = data[ptr: ptr + self.sampleblock_size]
 				ptr += self.sampleblock_size
-				self.channels[c] += self.decode_block(block, self.channelinfo[c])
+				channels[c] += self.decode_block(block, self.channelinfo[c], i == self.sampleblock_count - 1)
+		if len(self.trackinfo) > 0:
+			for i, info in enumerate(self.trackinfo):
+				track = [channels[j] for j in info.channelindex]
+				wav = WAV.new(rate=self.sample_rate, channels=len(info.channelindex))
+				wav.samples = track
+				outname = self.outname + '_track%d' % i
+				wav.save(make_outfile(outname, 'wav'))
+		else:
+			wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
+			wav.samples = channels
+			outname = self.outname
+			wav.save(make_outfile(outname, 'wav'))
 	
-	def decode_block(self, block, info):
+	def decode_block(self, block, info, last):
 		#Inspirated from vgmstream
 		hist1 = info.context.previous_sample
 		hist2 = info.context.second_previous_sample
 		sample = 0
 		ptr = 0
-		while sample < self.sampleblock_samplecount:
-			header = block[ptr]
+		ret = []
+		samplecount = self.last_sampleblock_samplecount if last else self.sampleblock_samplecount
+		while len(ret) < samplecount:
+			try:
+				header, ptr = self.uint8(block, ptr)
+			except:
+				break
 			scale, coef_index = self.nibbles(header)
 			scale = 1 << scale
-			coef1, coef2 = info.param[coef_index]
-			paf
+			coef1, coef2 = info.param[coef_index % 8]
+			for i in range(7):
+				byte, ptr = self.uint8(block, ptr)
+				nibbles = self.signed_nibbles(byte)
+				if i == 0:
+					adpcm_nibble = nibbles[0]
+				else:
+					adpcm_nibble = nibbles[1]
+				sample = self.clamp(((adpcm_nibble * scale) << 11) + 1024 + ((coef1 * hist1) + (coef2 * hist2)) >> 11)
+				hist2 = hist1
+				hist1 = sample
+				ret.append(sample / 32768)
+		return ret

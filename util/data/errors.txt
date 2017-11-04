@@ -17,7 +17,6 @@ These are the different error codes, and their explaination.
 	204: The packer needs another input format
 	205: Specified file name has not the right format
 		Do what the program says
-	
 ;;;;
 300: Invalid data
 	301: Invalid magic

@@ -1,0 +1,161 @@
++================================================+
+| Documentation on 3DSkit's developper interface |
++================================================+
+
+All these modules are accessible from any content included in 3DSkit: unpackers, packers and plugins
+;;;;
+=== util ===
+
+The util package contains many utilities used by 3DSkit.
+The top-level module contains:
+
+error(msg, errno)
+	Shows an error and exits 3DSkit.
+	Look at errors help for further informations on errnos. Feel free to add new errnos if you don't find your error in the existing ones, but add them in the errors help (util/data/errors.txt)
+
+BOMS = {'>': 0xfeff, '<': 0xfffe}
+	Converts the byte order symbols of rawutil to standard byte-order marks
+
+ENDIANS = {0xfeff: '>', 0xfffe: '<'}
+	Converts the standard byte-order marks to the rawutil's byte order symbols
+;;;;
+=== util.rawutil ===
+
+This module is copied from my other repo https://github.com/Tyulis/rawutil. It is used to work with binary packed data. See its help in the rawutil repo's readme
+;;;;
+=== util.fileops ===
+
+read(filename, encoding='utf-8')
+	Returns the content of a text file as a string, with the given encoding
+
+write(content, filename, encoding='utf-8')
+	Writes the str content to the given file with the given encoding
+
+bread(filename)
+	Returns the content of a binary file as a bytes object
+
+bwrite(content, filename)
+	Writes the bytes-like object content to the given file
+
+make_outdir(filename)
+	Creates the output directory which correspond to the given input file name, and returns its path
+	make_outdir('test/something.sarc') -> 'test/something'
+
+make_outfile(filename, ext)
+	Returns the path of the output file name which correspond to the given input file name, with the given extension
+	make_outfile('test/something.bflim', 'png') -> 'test/somthing.png'
+
+makedirs(filename)
+	Like os.makedirs, but doesn't raise exception if the directory already exists
+
+mkdir(dirname)
+	Like os.mkdir, but doesn't raise exception if the directory already exists 
+
+path(*els)
+	Shortcut for os.path.join
+
+basedir()
+	Reverts the current working directory to the 3DSkit's root path
+;;;;
+=== util.funcops ===
+
+class ClsFunc (object)
+	Creates a class which act as a function
+	The class entrypoint is its main() method, and it returns what the main() method returns
+	To use it, you should create a class which inherits from ClsFunc and which implement the main() method
+
+class FreeObject (object)
+	Creates an empty object. You can define any attribute you want
+
+class attrdict (collections.OrderedDict)
+	Creates a dict which can be used like that:
+		my_attrdict['myattr'] = 'something'
+		my_attrdict.myattr = 'something'
+
+
+class FakeFile (object)
+	Acts like a BytesIO object, but implements the methods of rawutil.TypeReader
+
+clearconsole()
+	Clears the terminal
+
+getsup(lst, num)
+	Returns the element of the list with the nearest greater value from the num argument
+
+split(s, sep)
+	Splits the str or bytes-like object s in segments of length sep. If sep is not an int object, it acts as the str.split method
+
+toascii(string)
+	Converts all the accentuated and non-ascii characters in the string to their ascii equivalent.
+	toascii('à œ €') -> 'a oe E'
+
+byterepr(s)
+	Returns a representation of the bytes object s as a str. Works exactly as the built-in function repr(), but removes the b'' around the string
+;;;;
+=== util.help ===
+
+Contains the utilities for the program's help (-H option). You shouldn't use it
+;;;;
+=== util.image2gif ===
+
+This is the original image2gif module, converted to python3
+
+=== util.txtree ===
+
+Provides a nice text representation of tree data
+
+dump(tree, customs=[])
+	Dumps the tree in a txtree representation. You can natively use dict and collections.OrderedDict objects, or lists, tuples, ints, floats, strings, bools... customs are classes which acts as dict which can be used in the tree.
+	dump({'Root':{'A': [1, 2, 3], 'B': 'Test', 'C': True}}) ->
+	'Root': 
+	|'C': True
+	|'B': 'Test'
+	|'A': list
+	|	|0: 1
+	|	|1: 2
+	|	|2: 3
+
+load(data)
+	Loads tree data from a string txtree representation
+	tree = ''''Root': 
+	|'C': True
+	|'B': 'Test'
+	|'A': list
+	|	|0: 1
+	|	|1: 2
+	|	|2: 3'''
+	load(tree) -> {'Root':{'A': [1, 2, 3], 'B': 'Test', 'C': True}}
+
+;;;;
+=== util.wavy ===
+
+This module provides a simple interface to handle WAV files.
+
+Class methods:
+
+WAV.new(rate=44100, channels=2, format=wavy.PCM, bitspersample=16)
+	Creates a new wave file instance
+
+WAV.load(filename)
+	Loads a WAV file
+
+Methods:
+
+save(filename)
+	Saves the WAV file to the given file
+
+The WAV instance has a samples attribute, which is a list of lists. Each sublist represents a channel. All samples are floats between 0 and 1.
+;;;;
+=== plugins ===
+
+The plugins module contains some utilities for plugins.
+
+getpath()
+	Returns the plugin's root path
+
+readdata(name)
+	Reads a file in text mode in the plugin's data folder
+
+breaddata(name)
+	Reads a file in binary mode in the plugin's data folder
+	

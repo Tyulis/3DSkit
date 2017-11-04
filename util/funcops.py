@@ -37,7 +37,7 @@ class FakeFile (object):
 			self.ptr = len(data)
 		else:
 			if self.ptr + num >= len(self.data):
-				raise IOError('Not as many data to read')
+				raise IOError('Not enough data to read')
 			return self.data[self.ptr:self.ptr + num]
 			self.ptr += num
 	
@@ -139,10 +139,10 @@ def clearconsole():
 	else:
 		os.system('clear')
 	
-def getsup(l, n):
-	l = sorted(l)
-	i = l.index(n)
-	return l[i + 1]
+def getsup(lst, num):
+	lst = sorted(lst)
+	i = lst.index(num)
+	return lst[i + 1]
 
 def split(s, sep):
 	if type(sep) in (str, bytes):

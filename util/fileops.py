@@ -2,8 +2,8 @@
 import os
 import __main__
 
-def read(filename):
-	file = open(filename, 'r', encoding='utf-8')
+def read(filename, encoding='utf-8'):
+	file = open(filename, 'r', encoding=encoding)
 	cnt = file.read()
 	file.close()
 	return cnt
@@ -14,8 +14,8 @@ def bread(filename):
 	file.close()
 	return cnt
 
-def write(content, filename):
-	file = open(filename, 'w', encoding='utf-8')
+def write(content, filename, encoding='utf-8'):
+	file = open(filename, 'w', encoding=encoding)
 	file.write(content)
 	file.close()
 	
@@ -55,3 +55,9 @@ def basedir():
 
 def path(*els):
 	return os.path.join(*els)
+
+def mkdir(dirname):
+	try:
+		os.mkdir(dirname)
+	except FileExistsError:
+		pass

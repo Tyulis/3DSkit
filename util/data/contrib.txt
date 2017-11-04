@@ -1,0 +1,31 @@
++===========================+
+| Developper info on 3DSkit |
++===========================+
+;;;;
+=== Creating an unpacker ===
+;;;;
+-Add the code to recognize the format in the recognize() function in the unpack._formats.py module
+-You can just add the magic in the MAGICS dict with the format name if it's a 4-bytes or 2-bytes magic at the start of the file
+-You can just add the file name extension in the EXTS dict with the format name if the format can only be recognized with file name extension
+-If you need the byte order to be specified, add the format name in the NEEDS_ENDIAN tuple
+-If the decompression should be skipped, for example if the start of the file can be anything and can be misrecognized by the decompressor, add the format name in the SKIP_DECOMPRESSION tuple
+
+-You don't have to edit anything else in unpack/__init__.py or 3DSkit.py
+;;;;
+-Then, use the newmod plugin to create your template
+-run python3 3DSkit.py -g newmod
+-You can now edit your module.
+;;;;
+=== Creating a packer ===
+;;;;
+-Add the packed format name in the formats tuple in pack._formats
+-run python3 3DSkit.py -g newmod
+-You can now edit your module
+;;;;
+=== Creating a plugin ===
+;;;;
+-run python3 3DSkit.py -g newmod
+-Type all required data
+-Then, your plugin template is created in the plugins folder
+-The help.py file is imported by the program's help
+-The main.py file is imported when you use 3DSkit -g MyPlugin

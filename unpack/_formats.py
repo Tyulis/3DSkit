@@ -4,7 +4,7 @@ import sys
 from util import error
 
 
-need_endian = (
+NEEDS_ENDIAN = (
 	'GFA',
 )
 
@@ -21,14 +21,18 @@ MAGICS = {
 	b'CLIM': 'BCLIM',
 	b'CSAR': 'BCSAR',
 	b'CSTM': 'BCSTM',
-	b'BL':   'BL'
+	b'BL':   'BL',
+	b'NCCH': 'NCCH',
+	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
+	b'---a': 'ExtHeader',
+	b'---b': 'NDS',
 }
 
 EXTS = {
 	'nds': 'NDS'
 }
 
-SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM')
+SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH')
 
 
 def recognize(cnt, filename='', format=None):
@@ -37,6 +41,8 @@ def recognize(cnt, filename='', format=None):
 			return format
 		else:
 			error('Unsupported format to extract: %s. Read the formats section of the help for more infos.', 101)
+	if filename.lower() in ('extheader.bin', 'exheader.bin', 'decryptedexheader.bin'):
+		return 'ExtHeader'
 	if len(cnt) >= 4:
 		if cnt[0:4] in MAGICS.keys():
 			return MAGICS[cnt[0:4]]
@@ -46,6 +52,9 @@ def recognize(cnt, filename='', format=None):
 	if len(cnt) >= 0x28:
 		if cnt[-0x28:-0x24] in (b'FLIM', b'CLIM'):
 			return MAGICS[cnt[-0x28:-0x24]]
+	if len(cnt) >= 0x104:
+		if cnt[0x100: 0x104] == b'NCCH':
+			return 'NCCH'
 	try:
 		ext = os.path.split(filename)[-1].lower().split('.')[-1]
 	except IndexError:

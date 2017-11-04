@@ -7,7 +7,7 @@ def extract(content, filename, format, endian, opts):
 	mod = __import__('unpack.%s' % format)
 	cls = eval('mod.%s.extract%s' % (format, format))  #shorter than if magic == 'SARC': extractSARC()...
 	args = [filename, content]
-	if format in need_endian:
+	if format in NEEDS_ENDIAN:
 		args.append(endian)
 	args.append(opts)
 	unpacker = cls(*args)

@@ -37,7 +37,7 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 		ptr = 0
 		final = []
 		while len(final) < self.decsize:
-			flags = self.tobits(self.data[ptr])
+			flags = self.tobits(self.data[ptr], 8)
 			ptr += 1
 			for flag in flags:
 				if flag == 0:

@@ -10,7 +10,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.17.32'
+__version__ = '1.17.33'
 
 
 def parse_opts(s):
@@ -64,7 +64,7 @@ def extract_files(filename, isbigendian, format, opts):
 		print('Extracted!')
 	else:
 		if compression is not None:
-			sname = filename.partition('.')
+			sname = list(filename.partition('.'))
 			sname[0] += '_dec'
 			filename = ''.join(sname)
 			bwrite(content, filename)

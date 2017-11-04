@@ -7,7 +7,7 @@ import builtins
 import binascii
 from collections import OrderedDict
 
-__version__ = '1.15.35'
+__version__ = '1.15.38'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -29,20 +29,20 @@ def lreplace(s, reco, rep):
 		return s
 
 
-def bin(val):
+def bin(val, align=0):
 	if isinstance(val, int):
-		return builtins.bin(val).lstrip('0b')
+		return builtins.bin(val).lstrip('0b').zfill(align)
 	elif type(val) in (bytes, bytearray, list, tuple):
-		return ''.join([builtins.bin(b).lstrip('0b').zfill(8) for b in val])
+		return ''.join([builtins.bin(b).lstrip('0b').zfill(8) for b in val]).zfill(align)
 	else:
 		raise TypeError('Int, bytes or bytearray object is needed')
 
 
-def hex(val):
+def hex(val, align=0):
 	if isinstance(val, int):
-		return builtins.hex(val).lstrip('0x')
+		return builtins.hex(val).lstrip('0x').zfill(align)
 	else:
-		return binascii.hexlify(bytes(val)).decode('ascii')
+		return binascii.hexlify(bytes(val)).decode('ascii').zfill(align)
 
 
 def register_sub(sub, rep):
@@ -70,6 +70,9 @@ class TypeUser (object):
 
 
 class TypeReader (TypeUser):
+	def tobits(self, n, align=8):
+		return [int(bit) for bit in bin(n, align)]
+		
 	def bit(self, n, bit, length=1):
 		mask = ((2 ** length) - 1) << bit
 		return (n & mask) >> (bit - length)
@@ -374,6 +377,8 @@ def _pack(stct, data, byteorder):
 							dataptr += 1
 				elif tp == 'a':
 					pad = c - (len(final) % c)
+					if pad >= c:
+						pad = 0
 					final += b'\x00' * pad
 				elif tp == 'x':
 					final += struct.pack(byteorder + str(c) + 's', binascii.unhexlify(data[dataptr].encode('ascii')))
@@ -575,8 +580,9 @@ def _unpack(stct, data, byteorder, refdata=(), retused=False):
 					bracklvl -= 1
 				c += el
 			c = c[1:-1]
-			final.append(_unpack(c, data[ptr:ptr + _calcsize(byteorder + c, data)], byteorder)[0])
-			ptr += _calcsize(byteorder + c, data)
+			sub, used = _unpack(c, data[ptr:], byteorder)
+			final.append(sub)
+			ptr += used
 		elif c == '{':
 			bracklvl = 1
 			while bracklvl != 0:

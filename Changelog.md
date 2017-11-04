@@ -166,5 +166,10 @@
 **v1.17**
 
 *	v1.17.32
+	*	Added unpack.NCCH
+	*	Added unpack.ExtHeader
 	*	Added an error codes system and added the errors help
+*	v1.17.33
 	*	Updated the readme
+	*	Improved colors precision for RGB565 and RGBA5551 formats of BFLIM files
+	*	Updated rawutil

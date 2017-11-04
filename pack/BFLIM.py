@@ -153,15 +153,15 @@ class packBFLIM(ClsFunc, TypeWriter):
 		elif self.format == RGB8:
 			return self.pack('3B', r, g, b)
 		elif self.format == RGB565:
-			r = (r // 8) << 11
-			g = (g // 4) << 5
-			b = (b // 8)
+			r = math.ceil(r / 8.225806451612904) << 11
+			g = math.ceil(g / 4.0476190476190474) << 5
+			b = math.ceil(b / 8.225806451612904)
 			return self.pack('H', r + g + b)
 		elif self.format == RGBA5551:
 			a = int(a != 0)
-			r = (r // 8) << 11
-			g = (g // 8) << 6
-			b = (b // 8) << 1
+			r = math.ceil(r // 8.225806451612904) << 11
+			g = math.ceil(g // 8.225806451612904) << 6
+			b = math.ceil(b // 8.225806451612904) << 1
 			return self.pack('H', r + g + b + a)
 		elif self.format == RGBA4:
 			r = (r // 0x11) << 12
