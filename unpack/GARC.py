@@ -61,7 +61,7 @@ class extractGARC (rawutil.TypeReader):
 			self.larger_unpadded = padinfo[1]
 			self.pad_to_nearest = padinfo[2]
 		else:
-			error('Unsupported version 0x%04x' % self.version, 304
+			error('Unsupported version 0x%04x' % self.version, 304)
 		return ptr
 	
 	def readFATO(self, data, ptr):
