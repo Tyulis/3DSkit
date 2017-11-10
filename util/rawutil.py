@@ -7,7 +7,7 @@ import builtins
 import binascii
 from collections import OrderedDict
 
-__version__ = '1.15.38'
+__version__ = '1.15.40'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -43,6 +43,12 @@ def hex(val, align=0):
 		return builtins.hex(val).lstrip('0x').zfill(align)
 	else:
 		return binascii.hexlify(bytes(val)).decode('ascii').zfill(align)
+
+def hextoint(hx):
+	return int(hx, 16)
+
+def hextobytes(hx):
+	return binascii.unhexlify(hx.encode('ascii'))
 
 
 def register_sub(sub, rep):
@@ -491,8 +497,8 @@ def _unpack(stct, data, byteorder, refdata=(), retused=False):
 						string = data[ptr:null + ptr]
 						final.append(string)
 						ptr += len(string) + 1
-				elif c == 'u':
-					for i in range(0, c):
+				elif tp == 'u':
+					for _ in range(0, c):
 						bnum = data[ptr:ptr + 3]
 						ptr += 3
 						endian = ENDIANNAMES[byteorder]
@@ -500,8 +506,8 @@ def _unpack(stct, data, byteorder, refdata=(), retused=False):
 						if num >= 0x800000:
 							num = num - 0x1000000
 						final.append(num)
-				elif c == 'U':
-					for i in range(0, c):
+				elif tp == 'U':
+					for _ in range(0, c):
 						bnum = data[ptr:ptr + 3]
 						ptr += 3
 						endian = ENDIANNAMES[byteorder]

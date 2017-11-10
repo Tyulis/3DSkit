@@ -63,7 +63,7 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 	def extract_sci(self):
 		root = self.tree['SCI']
 		data = self.unpack(EXTHEADER_SCI_STRUCT, self.sci)
-		root['App-Title'] = data[0].decode('ascii')
+		root['App-Title'] = data[0].rstrip(b'\x00').decode('ascii')
 		reserved = data[1]
 		flags = data[2]
 		root['Compress-ExeFS-code'] = bool(flags & 1)

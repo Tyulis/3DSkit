@@ -42,6 +42,23 @@ How to use
 		-O OPTIONS, --options OPTIONS
 								Format-specific options, see help for details
 
+#Format-Specific options
+
+Specify these options with the -O option (see options help)
+You can specify them with -O{option=value} or -O{option1=value1;option2=value2}
+
+**At extraction**:
+
+*	NCCH / ExeFS:
+	*	**dochecks**: If "true", checks if the contents hashes match. Defaults to false.
+
+**At packing**:
+
+*	BFLIM:
+	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format  of original without any problem, for example for ETC1, not supported at packing. Defaults to RGBA8
+		
+	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
+
 Dependencies
 ============
 To access all 3DSkit functionnalities, you need:

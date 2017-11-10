@@ -74,6 +74,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 			self.strformat = opts['format'].upper()
 		else:
 			self.format = RGBA8
+		if 'swizzle' not in opts.keys():
+			opts['swizzle'] = '0'
 		img = self.swizzle(img, opts['swizzle'])
 		data = self.repack_data(img)
 		final = data

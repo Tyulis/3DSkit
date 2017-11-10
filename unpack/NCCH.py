@@ -11,6 +11,7 @@ from hashlib import sha256
 from compress.LZ11 import decompressLZ11
 from unpack.ExtHeader import extractExtHeader
 from unpack.ExeFS import extractExeFS
+from unpack.RomFS import extractRomFS
 from unpack.DARC import extractDARC
 
 NCCH_HEADER_STRUCT = '256x 4s IQ2HIQ 16x 32s n16a 32s 2I (8B) 12I 32s32s'
@@ -168,6 +169,10 @@ class extractNCCH (rawutil.TypeReader):
 		logo = self.data[self.logo_offset: self.logo_offset + self.logo_size]
 		exefs = self.data[self.exefs_offset: self.exefs_offset + self.exefs_size]
 		romfs = self.data[self.romfs_offset: self.romfs_offset + self.romfs_size]
+		if len(logo) > 0:
+			self.has_logo = True
+		else:
+			self.has_logo = False
 		if self.dochecks:
 			if sha256(self.data[0x200: 0x200 + self.extheader_size]).digest() != self.extheader_hash:
 				error('Extended header hash mismatch', 305)
@@ -187,16 +192,20 @@ class extractNCCH (rawutil.TypeReader):
 			bwrite(romfs, self.outdir + 'romfs.bin')
 
 	def extract_subs(self):
-		logopath = self.outdir + 'logo.darc'
-		raw = bread(logopath)
-		content = decompressLZ11(raw)
-		logo_extractor = extractDARC(logopath, content)
-		logo_extractor.extract()
+		if self.has_logo:
+			logopath = self.outdir + 'logo.darc'
+			raw = bread(logopath)
+			content = decompressLZ11(raw)
+			logo_extractor = extractDARC(logopath, content)
+			logo_extractor.extract()
 		extheaderpath = self.outdir + 'extheader.bin'
 		extractExtHeader(extheaderpath, bread(extheaderpath))
 		exefspath = self.outdir + 'exefs.bin'
 		exefs_extractor = extractExeFS(exefspath, bread(exefspath), opts={'dochecks': str(self.dochecks)})
 		exefs_extractor.extract()
+		romfspath = self.outdir + 'romfs.bin'
+		romfs_extractor = extractRomFS(romfspath, bread(romfspath), opts={'dochecks': str(self.dochecks)})
+		romfs_extractor.extract()
 
 	def list(self):
 		#Code to list contained files names

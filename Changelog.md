@@ -133,7 +133,7 @@
 	*	Fixed plugin loading issue when other options are specified <br>
 *	v1.14.25:
 	*	Fixed some bugs in color packing by rawutil
-	*	Fixed some bugs in pack.BFLYT (mat1 offsets table length calculation issue, thanks to ericjwg, and materials offsets mismatch)
+	*	Fixed some bugs in pack.BFLYT (mat1 offsets table length calculation issue, thanks to __ericjwg__, and materials offsets mismatch)
 *	v1.14.26:
 	*	Fixed a huge bug with {} structures packing in rawutil
 	*	Fixed a stupid error in unpack.SARC
@@ -176,5 +176,13 @@
 	*	Updated rawutil
 *	v1.17.34
 	*	Added unpack.ExeFS
-	*	Added the dochecks option for unpack.NCCH and unpack.ExeFS to check files and sections hashes
 	*	Small orthographic fixes in the help and the changelog
+*	v1.17.35
+	*	Added the dochecks option for unpack.NCCH and unpack.ExeFS to check files and sections hashes
+	*	Fixed a huge bug which prevents use of uint24 and int24 in unpacking functions of rawutil
+*	v1.17.36
+	*	Merged:
+		*	Syntax fix in unpack.GARC (by ObscenityIB)
+		*	Fix of \_alyt\_ folder detection in pack.ALYT (by hlixed)
+	*	Fixed the error when the swizzle option is not specified to pack.BFLIM (thanks to hlixed)
+	*	Improved the readme
