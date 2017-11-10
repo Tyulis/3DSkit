@@ -16,11 +16,12 @@ class packALYT (ClsFunc, TypeWriter):
 		bwrite(final, outname)
 	
 	def getmeta(self, filenames):
-		self.files = [name for name in filenames if os.path.dirname(name) != '_alyt_']
+		self.files = [name for name in filenames if os.path.basename(os.path.dirname(name)) != '_alyt_']
 		if len(self.files) == len(filenames):
 			#no _alyt_ folder, aborting
 			error('No _alyt_ folder in the specified directory', 401)
-		metadir = '_alyt_' + os.path.sep
+		self.alyt_folder = [os.path.dirname(name) for name in filenames if os.path.basename(os.path.dirname(name)) == '_alyt_'][0] # horrible hack; should probably be passed as an argument
+		metadir = self.alyt_folder + os.path.sep
 		try:
 			file = metadir + 'LTBL.bin'
 			self.ltbl = bread(file)
