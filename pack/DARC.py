@@ -6,12 +6,13 @@ from util.funcops import ClsFunc
 from util import error, BOMS
 
 DARC_HEADER_STRUCT = '4s4H4I'
-DARC_TABLE_STRUCT = '#0[3I]'
+DARC_TABLE_STRUCT = '{3I}'
 
 
 class packDARC (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, opts={}):
+	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		self.outname = outname
 		tree = self.make_tree(filenames)
 		final = self.pack_sections(tree)

@@ -19,14 +19,15 @@ class DARCTableEntry (object):
 
 
 class extractDARC (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
+		self.verbose = verbose
 		ptr = self.readhdr(data)
 		ptr = self.readtable(data, ptr)
 		self.data = data
 	
 	def readhdr(self, data):
-		magic, endian = rawutil.unpack_from('>4sH', data, 0)
+		magic, endian = self.unpack_from('>4sH', data, 0)
 		if magic != b'darc':
 			error('Invalid magic %s, expected darc' % byterepr(magic), 301)
 		self.byteorder = ENDIANS[endian]
@@ -40,13 +41,15 @@ class extractDARC (rawutil.TypeReader):
 		self.tableoffset = hdr[6]
 		self.tablelen = hdr[7]
 		self.dataoffset = hdr[8]
+		if self.verbose:
+			print('Version: %08x' % self.version)
 		return ptr
 	
 	def readtable(self, data, ptr):
 		rawtable = data[self.tableoffset:self.tableoffset + self.tablelen]
 		root = self.unpack_from('3I', data, ptr)
 		entrynum = root[2]
-		tablebs, ptr = self.unpack_from(DARC_TABLE_STRUCT, data, ptr, refdata=[entrynum], getptr=True)
+		tablebs, ptr = self.unpack_from(DARC_TABLE_STRUCT, data, ptr, refdata = [entrynum], getptr=True)
 		self.table = [DARCTableEntry(entry) for entry in tablebs[0]]
 		for i, entry in enumerate(self.table):
 			self.table[i].name, end = self.utf16string(data, entry.nameoffset + ptr)
@@ -71,4 +74,6 @@ class extractDARC (rawutil.TypeReader):
 			elif not entry.isdir:  #because of null and .
 				filedata = self.data[entry.dataoffset:entry.dataoffset + entry.datalength]
 				path = os.path.join(*(actfolder + [entry.name]))
+				if self.verbose:
+					print('Extracting %s' % path)
 				bwrite(filedata, path)

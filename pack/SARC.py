@@ -21,8 +21,9 @@ class SFATnode (object):
 
 
 class packSARC (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, opts={}, embedded=False):
+	def main(self, filenames, outname, endian, verbose, opts={}, embedded=False):
 		self.byteorder = endian
+		self.verbose = verbose
 		self.embedded = embedded  #Used for embedded SARC sections in other files such as ALYT
 		self.hash_multiplier = 0x65
 		self.outname = outname
@@ -54,14 +55,16 @@ class packSARC (ClsFunc, TypeWriter):
 			data += bread(node.name)
 			data_end = len(data)
 			data += self.align(data, 0x80)
-			sfnt += self.string4(node.name)
+			sfnt += self.pack('n', node.name)
+			sfnt += self.align(sfnt, 4)
 			sfat += self.pack(SFAT_NODE_STRUCT, node.hash, name_offset, data_start, data_end)
+		sfat = self.pack(SFAT_HEADER_STRUCT, b'SFAT', 12, len(self.nodes), self.hash_multiplier) + sfat
+		sfnt += self.align(sfat, 0x100)
+		sfnt = self.pack(SFNT_HEADER_STRUCT, b'SFNT', 8, 0) + sfnt
 		sfnt += self.align(sfnt, 0x100)
-		sfathdr = self.pack(SFAT_HEADER_STRUCT, b'SFAT', 12, len(self.nodes), self.hash_multiplier)
-		sfnthdr = self.pack(SFNT_HEADER_STRUCT, b'SFNT', 8, 0)
-		meta = sfathdr + sfat + sfnthdr + sfnt
+		meta = sfat + sfnt
 		final = meta + data
-		sarchdr = self.pack(SARC_HEADER_STRUCT, b'SARC', 20, BOMS[self.byteorder], len(final) + 20, len(meta) + 20, 0x00000100)
+		sarchdr = self.pack(SARC_HEADER_STRUCT, b'SARC', 20, 0xfeff, len(final) + 20, len(meta) + 20, 0x00000100)
 		final = sarchdr + final
 		if self.embedded:
 			return final

@@ -4,9 +4,10 @@ from util import error, ENDIANS
 from util.fileops import *
 from util.funcops import byterepr
 import util.rawutil as rawutil
+from unpack._formats import get_ext
 
 SARC_HEADER_STRUCT = '4s2H3I'
-SFAT_STRUCT = '4s2HI/2[4I]'
+SFAT_STRUCT = '4s2HI /2[4I]'
 SFNT_HEADER_STRUCT = '4s2H'
 
 
@@ -20,8 +21,9 @@ class SFATnode (object):
 
 
 class extractSARC (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
+		self.verbose = verbose
 		ptr = self.readheader(data)
 		ptr = self.readSFAT(data, ptr)
 		self.readSFNT(data, ptr)
@@ -66,13 +68,17 @@ class extractSARC (rawutil.TypeReader):
 				if self.calc_hash(filename) != node.hash:
 					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash), 305)
 			else:
-				node.name = '0x%08x.noname.bin' % node.hash
+				node.name = '0x%08x.noname' % node.hash
 			self.nodes[i] = node
 	
 	def extract(self):
 		for node in self.nodes:
 			filedata = self.data[self.dataoffset + node.data_start:self.dataoffset + node.data_end]
+			if node.name.endswith('.noname'):
+				node.name += get_ext(filedata)
 			makedirs(self.outdir + node.name)
+			if self.verbose:
+				print('Extracting %s' % self.outdir + node.name)
 			bwrite(filedata, self.outdir + node.name)
 	
 	def list(self):

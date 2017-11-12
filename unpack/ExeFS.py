@@ -18,8 +18,9 @@ class FileEntry (object):
 
 
 class extractExeFS (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
+		self.verbose = verbose
 		self.dochecks = False
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False

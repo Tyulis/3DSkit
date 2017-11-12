@@ -24,6 +24,7 @@ How to use
 	optional arguments:
 		-h, --help            show this help message and exit
 		-H, --detailed_help   Detailed help (you should read it the first time you use 3DSkit)
+		-v, --verbose         Increases the 3DSkit's verbosity
 		-t, --list            Lists the files contained in an archive
 		-x, --extract         Extract files contained in the archive / decompress the file if necessary and convert it to a readable format
 		-p, --pack            Pack files into an archive, or convert it to a console format
@@ -42,7 +43,8 @@ How to use
 		-O OPTIONS, --options OPTIONS
 								Format-specific options, see help for details
 
-#Format-Specific options
+Format-Specific options
+=======================
 
 Specify these options with the -O option (see options help)
 You can specify them with -O{option=value} or -O{option1=value1;option2=value2}
@@ -59,13 +61,59 @@ You can specify them with -O{option=value} or -O{option1=value1;option2=value2}
 		
 	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
 
+Supported formats
+=================
+
+Info on the table:
+
+*	X (Extract): 3DSkit can extract these files
+*	P (Pack): 3DSkit can create and pack these files from scratch
+*	R (Repack): 3DSkit can only repack files which have been extracted by 3DSkit
+*	Extensions: Frequent file extensions or names for this format (all formats can sometimes have the .bin extension)
+
+Crosses:
+
+*	x : full support
+*	e : experimental / untested
+*	p : partial support
+*	n : not functional
+*	b : bugged
+*	  : no support
+	
+Output: Output format at extracting. See the output formats help for informations
+
+	Format | X | P | R | Extensions          | Output
+	--------------------------------------------------
+	ALYT   | x |   | x | .alyt               | files
+	BCLYT  | p |   |   | .bclyt              | TX
+	BCSAR  | b |   |   | .bcsar              | files
+	BFLIM  | x | x |   | .bflim              | PNG
+	BFLYT  | x |   | x | .bflyt              | TX
+	BL     | e |   | e | .bl                 | files
+	CBMD   | e |   |   | .bnr banner[.bin]   | files
+	DARC   | x | e |   | .arc .bcma (...)    | files
+	GARC   | x |   |   | .garc (none)        | files
+	GFA    | x |   |   | .gfa                | files
+	NCCH   | x |   |   | .app .cxi .cfa      | sections
+	NDS    | x |   |   | .nds                | files
+	SARC   | x | x |   | .sarc .arc .szs     | files
+
+There is also:
+
+*	unpack.ExtHeader:
+	*	Unpacks NCCH extended headers (automatic when unpacking an NCCH partition). Needs a specific file name (exheader.bin, extheader.bin or DecryptedExtHeader.bin) to be recognized. Outputs as a TXTree
+*	unpack.ExeFS:
+	*	Unpack ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
+*	unpack.RomFS:
+	*	Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized [Actually not completely implemented]
+
 Dependencies
 ============
 To access all 3DSkit functionnalities, you need:
 
-*	python3 (tested under python 3.5 and 3.6, but it should work with previous versions)
+*	python3 (tested under python 3.5 and 3.6, but it should work from 3.2 to 3.6+)
 *	Pillow (Fork of PIL, use sudo apt-get install python3-pil)
-*	struct (it should be installed by default with python)
+*	struct (it should be installed by default with python3)
 
 Contributing
 ============

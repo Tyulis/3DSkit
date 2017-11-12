@@ -27,7 +27,7 @@ def setuplist():
 	print(gensetup(bin))
 
 
-def main(options):
+def main(options, verbose):
 	'''The plugin's entry point. Options are strings placed instead of the normal input name argument'''
 	lang = options[0]
 	opt = None

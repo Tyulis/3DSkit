@@ -8,12 +8,13 @@ from unpack.SARC import extractSARC
 from collections import OrderedDict
 from util.txtree import dump
 
-ALYT_META_STRUCT = '4s9I /3s /5s /7s128a I/14[n64a] I/16[n32a]128a'
+ALYT_META_STRUCT = '4s9I /3s /5s /7s128a I/p1[n64a] I/p1[n32a]128a'
 ALYT_LTBL_STRUCT = '4s2H /2[I] /2[4H(3I) /1[H]4a /1[H]4a /2[I]]'
 
 
 class extractALYT (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		self.outdir = make_outdir(filename)
 		try:
 			os.mkdir(self.outdir + '_alyt_')
@@ -22,7 +23,7 @@ class extractALYT (rawutil.TypeReader):
 		self.metapath = self.outdir + '_alyt_' + os.path.sep
 		self.byteorder = '<'
 		self.readmeta(data)
-		self.extractor = extractSARC(filename, self.sarc)
+		self.extractor = extractSARC(filename, self.sarc, self.verbose)
 		self.list = self.extractor.list
 
 	def readmeta(self, data):
@@ -32,8 +33,8 @@ class extractALYT (rawutil.TypeReader):
 		self.ltbl = meta[10]
 		self.lmtl = meta[11]
 		self.lfnl = meta[12]
-		self.nametable = [el[0].decode('utf-8') for el in meta[15]]
-		self.symtable = [el[0].decode('utf-8') for el in meta[17]]
+		self.nametable = [el[0].decode('utf-8') for el in meta[14]]
+		self.symtable = [el[0].decode('utf-8') for el in meta[16]]
 		self.sarc = data[ptr:]
 
 	def extract(self):
@@ -53,8 +54,8 @@ class extractALYT (rawutil.TypeReader):
 			entry['BFLYT'] = self.nametable[edat[0]]
 			entry['unknown'] = edat[3]
 			entry['prt1'] = [self.symtable[el[0]] for el in edat[5]]
-			entry['links'] = [self.symtable[el[0]] for el in edat[7]]
-			entry['animations'] = [self.nametable[el[0]] for el in edat[9]]
+			entry['links'] = [self.symtable[el[0]] for el in edat[6]]
+			entry['animations'] = [self.nametable[el[0]] for el in edat[7]]
 			final.append(entry)
 		write(dump({'LTBL': final}), self.metapath + 'LTBL.txt')
 

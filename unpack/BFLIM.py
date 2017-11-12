@@ -74,8 +74,9 @@ ETC1_MODIFIERS = [
 ]
 
 class extractBFLIM(ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
 		self.outfile = make_outfile(filename, 'png')
+		self.verbose = verbose
 		data = self.readheader(data)
 		if self.format in (ETC1, ETC1A4, ETC1_2):
 			self.decompress_ETC1(data)
@@ -115,8 +116,13 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		self.swizzle = hdata[6]
 		print('Texture swizzling: %d' % self.swizzle)
 		#datalen = hdata[7]
+		if self.verbose:
+			print('Width: %d' % self.width)
+			print('Height: %d' % self.height)
 		
 	def extract(self, data):
+		if self.verbose:
+			print('Extracting pixel data')
 		img = Image.new('RGBA', (self.width, self.height))
 		self.pixels = img.load()
 		
@@ -167,7 +173,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 									if outpos_y >= self.height or outpos_x >= self.width:
 										continue
 									self.pixels[outpos_x, outpos_y] = rgba
-									#assert rgba[3] == 0
+									#assert rgba[3] ==  0
 									
 	def getpixel(self, data, ptr=0, subpx=0):
 		if self.format == L8:
@@ -222,6 +228,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		return tuple(px)
 		
 	def deswizzle(self, img):
+		if self.verbose and self.swizzle != 0:
+			print('Deswizzling')
 		if self.swizzle == 4:
 			img = img.rotate(90)
 		elif self.swizzle == 8:
@@ -236,6 +244,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		
 	def decompress_ETC1(self, data):
 		#Based on ObsidianX's BFLIM ETC1 decompression algorithm (https://github.com/ObsidianX/3dstools)
+		if verbose:
+			print('Decompressing pixel data')
 		has_alpha = (self.format == ETC1A4)
 		blklen = (16 if has_alpha else 8)
 		img = Image.new('RGBA', (self.height, self.width))

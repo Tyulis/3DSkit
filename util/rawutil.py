@@ -5,9 +5,8 @@ import sys
 import struct
 import builtins
 import binascii
-from collections import OrderedDict
 
-__version__ = '1.15.40'
+__version__ = '2.2.2'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -18,15 +17,6 @@ ENDIANNAMES = {
 }
 
 SUBS = {}
-
-
-def lreplace(s, reco, rep):
-	if reco in s:
-		l = list(s.partition(reco))
-		l[1] = rep
-		return ''.join(l)
-	else:
-		return s
 
 
 def bin(val, align=0):
@@ -44,35 +34,67 @@ def hex(val, align=0):
 	else:
 		return binascii.hexlify(bytes(val)).decode('ascii').zfill(align)
 
+
 def hextoint(hx):
 	return int(hx, 16)
 
+
 def hextobytes(hx):
-	return binascii.unhexlify(hx.encode('ascii'))
+	if type(hx) == str:
+		hx = hx.encode('ascii')
+	return binascii.unhexlify(hx)
 
 
 def register_sub(sub, rep):
 	SUBS[sub] = rep
 
 
+class _ClsFunc (object):
+	def __new__(cls, *args, **kwargs):
+		ins = object.__new__(cls)
+		return ins.main(*args, **kwargs)
+
+
 class TypeUser (object):
 	def __init__(self, byteorder='@'):
 		self.byteorder = byteorder
 	
-	def pack(self, stct, *data):
-		if stct[0] not in ENDIANNAMES.keys():
-			stct = self.byteorder + stct
-		return pack(stct, *data)
+	def pack(self, stct, *data, out=None):
+		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
+		stct = stct.lstrip('<>=!@')
+		stct = stct.replace(' ', '')
+		if len(SUBS) > 0:
+			for sub in SUBS.keys():
+				stct = stct.replace(sub, SUBS[sub])
+		data = list(data)
+		for i, el in enumerate(data):
+			if isinstance(el, str):
+				data[i] = el.encode('utf-8')
+		packed = _pack(stct, data, byteorder, out)
+		return packed
 	
 	def unpack(self, stct, data, refdata=()):
-		if stct[0] not in ENDIANNAMES.keys():
-			stct = self.byteorder + stct
-		return unpack(stct, data, refdata)
+		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
+		stct = stct.lstrip('<>=!@')
+		stct = stct.replace(' ', '')
+		if len(SUBS) > 0:
+			for sub in SUBS.keys():
+				stct = stct.replace(sub, SUBS[sub])
+		unpacked, ptr = _unpack(stct, data, 0, byteorder, refdata)
+		return unpacked
 	
 	def unpack_from(self, stct, data, offset=0, refdata=(), getptr=False):
-		if stct[0] not in ENDIANNAMES.keys():
-			stct = self.byteorder + stct
-		return unpack_from(stct, data, offset, refdata, getptr)
+		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
+		stct = stct.lstrip('<>=!@')
+		stct = stct.replace(' ', '')
+		if len(SUBS) > 0:
+			for sub in SUBS.keys():
+				stct = stct.replace(sub, SUBS[sub])
+		unpacked, ptr = _unpack(stct, data, offset, byteorder, refdata)
+		if getptr:
+			return unpacked, ptr
+		else:
+			return unpacked
 
 
 class TypeReader (TypeUser):
@@ -141,36 +163,18 @@ class TypeReader (TypeUser):
 	
 	def utf16string(self, data, ptr):
 		subdata = data[ptr:]
-		try:
-			end = subdata.index(b'\x00\x00')
-			end += (end % 2)
-		except:
-			end = -1
+		s = []
+		zeroes = 0
+		for i, c in enumerate(subdata):
+			if c == 0:
+				zeroes += 1
+			else:
+				zeroes = 0
+			s.append(c)
+			if zeroes >= 2 and i % 2 == 1:
+				break
 		endian = 'le' if self.byteorder == '<' else 'be'
-		if end == -1:
-			return subdata.decode('utf-16-%s' % endian), ptr + len(subdata)
-		else:
-			return subdata[:end].decode('utf-16-%s' % endian), ptr + end + 2
-	
-	def color(self, data, ptr, format):
-		format = format.upper().strip()
-		if format == 'RGBA8':
-			sz = 4
-		elif format == 'RGB8':
-			sz = 3
-		if format in ('RGBA8', 'RGB8'):
-			r = data[offset]
-			g = data[offset + 1]
-			b = data[offset + 2]
-			if format == 'RGBA8':
-				a = data[offset + 3]
-			final = OrderedDict()
-			final['RED'] = r
-			final['GREEN'] = g
-			final['BLUE'] = b
-			if format == 'RGBA8':
-				final['ALPHA'] = a
-		return final, offset + sz
+		return bytes(s[:-2]).decode('utf-16-%s' % endian), ptr + i
 
 
 class TypeWriter (TypeUser):
@@ -234,7 +238,7 @@ class TypeWriter (TypeUser):
 		return b'\x00' * num
 	
 	def align(self, data, alignment):
-		padding = alignment - (len(data) % alignment)
+		padding = alignment - (len(data) % alignment or alignment)
 		return b'\x00' * padding
 	
 	def color(self, data, format):
@@ -314,149 +318,403 @@ class FileReader (object):
 		return s
 
 
+class _InternRef (object):
+	def __init__(self, type='s', index=1):
+		self.type, self.index = type, index
+	
+	def __repr__(self):
+		return '/%s%d' % (self.type, self.index)
+
+
+class _Sub (object):
+	def __init__(self, type, structure):
+		self.type, self.stct = type, structure
+	
+	def __repr__(self):
+		return '%s%s%s' % (self.type[0], self.stct, self.type[1])
+
+
+class _StructParser (object):
+	def parse_struct(self, stct, refdata=()):
+		ptr = 0
+		final = []
+		for i, el in enumerate(refdata):
+			stct = stct.replace('#%d' % i, str(el))
+		while ptr < len(stct):
+			el = stct[ptr]
+			ptr += 1
+			if el.isdigit():
+				countstr = ''
+				while el.isdigit():
+					countstr += el
+					el = stct[ptr]
+					ptr += 1
+				count = int(countstr)
+			elif el == '/':
+				el = stct[ptr]
+				ptr += 1
+				indexstr = ''
+				if el in 'sp':
+					type = el
+					el = stct[ptr]
+					ptr += 1
+				else:
+					type = 's'
+				while el.isdigit():
+					indexstr += el
+					el = stct[ptr]
+					ptr += 1
+				index = int(indexstr)
+				count = _InternRef(type, index)
+			else:
+				count = 1
+			if el in '([{':
+				level = 1
+				open = el
+				close = ')' if el == '(' else (']' if el == '[' else '}')
+				substruct = ''
+				while level > 0:
+					el = stct[ptr]
+					ptr += 1
+					if el == open:
+						level += 1
+					elif el == close:
+						level -= 1
+					substruct += el
+				substruct = substruct[0:-1]  #removes the last close bracket
+				el = _Sub(open + close, self.parse_struct(substruct))
+			token = (count, el)
+			final.append(token)
+		return final
+
+
 def _calcsize(stct, data):
 	stct = stct.replace('u', 'hb').replace('U', 'HB')
 	stct = stct.replace('(', '').replace(')', '')
 	return struct.calcsize(stct)
 
 
-def _pack(stct, data, byteorder):
-	data = list(data)
-	for i in range(len(data)):
-		if isinstance(data[i], str):
-			data[i] = data[i].encode('utf-8')
-	finalstct = ''
-	j = 0
-	while j < len(stct):
-		c = stct[j]
-		j += 1
-		if c in ('/', '#', '-'):
-			idx = ''
-			while stct[j].isdigit():
-				idx += stct[j]
-				j += 1
-			idx = int(idx)
-			if c == '/':
-				res = str(data[idx])
-			elif c == '#':
-				res = str(data[idx])
-			elif c == '-':
-				res = str(len(data[idx]))
-			finalstct += res
+class _unpack (_ClsFunc, _StructParser):
+	def main(self, stct, data, ptr, byteorder, refdata=()):
+		self.data = data
+		self.byteorder = byteorder
+		self.endianname = ENDIANNAMES[byteorder]
+		stct = self.parse_struct(stct, refdata)
+		if hasattr(self.data, 'read'):
+			self.data.seek(ptr)
+			return self.unpack_file(stct)
 		else:
-			finalstct += c
-	stct = finalstct
-	i = 0
-	final = b''
-	dataptr = 0
-	while i < len(stct):
-		c = stct[i]
-		i += 1
-		if c.isdigit():
-			while stct[i].isdigit():
-				c += stct[i]
-				i += 1
-			c = int(c)
-			tp = stct[i]
-			i += 1
-			if tp.isalpha():
-				if tp not in 'xas':
-					s = tp * c
-					for el in s:
-						if el == 'n':
-							final += data[dataptr] + b'\x00'
-							dataptr += 1
-						elif el == 'u':
-							n = data[dataptr]
-							dataptr += 1
-							if abs(n) >= 0x800000:
-								raise struct.error('Number for int24 > 8388607 (0x800000)')
-							if n < 0:
-								n = 0x1000000 + n
-							final += n.to_bytes(3, ('little' if byteorder == '<' else 'big'))
-						elif el == 'U':
-							n = data[dataptr]
-							dataptr += 1
-							final += n.to_bytes(3, ('little' if byteorder == '<' else 'big'))
-						else:
-							final += struct.pack(byteorder + el, data[dataptr])
-							dataptr += 1
-				elif tp == 'a':
-					pad = c - (len(final) % c)
-					if pad >= c:
-						pad = 0
-					final += b'\x00' * pad
-				elif tp == 'x':
-					final += struct.pack(byteorder + str(c) + 's', binascii.unhexlify(data[dataptr].encode('ascii')))
-					dataptr += 1
-				else:
-					final += struct.pack(byteorder + str(c) + tp, data[dataptr])
-					dataptr += 1
-			elif tp == '[':
-				bracklvl = 1
-				while bracklvl != 0:
-					el = stct[i]
-					i += 1
-					if el == '[':
-						bracklvl += 1
-					elif el == ']':
-						bracklvl -= 1
-					tp += el
-				datalist = data[dataptr]
-				dataptr += 1
-				for j in range(0, c):
-					final += _pack(tp[1:-1], datalist[j], byteorder)
-		elif c.isalpha():
-			if c == 'n':
-				final += data[dataptr] + b'\x00'
-				dataptr += 1
-			elif c == 'u':
-				n = data[dataptr]
-				dataptr += 1
-				if abs(n) >= 0x800000:
-					raise struct.error('Number for int24 > 8388607')
-				if n < 0:
-					n = 0x1000000 + n
-				final += n.to_bytes(3, ENDIANNAMES[byteorder])
-			elif c == 'U':
-				n = data[dataptr]
-				dataptr += 1
-				final += n.to_bytes(3, ENDIANNAMES[byteorder])
+			self.data = self.data[ptr:]
+			self.ptr = 0
+			return self.unpack(stct)
+	
+	def unpack(self, stct):
+		groupbase = self.ptr
+		final = []
+		for token in stct:
+			count, el = token
+			if isinstance(count, _InternRef):
+				if count.type == 's':
+					count = final[count.index]
+				elif count.type == 'p':
+					count = final[-count.index]
+			if isinstance(el, _Sub):
+				if el.type == '()':
+					final.append(self.unpack(el.stct)[0])
+				elif el.type == '[]':
+					final.append([self.unpack(el.stct)[0] for i in range(count)])
+				elif el.type == '{}':
+					sub = []
+					while self.ptr < len(self.data):
+						sub.append(self.unpack(el.stct)[0])
+					final.append(sub)
+					break
 			else:
-				final += struct.pack(byteorder + c, data[dataptr])
-				dataptr += 1
-		elif c == '$':
-			final += data[dataptr]
-			return final
-		elif c == '(':
-			bracklvl = 1
-			while bracklvl != 0:
-				el = stct[i]
-				i += 1
-				if el == '(':
-					bracklvl += 1
-				elif el == ')':
-					bracklvl -= 1
-				c += el
-			c = c[1:-1]
-			datalist = data[dataptr]
-			dataptr += 1
-			final += _pack(c, datalist, byteorder)
-		elif c == '{':
-			bracklvl = 1
-			while bracklvl > 0:
-				el = stct[i]
-				i += 1
-				if el == '{':
-					bracklvl += 1
-				elif el == '}':
-					bracklvl -= 1
-				c += el
-			c = c[1:-1]
-			for datalist in data[dataptr]:
-				final += _pack(c, datalist, byteorder)
-			dataptr += 1
-	return final
+				if el in 'uU':
+					for _ in range(count):
+						sub = self.data[self.ptr: self.ptr + 3]
+						self.ptr += 3
+						num = int.from_bytes(sub, self.endianname)
+						if num > 0x7fffff and el == 'u':
+							num -= 0x1000000
+						final.append(num)
+				elif el == 'x':
+					self.ptr += count
+				elif el == 'X':
+					sub = self.data[self.ptr: self.ptr + count]
+					self.ptr += count
+					final.append(hex(sub))
+				elif el == 'a':
+					subptr = self.ptr - groupbase
+					padding = count - (subptr % count or count)
+					self.ptr += padding
+				elif el == 'n':
+					for _ in range(count):
+						try:
+							null = self.data[self.ptr:].index(b'\x00')
+							s = self.data[self.ptr: self.ptr + null]
+						except ValueError:
+							s = self.data[self.ptr:]
+						self.ptr += len(s) + 1  #skips the null byte
+						final.append(s)
+				elif el == 's':
+					final.append(self.data[self.ptr: self.ptr + count])
+					self.ptr += count
+				elif el == '?':
+					for _ in range(count):
+						final.append(bool(self.data[self.ptr]))
+						self.ptr += 1
+				elif el == '$':
+					final.append(self.data[self.ptr:])
+					break
+				else:
+					#Avoids copy of the entire data
+					substruct = '%s%d%s' % (self.byteorder, count, el)
+					length = struct.calcsize(substruct)
+					subdata = self.data[self.ptr: self.ptr + length]
+					self.ptr += length
+					final += struct.unpack(substruct, subdata)
+		return final, self.ptr
+	
+	def unpack_file(self, stct):
+		groupbase = self.data.tell()
+		final = []
+		for token in stct:
+			count, el = token
+			if isinstance(count, _InternRef):
+				if count.type == 's':
+					count = final[count.index]
+				elif count.type == 'p':
+					count = final[-count.index]
+			if isinstance(el, _Sub):
+				if el.type == '()':
+					final.append(self.unpack_file(el.stct)[0])
+				elif el.type == '[]':
+					final.append([self.unpack_file(el.stct)[0] for i in range(count)])
+				elif el.type == '{}':
+					sub = []
+					while self.ptr < len(self.data):
+						sub.append(self.unpack_file(el.stct)[0])
+					final.append(sub)
+					break
+			else:
+				if el in 'uU':
+					for _ in range(count):
+						sub = self.data.read(3)
+						num = int.from_bytes(sub, self.endianname)
+						if num > 0x7fffff and el == 'u':
+							num -= 0x1000000
+						final.append(num)
+				elif el == 'x':
+					self.data.seek(count, 1)
+				elif el == 'X':
+					sub = self.data.read(count)
+					final.append(hex(sub))
+				elif el == 'a':
+					subptr = self.data.tell() - groupbase
+					padding = count - (subptr % count or count)
+					self.data.seek(padding, 1)
+				elif el == 'n':
+					for _ in range(count):
+						s = b''
+						while not s.endswith(b'\x00'):
+							byte = self.data.read(1)
+							if byte == b'':
+								break
+							s += byte
+						final.append(s)
+				elif el == 's':
+					final.append(self.data.read(count))
+				elif el == '?':
+					for _ in range(count):
+						final.append(bool(self.data.read(1)))
+				elif el == '$':
+					final.append(self.data.read())
+					break
+				else:
+					#Avoids copy of the entire data
+					substruct = '%s%d%s' % (self.byteorder, count, el)
+					length = struct.calcsize(substruct)
+					subdata = self.data.read(length)
+					final += struct.unpack(substruct, subdata)
+		return final, self.data.tell()
+
+
+class _pack (_StructParser, _ClsFunc):
+	def main(self, stct, data, byteorder, out):
+		self.byteorder = byteorder
+		self.endianname = ENDIANNAMES[byteorder]
+		stct = self.parse_struct(stct)
+		if out is None:
+			self.final = b''
+			self.pack(stct, data)
+			return self.final
+		else:
+			self.final = out
+			self.pack_file(stct, data)
+	
+	def pack(self, stct, data):
+		ptr = 0
+		groupbase = len(self.final)
+		for token in stct:
+			count, el = token
+			if isinstance(count, _InternRef):
+				if count.type == 's':
+					count = data[count.index]
+				elif count.type == 'p':
+					count = data[ptr - count.index]
+			if isinstance(el, _Sub):
+				if el.type == '()':
+					self.pack(el.stct, data[ptr])
+					ptr += 1
+				elif el.type == '[]':
+					[self.pack(el.stct, data[ptr][i]) for i in range(count)]
+					ptr += 1
+				elif el.type == '{}':
+					for subdata in data[ptr]:
+						self.pack(el.stct, subdata)
+					ptr += 1
+			else:
+				if el in 'Uu':
+					for _ in range(count):
+						num = data[ptr]
+						ptr += 1
+						if num < 0 and el == 'u':
+							num += 0x1000000
+						self.final += num.to_bytes(3, self.endianname)
+				elif el == 'x':
+					self.final += b'\x00' * count
+				elif el == 'X':
+					sub = hextobytes(data[ptr])
+					if len(sub) != count:
+						raise struct.error('Given string of %d bytes, expected %d' % (len(sub), count))
+					ptr += 1
+					self.final += sub
+				elif el == 's':
+					sub = data[ptr]
+					if type(sub) == str:
+						sub = sub.encode('utf-8')
+					if len(sub) != count:
+						raise struct.error('Given string of %d bytes, expected %d' % (len(sub), count))
+					ptr += 1
+					self.final += sub
+				elif el == 'n':
+					for _ in range(count):
+						sub = data[ptr]
+						ptr += 1
+						if type(sub) == str:
+							sub = sub.encode('utf-8')
+						self.final += sub + b'\x00'
+				elif el == 'a':
+					subptr = len(self.final) - groupbase
+					length = count - (subptr % count or count)
+					self.final += length * b'\x00'
+				elif el == '?':
+					for _ in range(count):
+						self.final += struct.pack('B', data[ptr])
+						ptr += 1
+				elif el == '$':
+					self.final += data[ptr]
+					break
+				else:
+					substruct = '%s%d%s' % (self.byteorder, count, el)
+					subdata = data[ptr: ptr + count]
+					ptr += count
+					self.final += struct.pack(substruct, *subdata)
+	
+	def pack_file(self, stct, data):
+		ptr = 0
+		groupbase = self.final.tell()
+		for token in stct:
+			count, el = token
+			if isinstance(count, _InternRef):
+				if count.type == 's':
+					count = data[count.index]
+				elif count.type == 'p':
+					count = data[ptr - count.index]
+			if isinstance(el, _Sub):
+				if el.type == '()':
+					self.pack_file(el.stct, data[ptr])
+					ptr += 1
+				elif el.type == '[]':
+					[self.pack_file(el.stct, data[ptr][i]) for i in range(count)]
+					ptr += 1
+				elif el.type == '{}':
+					for subdata in data[ptr]:
+						self.pack_file(el.stct, subdata)
+					ptr += 1
+			else:
+				if el in 'Uu':
+					for _ in range(count):
+						num = data[ptr]
+						ptr += 1
+						if num < 0 and el == 'u':
+							num += 0x1000000
+						self.final.write(num.to_bytes(3, self.endianname))
+				elif el == 'x':
+					self.final.write(b'\x00' * count)
+				elif el == 'X':
+					sub = hextobytes(data[ptr])
+					if len(sub) != count:
+						raise struct.error('Given string of %d bytes, expected %d' % (len(sub), count))
+					ptr += 1
+					self.final.write(sub)
+				elif el == 's':
+					sub = data[ptr]
+					if type(sub) == str:
+						sub = sub.encode('utf-8')
+					if len(sub) != count:
+						raise struct.error('Given string of %d bytes, expected %d' % (len(sub), count))
+					ptr += 1
+					self.final.write(sub)
+				elif el == 'n':
+					for _ in range(count):
+						sub = data[ptr]
+						ptr += 1
+						if type(sub) == str:
+							sub = sub.encode('utf-8')
+						self.final.write(sub + b'\x00')
+				elif el == 'a':
+					subptr = self.final.tell() - groupbase
+					length = count - (subptr % count or count)
+					self.final.write(length * b'\x00')
+				elif el == '?':
+					for _ in range(count):
+						self.final.write(struct.pack('B', data[ptr]))
+						ptr += 1
+				elif el == '$':
+					self.final.write(data[ptr])
+					break
+				else:
+					substruct = '%s%d%s' % (self.byteorder, count, el)
+					subdata = data[ptr: ptr + count]
+					ptr += count
+					self.final.write(struct.pack(substruct, *subdata))
+
+
+def unpack(stct, data, refdata=()):
+	byteorder = stct[0] if stct[0] in '@=><!' else '@'
+	stct = stct.lstrip('<>=!@')
+	stct = stct.replace(' ', '')
+	if len(SUBS) > 0:
+		for sub in SUBS.keys():
+			stct = stct.replace(sub, SUBS[sub])
+	unpacked, ptr = _unpack(stct, data, 0, byteorder, refdata)
+	return unpacked
+
+
+def unpack_from(stct, data, offset=0, refdata=(), getptr=False):
+	byteorder = stct[0] if stct[0] in '@=><!' else '@'
+	stct = stct.lstrip('<>=!@')
+	stct = stct.replace(' ', '')
+	if len(SUBS) > 0:
+		for sub in SUBS.keys():
+			stct = stct.replace(sub, SUBS[sub])
+	unpacked, ptr = _unpack(stct, data, offset, byteorder, refdata)
+	if getptr:
+		return unpacked, ptr
+	else:
+		return unpacked
 
 
 def pack(stct, *data):
@@ -467,201 +725,20 @@ def pack(stct, *data):
 		for sub in SUBS.keys():
 			stct = stct.replace(sub, SUBS[sub])
 	data = list(data)
-	for i, el in enumerate(data):
-		if isinstance(el, str):
-			data[i] = el.encode('utf-8')
-	packed = _pack(stct, data, byteorder)
+	if hasattr(data[-1], 'write'):
+		out = data.pop(-1)
+	else:
+		out = None
+	packed = _pack(stct, data, byteorder, out)
 	return packed
 
-
-def _unpack(stct, data, byteorder, refdata=(), retused=False):
-	lastidx = -1
-	i = 0
-	final = []
-	ptr = 0
-	while i < len(stct):
-		indic = ''
-		c = stct[i]
-		i += 1
-		if c.isdigit():
-			while stct[i].isdigit():
-				c += stct[i]
-				i += 1
-			c = int(c)
-			tp = stct[i]
-			i += 1
-			if tp.isalpha():
-				if tp == 'n':
-					for i in range(0, c):
-						null = data[ptr:].index(b'\x00')
-						string = data[ptr:null + ptr]
-						final.append(string)
-						ptr += len(string) + 1
-				elif tp == 'u':
-					for _ in range(0, c):
-						bnum = data[ptr:ptr + 3]
-						ptr += 3
-						endian = ENDIANNAMES[byteorder]
-						num = int.from_bytes(bnum, endian)
-						if num >= 0x800000:
-							num = num - 0x1000000
-						final.append(num)
-				elif tp == 'U':
-					for _ in range(0, c):
-						bnum = data[ptr:ptr + 3]
-						ptr += 3
-						endian = ENDIANNAMES[byteorder]
-						num = int.from_bytes(bnum, endian)
-						final.append(num)
-				elif tp == 'a':
-					if (ptr % c) != 0:
-						pad = c - (ptr % c)
-					else:
-						pad = 0
-					final.append(data[ptr:ptr + pad])
-					ptr += pad
-				elif tp == 's':
-					final.append(struct.unpack_from(byteorder + str(c) + tp, data, ptr)[0])
-					ptr += c
-				elif tp == 'x':
-					final.append(binascii.hexlify(struct.unpack_from(byteorder + str(c) + 's', data, ptr)[0]).decode('ascii'))
-					ptr += c
-				else:
-					c = tp * c
-					for el in c:
-						final += struct.unpack_from(byteorder + el, data, ptr)
-						ptr += _calcsize(byteorder + el, data)
-			elif tp == '[':
-				bracklvl = 1
-				while bracklvl != 0:
-					el = stct[i]
-					i += 1
-					if el == '[':
-						bracklvl += 1
-					elif el == ']':
-						bracklvl -= 1
-					tp += el
-				tp = tp[1:-1]
-				ls = []
-				for j in range(0, c):
-					res, used = _unpack(tp, data[ptr:], byteorder)
-					ls.append(res)
-					ptr += used
-				final.append(ls)
-		elif c.isalpha():
-			if c == 'n':
-				null = data[ptr:].index(b'\x00')
-				string = data[ptr:null + ptr]
-				final.append(string)
-				ptr += len(string) + 1
-			elif c == 'u':
-				bnum = data[ptr:ptr + 3]
-				ptr += 3
-				endian = ENDIANNAMES[byteorder]
-				num = int.from_bytes(bnum, endian)
-				if num >= 0x800000:
-					num = num - 0x1000000
-				final.append(num)
-			elif c == 'U':
-				bnum = data[ptr:ptr + 3]
-				ptr += 3
-				endian = ENDIANNAMES[byteorder]
-				num = int.from_bytes(bnum, endian)
-				final.append(num)
-			else:
-				final += struct.unpack_from(byteorder + c, data, ptr)
-				ptr += _calcsize(byteorder + c, data)
-		elif c == '$':
-			final.append(data[ptr:])
-			ptr = len(data)
-			return final, ptr
-		elif c == '(':
-			bracklvl = 1
-			while bracklvl != 0:
-				el = stct[i]
-				i += 1
-				if el == '(':
-					bracklvl += 1
-				elif el == ')':
-					bracklvl -= 1
-				c += el
-			c = c[1:-1]
-			sub, used = _unpack(c, data[ptr:], byteorder)
-			final.append(sub)
-			ptr += used
-		elif c == '{':
-			bracklvl = 1
-			while bracklvl != 0:
-				el = stct[i]
-				i += 1
-				if el == '{':
-					bracklvl += 1
-				elif el == '}':
-					bracklvl -= 1
-				c += el
-			ls = []
-			c = c[1:-1]
-			while ptr < len(data):
-				res, used = _unpack(c, data[ptr:], byteorder)
-				ls.append(res)
-				ptr += used
-			final.append(ls)
-		elif c in ('/', '#', '-'):
-			idx = ''
-			j = i
-			if stct[j].isalpha():
-				indic = stct[j]
-				j += 1
-			while stct[j].isdigit():
-				idx += stct[j]
-				j += 1
-			idx = int(idx)
-			if c == '/':
-				if indic == 'p':
-					idx = -idx
-				elif indic == 'l':
-					idx += lastidx
-				lastidx = idx
-				if indic == 'p':
-					lastidx = len(final) - idx
-				res = str(final[idx])
-				reco = '/' + indic + str(abs(idx))
-				stct = lreplace(stct, reco, res)
-				i -= 1
-			elif c == '#':
-				res = str(refdata[idx])
-				reco = '#' + indic + str(idx)
-				i -= 1
-				stct = lreplace(stct, reco, res)
-			elif c == '-':
-				res = str(len(final[idx]))
-				reco = '-' + indic + str(idx)
-				stct = lreplace(stct, reco, res)
-				i -= 1
-	return final, ptr
-
-
-def unpack(stct, data, refdata=()):
-	byteorder = stct[0] if stct[0] in '@=><!' else '@'
-	stct = stct.lstrip('<>=!@')
-	stct = stct.replace(' ', '')
-	if len(SUBS) > 0:
-		for sub in SUBS.keys():
-			stct = stct.replace(sub, SUBS[sub])
-	unpacked, ptr = _unpack(stct, data, byteorder, refdata)
-	return unpacked
-
-
-def unpack_from(stct, data, offset=0, refdata=(), getptr=False):
-	data = data[offset:]
-	byteorder = stct[0] if stct[0] in '@=><!' else '@'
-	stct = stct.lstrip('<>=!@')
-	stct = stct.replace(' ', '')
-	if len(SUBS) > 0:
-		for sub in SUBS.keys():
-			stct = stct.replace(sub, SUBS[sub])
-	unpacked, ptr = _unpack(stct, data, byteorder, refdata)
-	if getptr:
-		return unpacked, ptr + offset
-	else:
-		return unpacked
+if __name__ == '__main__':
+	#test
+	s = '>4s2I/p1[H(2B)] n4a 5X2x? 2u'
+	data = unpack(s, b'TESTaaaa\x00\x00\x00\x02GGhiJJklRETEST\x00\x00YBOOM\x00\xff\x01333666')
+	f = pack(s, *data)
+	file = open('test.bin', 'wb')
+	pack(s, *data, file)
+	file.close()
+	file = open('test.bin', 'rb')
+	d = unpack(s, file)

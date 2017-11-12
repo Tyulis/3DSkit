@@ -5,7 +5,7 @@ from util import error
 
 
 NEEDS_ENDIAN = (
-	'GFA',
+	'GFA', 'BL'
 )
 
 MAGICS = {

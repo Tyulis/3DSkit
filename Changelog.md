@@ -186,3 +186,14 @@
 		*	Fix of \_alyt\_ folder detection in pack.ALYT (by hlixed)
 	*	Fixed the error when the swizzle option is not specified to pack.BFLIM (thanks to hlixed)
 	*	Improved the readme
+
+**v1.18**
+
+*	v1.18.36
+	*	Added LZ10 compression
+	*	Huge upgrade to rawutil, completely rewritten in a faster and more readable way
+	*	Added the -v option (verbose)
+	*	Added the supported formats table in te readme
+	*	Added format recognition for unnamed files in SARCs
+	*	Fixed a stupid bug in compress.LZ11.decompressLZ11 which created errors in the decompressed data
+	*	Fixed a byte order problem in pack.SARC

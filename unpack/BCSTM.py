@@ -20,6 +20,13 @@ PCM16 = 1
 DSPADPCM = 2
 IMAADPCM = 3
 
+CODECS = {
+	0: 'PCM8',
+	1: 'PCM16',
+	2: 'DSP-ADPCM',
+	3: 'IMA-ADPCM',
+}
+
 
 class SizedRef (object):
 	def __init__(self, data):
@@ -77,7 +84,8 @@ class IMAADPCMInfo (object):
 
 
 class extractBCSTM (ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		self.outname = os.path.splitext(filename)[0]
 		self.read_header(data)
 		self.readINFO()
@@ -103,6 +111,8 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		self.info = inforef.getdata(data)
 		self.seek = seekref.getdata(data)
 		self.data = dataref.getdata(data)
+		if self.verbose:
+			print('Version: %08x' % self.version)
 	
 	def readINFO(self):
 		data = self.unpack(BCSTM_INFO_STRUCT, self.info)
@@ -169,6 +179,12 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		self.seek_datasize = data[13]
 		self.seek_interval_samplecount = data[14]
 		self.sampledata_ref = Reference(data[15])
+		if self.verbose:
+			print('Codec: %s' % CODECS[self.codec])
+			print('Channel count: %d' % self.channel_count)
+			print('Sample rate: %d' % self.sample_rate)
+			print('Looping: %s' % self.islooping)
+			print('Loop: %d - %d' % (self.loop_start, self.loop_end))
 	
 	def readSEEK(self):
 		NotImplemented

@@ -31,8 +31,9 @@ class FATBSubEntry (object):
 
 
 class extractGARC (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
+		self.verbose = verbose
 		ptr = self.readheader(data)
 		ptr = self.readFATO(data, ptr)
 		ptr = self.readFATB(data, ptr)
@@ -74,6 +75,8 @@ class extractGARC (rawutil.TypeReader):
 		#padding = fato[3]
 		table = fato[4]
 		self.fato = [el[0] for el in table]
+		if self.verbose:
+			print('File count: %d' % entrycount)
 		return ptr
 	
 	def readFATB(self, data, ptr):
@@ -131,12 +134,12 @@ class extractGARC (rawutil.TypeReader):
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
 				end = start + subentry.length
-				filedata = data[start:end]
+				filedata = data[start: end]
 				comp = compress.recognize(filedata)
 				ext = get_ext(filedata)
 				outname = self.outdir + str(i) + ext
 				if comp == 'LZ11':
-					filedata = compress.decompress(filedata, comp)
+					filedata = compress.decompress(filedata, comp, self.verbose)
 					ext = get_ext(filedata)
-					outname = self.outdir + 'dec_' + str(i) + ext
+					outname = self.outdir + 'dec_%d%s' % (i, ext)
 				bwrite(filedata, outname)

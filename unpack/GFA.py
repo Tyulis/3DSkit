@@ -15,8 +15,9 @@ class GFA_FATnode (object):
 
 
 class extractGFA (rawutil.TypeReader):
-	def __init__(self, filename, data, endian, opts={}):
+	def __init__(self, filename, data, verbose, endian, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		self.outdir = make_outdir(filename)
 		ptr = self.readmeta(data)
 		self.readinfo()
@@ -45,6 +46,9 @@ class extractGFA (rawutil.TypeReader):
 		self.fat = hdata[12]
 		self.filenames = hdata[13]
 		self.readinfo()
+		if self.verbose:
+			print('Version: %08x' % self.version)
+			print('File count: %d' % self.filecount)
 		return ptr
 	
 	def readinfo(self):
@@ -73,15 +77,19 @@ class extractGFA (rawutil.TypeReader):
 		if magic != b'GFCP':
 			error('Invalid GFCP magic: %s' % byterepr(magic), 301)
 		if comp in (2, 3):
-			print('\tDecompressing data...')
+			if self.verbose:
+				print('Decompressing data...')
 			data = self.decompressLZ10(data)
-			print('\tOK!')
+			if self.verbose:
+				print('Decompressed')
 		elif comp == 1:
 			error('Actually unsupported compression')
 		else:
 			error('Invalid compression')
 		for node in self.nodes:
 			outname = self.outdir + node.name
+			if self.verbose:
+				print('Extracting %s' % outname)
 			filedata = data[node.offset:node.offset + node.length]
 			bwrite(filedata, outname)
 	

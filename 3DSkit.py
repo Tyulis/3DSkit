@@ -10,7 +10,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.17.36'
+__version__ = '1.18.36'
 
 
 def parse_opts(s):
@@ -27,21 +27,22 @@ def parse_opts(s):
 	return opts
 
 
-def pack_files(filenames, output, compression, format, isbigendian, opts):
+def pack_files(filenames, output, compression, format, isbigendian, verbose, opts):
 	endian = '>' if isbigendian else '<'
 	if format.upper() in pack.formats:
 		print('Packing...')
-		outnames = pack.pack(filenames, output, format, endian, opts)
+		outnames = pack.pack(filenames, output, format, endian, verbose, opts)
 		print('Packed!')
 	else:
 		error('Unknown format for repacking', 102)
 	if compression is not None:
-		print('Compressîng...')
-		compress.compress(output, compression)
+		print('Compressing...')
+		compressed = compress.compress(bread(output), compression, verbose)
+		bwrite(compressed, output)
 		print('Compressed')
 
 
-def extract_files(filename, isbigendian, format, opts):
+def extract_files(filename, isbigendian, format, verbose, opts):
 	endian = '>' if isbigendian else '<'
 	content = bread(filename)
 	format = unpack.recognize(content, filename, format)
@@ -50,7 +51,7 @@ def extract_files(filename, isbigendian, format, opts):
 		if compression is not None:
 			print('Compression: %s' % compression)
 			print('Decompression...')
-			content = compress.decompress(content, compression)
+			content = compress.decompress(content, compression, verbose)
 			print('Decompressed!')
 		else:
 			print('No compression')
@@ -60,7 +61,7 @@ def extract_files(filename, isbigendian, format, opts):
 	if format is not None:
 		print('%s file found' % format)
 		print('Extracting...')
-		unpack.extract(content, filename, format, endian, opts)
+		unpack.extract(content, filename, format, endian, verbose, opts)
 		print('Extracted!')
 	else:
 		if compression is not None:
@@ -78,18 +79,18 @@ def list_files(filename, isbigendian, format, opts):
 	compression = compress.recognize(filename)
 	if compression is not None:
 		print('Decompression...')
-		content = compress.decompress(content, compression)
+		content = compress.decompress(content, compression, verbose)
 		print('Decompressed!')
 	else:
 		print('No compression')
 	format = unpack.recognize(content, filename, format)
 	if format is not None:
-		unpack.list_files(content, filename, format, endian, opts)
+		unpack.list_files(content, filename, format, endian, verbose, opts)
 	else:
 		error('Unrecognized format', 103)
 
 
-def decompress_files(filename):
+def decompress_files(filename, verbose):
 	content = bread(filename)
 	compression = compress.recognize(content)
 	if compression is None:
@@ -97,7 +98,7 @@ def decompress_files(filename):
 	else:
 		print('Compression: %s' % compression)
 	print('Decompression...')
-	content = compress.decompress(content, compression)
+	content = compress.decompress(content, compression, verbose)
 	sname = list(filename.partition('.'))
 	sname[0] += '_dec'
 	outname = ''.join(sname)
@@ -107,13 +108,16 @@ def decompress_files(filename):
 
 def compress_file(filename, outname, compression):
 	content = bread(filename)
+	print('Compressing...')
 	out = compress.compress(content, compression)
 	bwrite(out, outname)
+	print('Compressed')
 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-H', '--detailed_help', help='Detailed help (you should read it the first time you use 3DSkit)', action='store_true')
+	parser.add_argument('-v', '--verbose', help='Increases the verbosity of 3DSkit', action='store_true')
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument('-t', '--list', help='Lists the files contained in an archive', action='store_true')
 	group.add_argument('-x', '--extract', help='Extract files contained in the archive /  decompress the file if necessary and convert it to a readable format', action='store_true')
@@ -137,9 +141,9 @@ if __name__ == '__main__':
 	elif args.list or args.extract:
 		for filename in args.files:
 			if args.list:
-				list_files(filename, args.big, args.format, opts)
+				list_files(filename, args.big, args.format, args.verbose, opts)
 			elif args.extract:
-				extract_files(filename, args.big, args.format, opts)
+				extract_files(filename, args.big, args.format, args.verbose, opts)
 	elif args.pack:
 		files = []
 		basedir = os.getcwd()
@@ -160,15 +164,15 @@ if __name__ == '__main__':
 							files.append(os.path.join(path, filename))
 				else:
 					files.append(file)
-		pack_files(files, args.out, args.compression, args.format.upper(), args.big, opts)
+		pack_files(files, args.out, args.compression, args.format, args.big, args.verbose, opts)
 		os.chdir(basedir)
 	elif args.decompress:
 		for filename in args.files:
-			decompress_files(filename)
+			decompress_files(filename, args.verbose)
 
 	elif args.compress:
 		if args.compression is None:
 			error('You have to specify the compression type', 203)
-		compress_file(args.files[0], args.out, args.compression)
+		compress_file(args.files[0], args.out, args.compression, args.verbose)
 	elif args.plugin is not None:
-		plugins.run_plugin(args.plugin, args.files)
+		plugins.run_plugin(args.plugin, args.files, args.verbose)

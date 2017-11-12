@@ -85,7 +85,7 @@ def create_plugin():
 	write('', initname)
 	clearconsole()
 
-def main(options):
+def main(options, verbose):
 	'''The plugin's entry point. Options are strings placed instead of the normal input name argument'''
 	opt = menu().lower()
 	clearconsole()

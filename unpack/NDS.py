@@ -71,6 +71,7 @@ AGE_RATING_TYPES = {
 	0x0f: 'Reserved',
 }
 
+#from gbatek
 CRC_BASE = 0xffff
 CRC_VALUES = (0xc0c1, 0xc181, 0xc301, 0xc601, 0xcc01, 0xd801, 0xf001, 0xa001)
 
@@ -82,18 +83,19 @@ class NitroFATEntry (object):
 
 
 class extractNDS (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
 		self.byteorder = '<'
+		self.verbose = verbose
 		self.outdir = make_outdir(filename)
+		self.dochecks = False
+		if 'docheck' in opts:
+			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
 		header = data[:0x4000]
 		self.data = data
 		self.read_NTRheader(header)
 		self.extract_sections(data)
 		self.read_FAT()
 		self.read_FNT()
-	
-	def paf(self):
-		paf
 	
 	def crc16(self, data):
 		crc = CRC_BASE
@@ -161,9 +163,10 @@ class extractNDS (rawutil.TypeReader):
 		reserved2 = hdata[44]
 		if self.unitcode in ('DSI', 'NDS + DSI'):
 			self.read_TWLextheader(data)
-		self.make_checks(data)
+		if self.dochecks:
+			self.do_checks(data)
 	
-	def make_checks(self, data):
+	def do_checks(self, data):
 		if self.headerlen != 0x4000:
 			error('Invalid NDS ROM: Invalid header length', 306)
 		if self.nintendo_logocrc != 0xcf56:
@@ -313,6 +316,8 @@ class extractNDS (rawutil.TypeReader):
 				self.extractDir(el, subdir)
 			else:
 				filedata = self.data[el.start: el.end]
+				if self.verbose:
+					print('Extracting %s' % out + name)
 				bwrite(filedata, out + name)
 	
 	def extractIcon(self, data, outdir):

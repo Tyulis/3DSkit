@@ -53,7 +53,7 @@ class _3DSkitUI (Tk):
 	def unpack_file(self):
 		pass
 
-	def main(self, options):
+	def main(self, options, verbose):
 		'''The plugin's entry point. Options are strings placed instead of the normal input name argument'''
 		self.confirm_callback = self._null
 		self.title = Label(self, text='3DSkit UI')

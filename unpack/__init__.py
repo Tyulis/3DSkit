@@ -3,10 +3,10 @@ from util.fileops import bread
 from ._formats import *
 
 
-def extract(content, filename, format, endian, opts):
+def extract(content, filename, format, endian, verbose, opts):
 	mod = __import__('unpack.%s' % format)
 	cls = eval('mod.%s.extract%s' % (format, format))  #shorter than if magic == 'SARC': extractSARC()...
-	args = [filename, content]
+	args = [filename, content, verbose]
 	if format in NEEDS_ENDIAN:
 		args.append(endian)
 	args.append(opts)
@@ -15,10 +15,10 @@ def extract(content, filename, format, endian, opts):
 		unpacker.extract()
 
 
-def list_files(content, filename, format, endian, opts):
+def list_files(content, filename, format, endian, verbose, opts):
 	mod = __import__('unpack.%s' % format)
 	cls = eval('mod.%s.extract%s' % (format, format))  #shorter than if magic == 'SARC': extractSARC()...
-	args = [filename, content]
+	args = [filename, content, verbose]
 	if format in need_endian:
 		args.append(endian)
 	args.append(opts)

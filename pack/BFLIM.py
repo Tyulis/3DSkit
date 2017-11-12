@@ -65,8 +65,9 @@ FORMATS = {
 
 
 class packBFLIM(ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, opts={}):
+	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		filename = filenames[0]
 		img = Image.open(filename)
 		if 'format' in opts.keys():
@@ -95,6 +96,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 		return self.pack(BFLIM_IMAG_HDR_STRUCT, b'imag', 0x10, width, height, ALIGNMENT, self.format, swizzle, datalen)
 	
 	def swizzle(self, img, swizzle):
+		if self.verbose and swizzle != '0':
+			print('Swizzling image')
 		swizzle = int(swizzle)
 		if swizzle == 4:
 			img = img.rotate(-90)
@@ -104,6 +107,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 		return img
 	
 	def repack_data(self, img):
+		if self.verbose:
+			print('Packing pixel data')
 		self.pxsize = PIXEL_SIZES[self.format]
 		pixels = img.load()
 		width, height = img.size

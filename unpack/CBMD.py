@@ -25,8 +25,9 @@ OUT_NAMES = (
 
 
 class extractCBMD (ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
 		self.byteorder = '<'  #exists only on 3ds
+		self.verbose = verbose
 		self.outdir = make_outdir(filename)
 		self.readheader(data)
 		self.extract(data)

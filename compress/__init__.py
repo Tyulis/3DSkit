@@ -10,13 +10,13 @@ def recognize(cnt):
 	return None
 
 
-def decompress(cnt, format):
+def decompress(cnt, format, verbose):
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.decompress%s' % (format, format))
-	return func(cnt)
+	return func(cnt, verbose)
 
 
-def compress(cnt, format):
+def compress(cnt, format, verbose):
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.compress%s' % (format, format))
-	return func(cnt)
+	return func(cnt, verbose)

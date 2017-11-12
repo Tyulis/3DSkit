@@ -137,8 +137,9 @@ class TypeWriter (rawutil.TypeWriter):
 
 
 class packBFLYT(ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, opts={}):
+	def main(self, filenames, outname, endian, verbose, opts={}):
 		filename = filenames[0]
+		self.verbose = verbose
 		tree = load(read(filename))
 		if list(tree.keys())[2] != 'BFLYT':
 			error('This is not a converted BFLYT file', 203)

@@ -8,8 +8,9 @@ BL_TABLE_STRUCT = '2sH /1[I] 128a'
 
 
 class packBL (ClsFunc, rawutil.TypeWriter):
-	def main(self, filenames, outname, endian, opts={}):
+	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		data, offsets = self.repack_files(filenames)
 		header = self.repack_headers(offsets)
 		final = header + data

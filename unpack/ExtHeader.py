@@ -11,7 +11,7 @@ from collections import OrderedDict
 rawutil.register_sub('<', '')
 rawutil.register_sub('>', '')
 
-EXTHEADER_MAIN_STRUCT = '512s 512s 256x 256x 512s'
+EXTHEADER_MAIN_STRUCT = '512s 512s 256X 256X 512s'
 EXTHEADER_SCI_STRUCT = '8s 5s BH (3I) I (3I) I (3I) I (48Q) (2Q48s)'
 EXTHEADER_ACI_STRUCT = '(QI 4B (16H) (3Q Q) 34[8s] 15s B) ((28I) 16s) (Q 7s B)'
 
@@ -41,7 +41,8 @@ MEMORY_TYPES = {
 }
 
 class extractExtHeader (rawutil.TypeReader, ClsFunc):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		self.outfile = make_outfile(filename, 'txt')
 		self.byteorder = '<'
 		self.tree = OrderedDict()

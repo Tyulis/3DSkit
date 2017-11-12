@@ -7,8 +7,9 @@ from .SARC import packSARC
 
 
 class packALYT (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, opts={}):
+	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		self.getmeta(filenames)
 		self.repack_ALYT()
 		final = self.repack_all()
@@ -52,7 +53,11 @@ class packALYT (ClsFunc, TypeWriter):
 		self.alyt += (128 - (len(self.alyt) % 128)) * b'\x00'
 	
 	def repack_all(self):
+		if self.verbose:
+			print('Packing SARC')
 		sarc = bytearray(packSARC(self.files, None, endian=self.byteorder, embedded=True))
+		if self.verbose:
+			print('Packing ALYT')
 		final = self.alyt + sarc
 		hdr = self.pack('4s9I', 'ALYT', 0x00040002, self.ltbloffset, len(self.ltbl), self.lmtloffset, len(self.lmtl), self.lfnloffset, len(self.lfnl), self.dataoffset, len(final) + 0x28)
 		final[0:0x28] = hdr

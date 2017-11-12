@@ -5,11 +5,11 @@ from util.fileops import *
 
 plugin_path = None
 
-def run_plugin(name, options):
+def run_plugin(name, options, verbose):
 	global plugin_path
 	plugin_path = os.path.join(os.getcwd(), 'plugins', name, '')
 	mod = __import__('plugins.%s.main' % name)
-	exec('mod.%s.main.main(options)' % name)
+	exec('mod.%s.main.main(options, verbose)' % name)
 
 def getpath():
 	global plugin_path

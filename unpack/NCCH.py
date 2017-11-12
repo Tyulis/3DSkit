@@ -14,7 +14,7 @@ from unpack.ExeFS import extractExeFS
 from unpack.RomFS import extractRomFS
 from unpack.DARC import extractDARC
 
-NCCH_HEADER_STRUCT = '256x 4s IQ2HIQ 16x 32s n16a 32s 2I (8B) 12I 32s32s'
+NCCH_HEADER_STRUCT = '256X 4s IQ2HIQ 16X 32s n16a 32s 2I (8B) 12I 32s32s'
 
 CRYPTO_KEYSLOTS = {
 	0x00: None,
@@ -31,7 +31,8 @@ PLATFORMS = {
 
 
 class extractNCCH (rawutil.TypeReader):
-	def __init__(self, filename, data, opts={}):
+	def __init__(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		self.dochecks = False
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
@@ -57,10 +58,10 @@ class extractNCCH (rawutil.TypeReader):
 		reserved = data[8]
 		self.logo_hash = data[9]
 		self.product_code = data[10].decode('ascii')
-		self.extheader_hash = data[12]
-		self.extheader_size = data[13]  #in bytes
-		reserved = data[14]
-		ncchflags = data[15]
+		self.extheader_hash = data[11]
+		self.extheader_size = data[12]  #in bytes
+		reserved = data[13]
+		ncchflags = data[14]
 		self.crypto_keyslot = CRYPTO_KEYSLOTS[ncchflags[3]]
 		self.platform = PLATFORMS[ncchflags[4]]
 		self.content_types = self.extract_contenttypes(ncchflags[5])
@@ -71,20 +72,20 @@ class extractNCCH (rawutil.TypeReader):
 		self.has_crypto = not bool(flags & 0x04)
 		self.use_new_keyYgen = bool(flags & 0x20)
 		#Everything is in media units
-		self.plain_offset = data[16]
-		self.plain_size = data[17]
-		self.logo_offset = data[18]
-		self.logo_size = data[19]
-		self.exefs_offset = data[20]
-		self.exefs_size = data[21]
-		self.exefs_hashregion_size = data[22]
-		reserved = data[23]
-		self.romfs_offset = data[24]
-		self.romfs_size = data[25]
-		self.romfs_hashregion_size = data[26]
-		reserved = data[27]
-		self.exefs_hash = data[28]
-		self.romfs_hash = data[29]
+		self.plain_offset = data[15]
+		self.plain_size = data[16]
+		self.logo_offset = data[17]
+		self.logo_size = data[18]
+		self.exefs_offset = data[19]
+		self.exefs_size = data[20]
+		self.exefs_hashregion_size = data[21]
+		reserved = data[22]
+		self.romfs_offset = data[23]
+		self.romfs_size = data[24]
+		self.romfs_hashregion_size = data[25]
+		reserved = data[26]
+		self.exefs_hash = data[27]
+		self.romfs_hash = data[28]
 	
 	def extract_contenttypes(self, flags):
 		types = []
@@ -195,17 +196,18 @@ class extractNCCH (rawutil.TypeReader):
 		if self.has_logo:
 			logopath = self.outdir + 'logo.darc'
 			raw = bread(logopath)
-			content = decompressLZ11(raw)
-			logo_extractor = extractDARC(logopath, content)
+			content = decompressLZ11(raw, self.verbose)
+			logo_extractor = extractDARC(logopath, content, self.verbose)
 			logo_extractor.extract()
 		extheaderpath = self.outdir + 'extheader.bin'
-		extractExtHeader(extheaderpath, bread(extheaderpath))
+		extractExtHeader(extheaderpath, bread(extheaderpath), self.verbose)
 		exefspath = self.outdir + 'exefs.bin'
-		exefs_extractor = extractExeFS(exefspath, bread(exefspath), opts={'dochecks': str(self.dochecks)})
+		exefs_extractor = extractExeFS(exefspath, bread(exefspath), self.verbose, opts={'dochecks': str(self.dochecks)})
 		exefs_extractor.extract()
-		romfspath = self.outdir + 'romfs.bin'
-		romfs_extractor = extractRomFS(romfspath, bread(romfspath), opts={'dochecks': str(self.dochecks)})
-		romfs_extractor.extract()
+		if self.has_romfs:
+			romfspath = self.outdir + 'romfs.bin'
+			romfs_extractor = extractRomFS(romfspath, bread(romfspath), self.verbose, opts={'dochecks': str(self.dochecks)})
+			romfs_extractor.extract()
 
 	def list(self):
 		#Code to list contained files names

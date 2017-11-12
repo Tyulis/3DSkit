@@ -7,8 +7,9 @@ Yaz0_HEADER_STRUCT = '4sI(2I)'
 
 
 class decompressYaz0 (ClsFunc, rawutil.TypeReader):
-	def main(self, content):
+	def main(self, content, verbose):
 		self.byteorder = '>'
+		self.verbose = verbose
 		data = self.readheader(content)
 		return self.decompress(data)
 	

@@ -125,7 +125,8 @@ ORIG_Y = (
 
 
 class extractBCLYT(ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		outfile = make_outfile(filename, 'tclyt')
 		self.bclyt = data
 		self.readheader()
@@ -147,6 +148,8 @@ class extractBCLYT(ClsFunc, rawutil.TypeReader):
 		#filesize = hdata[5]
 		self.secnum = hdata[6]
 		#padding = hdata[7]
+		if self.verbose:
+			print('Version: %08x' % self.version)
 
 	def parsedata(self):
 		ptr = 0

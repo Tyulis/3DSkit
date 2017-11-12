@@ -8,8 +8,9 @@ BL_TABLE_STRUCT = '2sH /1[I] 128a'
 
 
 class extractBL (ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, endian, opts={}):
+	def main(self, filename, data, verbose, endian, opts={}):
 		self.byteorder = endian
+		self.verbose = verbose
 		self.outdir = make_outdir(filename)
 		offsets = self.read_table(data)
 		files = self.extract_files(offsets, data)
@@ -21,6 +22,8 @@ class extractBL (ClsFunc, rawutil.TypeReader):
 			error('Invalid magic %s, expected BL' % byterepr(tbl[0]), 301)
 		filecount = tbl[1]
 		offsets = [el[0] for el in tbl[2]]
+		if self.verbose:
+			print('File count: %d' % filecount)
 		return offsets
 	
 	def extract_files(self, offsets, data):

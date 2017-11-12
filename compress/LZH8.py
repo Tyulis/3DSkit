@@ -5,8 +5,9 @@ import util.rawutil as rawutil
 
 
 class decompressLZH8 (ClsFunc, rawutil.TypeReader):
-	def main(self, content):
+	def main(self, content, verbose):
 		self.byteorder = '<'
+		self.verbose = verbose
 		data = self.readhdr(content)
 		return self.decompress(data)
 	

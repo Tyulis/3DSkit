@@ -125,11 +125,32 @@ ORIG_Y = (
 
 
 class extractBFLYT(ClsFunc, rawutil.TypeReader):
-	def main(self, filename, data, opts={}):
+	def main(self, filename, data, verbose, opts={}):
+		self.verbose = verbose
 		outfile = make_outfile(filename, 'tflyt')
 		self.bflyt = data
 		self.readheader()
 		write(dump(self.parsedata()), outfile)
+	
+	def color(self, data, ptr, format):
+		format = format.upper().strip()
+		if format == 'RGBA8':
+			sz = 4
+		elif format == 'RGB8':
+			sz = 3
+		if format in ('RGBA8', 'RGB8'):
+			r = data[ptr]
+			g = data[ptr + 1]
+			b = data[ptr + 2]
+			if format == 'RGBA8':
+				a = data[ptr + 3]
+			final = OrderedDict()
+			final['RED'] = r
+			final['GREEN'] = g
+			final['BLUE'] = b
+			if format == 'RGBA8':
+				final['ALPHA'] = a
+		return final, ptr + sz
 	
 	def readheader(self):
 		header = self.bflyt[:0x14]
@@ -147,6 +168,9 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 		#filesize = hdata[5]
 		self.secnum = hdata[6]
 		#padding = hdata[7]
+		if self.verbose:
+			print('Version: %08x' % self.version)
+			print('Section count: %d' % self.secnum)
 	
 	def parsedata(self):
 		ptr = 0
