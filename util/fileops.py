@@ -1,15 +1,22 @@
 # -*- coding:utf-8 -*-
 import os
 import __main__
+from util import error
 
 def read(filename, encoding='utf-8'):
-	file = open(filename, 'r', encoding=encoding)
+	try:
+		file = open(filename, 'r', encoding=encoding)
+	except OSError:
+		error('File %s not found' % filename, 403)
 	cnt = file.read()
 	file.close()
 	return cnt
 
 def bread(filename):
-	file = open(filename, 'rb')
+	try:
+		file = open(filename, 'rb')
+	except OSError:
+		error('File %s not found' % filename, 403)
 	cnt = file.read()
 	file.close()
 	return cnt

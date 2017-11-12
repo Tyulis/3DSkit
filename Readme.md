@@ -89,7 +89,7 @@ Output: Output format at extracting. See the output formats help for information
 	BCSAR  | b |   |   | .bcsar              | files
 	BFLIM  | x | x |   | .bflim              | PNG
 	BFLYT  | x |   | x | .bflyt              | TX
-	BL     | e |   | e | .bl                 | files
+	BL     | e |   | e | .bl (none)          | files
 	CBMD   | e |   |   | .bnr banner[.bin]   | files
 	DARC   | x | e |   | .arc .bcma (...)    | files
 	GARC   | x |   |   | .garc (none)        | files

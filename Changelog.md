@@ -197,3 +197,9 @@
 	*	Added format recognition for unnamed files in SARCs
 	*	Fixed a stupid bug in compress.LZ11.decompressLZ11 which created errors in the decompressed data
 	*	Fixed a byte order problem in pack.SARC
+*	v1.18.37
+	*	Updated rawutil to add transparent handling of file objects
+	*	Fixed an offset calculation error in unpack.DARC
+	*	Added the use of file objects instead of bytes objects in certain modules. This make them MUCH faster.
+	*	Converted unpack.GARC to use file objects
+	*	Fixed an error which prevents recognition of file names in pack.SARC

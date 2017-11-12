@@ -6,7 +6,7 @@ import struct
 import builtins
 import binascii
 
-__version__ = '2.2.2'
+__version__ = '2.2.3'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -404,6 +404,7 @@ class _unpack (_ClsFunc, _StructParser):
 			self.data.seek(ptr)
 			return self.unpack_file(stct)
 		else:
+			self.offset = ptr
 			self.data = self.data[ptr:]
 			self.ptr = 0
 			return self.unpack(stct)
@@ -474,7 +475,7 @@ class _unpack (_ClsFunc, _StructParser):
 					subdata = self.data[self.ptr: self.ptr + length]
 					self.ptr += length
 					final += struct.unpack(substruct, subdata)
-		return final, self.ptr
+		return final, self.ptr + self.offset
 	
 	def unpack_file(self, stct):
 		groupbase = self.data.tell()
@@ -522,7 +523,7 @@ class _unpack (_ClsFunc, _StructParser):
 							if byte == b'':
 								break
 							s += byte
-						final.append(s)
+						final.append(s.rstrip(b'\x00'))
 				elif el == 's':
 					final.append(self.data.read(count))
 				elif el == '?':
@@ -735,10 +736,13 @@ def pack(stct, *data):
 if __name__ == '__main__':
 	#test
 	s = '>4s2I/p1[H(2B)] n4a 5X2x? 2u'
-	data = unpack(s, b'TESTaaaa\x00\x00\x00\x02GGhiJJklRETEST\x00\x00YBOOM\x00\xff\x01333666')
+	raw = b'TESTaaaa\x00\x00\x00\x02GGhiJJklRETEST\x00\x00YBOOM\x00\x00\x01333666'
+	data = unpack(s, raw)
 	f = pack(s, *data)
+	assert f == raw
 	file = open('test.bin', 'wb')
 	pack(s, *data, file)
 	file.close()
 	file = open('test.bin', 'rb')
 	d = unpack(s, file)
+	assert d == data

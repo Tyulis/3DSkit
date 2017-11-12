@@ -6,11 +6,12 @@ import pack
 import unpack
 import compress
 import plugins
+from io import BytesIO
 from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.18.36'
+__version__ = '1.18.37'
 
 
 def parse_opts(s):
@@ -44,24 +45,27 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 
 def extract_files(filename, isbigendian, format, verbose, opts):
 	endian = '>' if isbigendian else '<'
-	content = bread(filename)
-	format = unpack.recognize(content, filename, format)
+	#content = bread(filename)
+	format = unpack.recognize(filename, format)
 	if format not in unpack.SKIP_DECOMPRESSION:
+		content = bread(filename)
 		compression = compress.recognize(content)
 		if compression is not None:
 			print('Compression: %s' % compression)
 			print('Decompression...')
 			content = compress.decompress(content, compression, verbose)
+			format = unpack.recognize(BytesIO(content), format)
 			print('Decompressed!')
 		else:
 			print('No compression')
+			content = None
 	else:
 		print('%s file: decompression skipped' % format)
-	format = unpack.recognize(content, filename, format)
+	format = unpack.recognize(filename, format)
 	if format is not None:
 		print('%s file found' % format)
 		print('Extracting...')
-		unpack.extract(content, filename, format, endian, verbose, opts)
+		unpack.extract(filename, format, endian, verbose, opts, content)
 		print('Extracted!')
 	else:
 		if compression is not None:
@@ -75,17 +79,18 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 
 def list_files(filename, isbigendian, format, opts):
 	endian = '>' if isbigendian else '<'
-	content = bread(filename)
 	compression = compress.recognize(filename)
 	if compression is not None:
 		print('Decompression...')
+		content = bread(filename)
 		content = compress.decompress(content, compression, verbose)
 		print('Decompressed!')
 	else:
 		print('No compression')
-	format = unpack.recognize(content, filename, format)
+		content = None
+	format = unpack.recognize(filename, format)
 	if format is not None:
-		unpack.list_files(content, filename, format, endian, verbose, opts)
+		unpack.list_files(filename, format, endian, verbose, opts, content)
 	else:
 		error('Unrecognized format', 103)
 

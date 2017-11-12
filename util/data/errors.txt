@@ -36,4 +36,5 @@ These are the different error codes, and their explaination.
 		You tried to repack a folder which wasn't an extracted ALYT file
 	402: Needed file not found
 		You tried to pack something without the needed file, or you deleted it
-	
+	403: File not found
+		The file or directory you wanted to pack or unpack with 3DSkit doesn't exist

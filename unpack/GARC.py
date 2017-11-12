@@ -88,16 +88,16 @@ class extractGARC (rawutil.TypeReader):
 		self.fatb = []
 		for i in range(0, entrycount):
 			entry = FATBEntry()
-			flags, ptr = self.uint32(data, ptr)
+			flags, ptr = self.unpack_from('I', data, ptr, getptr=True)
+			flags = flags[0]
 			entry.flags = flags
 			for j in range(0, 32):
 				exists = (flags & 1) == 1
 				flags >>= 1
 				if exists:
 					subentry = FATBSubEntry()
-					subentry.start, ptr = self.uint32(data, ptr)
-					subentry.end, ptr = self.uint32(data, ptr)
-					subentry.length, ptr = self.uint32(data, ptr)
+					subdata, ptr = self.unpack_from('3I', data, ptr, getptr=True)
+					subentry.start, subentry.end, subentry.length = subdata
 					entry.subentries.append(subentry)
 			if len(entry.subentries) > 1:
 				entry.isfolder = True
@@ -120,8 +120,8 @@ class extractGARC (rawutil.TypeReader):
 				os.makedirs(outpath)
 				for j, subentry in enumerate(entry.subentries):
 					start = subentry.start + self.dataoffset
-					end = start + subentry.length
-					filedata = data[start:end]
+					data.seek(start)
+					filedata = data.read(subentry.length)
 					comp = compress.recognize(filedata)
 					ext = get_ext(filedata)
 					outname = outpath + str(j) + ext
@@ -133,8 +133,8 @@ class extractGARC (rawutil.TypeReader):
 			else:
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
-				end = start + subentry.length
-				filedata = data[start: end]
+				data.seek(start)
+				filedata = data.read(subentry.length)
 				comp = compress.recognize(filedata)
 				ext = get_ext(filedata)
 				outname = self.outdir + str(i) + ext

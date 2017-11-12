@@ -57,7 +57,7 @@ class packSARC (ClsFunc, TypeWriter):
 			data += self.align(data, 0x80)
 			sfnt += self.pack('n', node.name)
 			sfnt += self.align(sfnt, 4)
-			sfat += self.pack(SFAT_NODE_STRUCT, node.hash, name_offset, data_start, data_end)
+			sfat += self.pack(SFAT_NODE_STRUCT, node.hash, name_offset + (node.has_name << 24), data_start, data_end)
 		sfat = self.pack(SFAT_HEADER_STRUCT, b'SFAT', 12, len(self.nodes), self.hash_multiplier) + sfat
 		sfnt += self.align(sfat, 0x100)
 		sfnt = self.pack(SFNT_HEADER_STRUCT, b'SFNT', 8, 0) + sfnt
