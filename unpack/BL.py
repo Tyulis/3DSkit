@@ -28,8 +28,10 @@ class extractBL (ClsFunc, rawutil.TypeReader):
 	
 	def extract_files(self, offsets, data):
 		files = []
-		for i in range(0, len(offsets) - 1):  #the last is file length
-			files.append(data[offsets[i]: offsets[i + 1]])
+		for i in range(0, len(offsets) - 1):  #the last is total file length
+			data.seek(offsets[i])
+			length = offsets[i + 1] - offsets[i]
+			files.append(data.read(length))
 		return files
 	
 	def write_files(self, files):

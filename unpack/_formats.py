@@ -10,7 +10,7 @@ NEEDS_ENDIAN = (
 )
 
 USE_FILE_OBJ = (
-	'GARC',
+	'GARC', 'BL', 'SARC', 'ALYT',
 )
 
 MAGICS = {

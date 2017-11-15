@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import os
+from io import BytesIO
 from util import error, ENDIANS
 from util.funcops import byterepr
 from util.fileops import *
@@ -23,7 +24,7 @@ class extractALYT (rawutil.TypeReader):
 		self.metapath = self.outdir + '_alyt_' + os.path.sep
 		self.byteorder = '<'
 		self.readmeta(data)
-		self.extractor = extractSARC(filename, self.sarc, self.verbose)
+		self.extractor = extractSARC(filename, BytesIO(self.sarc), self.verbose)
 		self.list = self.extractor.list
 
 	def readmeta(self, data):
@@ -35,7 +36,7 @@ class extractALYT (rawutil.TypeReader):
 		self.lfnl = meta[12]
 		self.nametable = [el[0].decode('utf-8') for el in meta[14]]
 		self.symtable = [el[0].decode('utf-8') for el in meta[16]]
-		self.sarc = data[ptr:]
+		self.sarc = data.read()
 
 	def extract(self):
 		self.extractor.extract()

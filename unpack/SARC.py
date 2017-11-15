@@ -63,7 +63,7 @@ class extractSARC (rawutil.TypeReader):
 		#unknown = hdr[2]
 		for i, node in enumerate(self.nodes):
 			if node.has_name:
-				filename = self.string(data, node.name_offset + ptr)[0]
+				filename = self.unpack_from('n', data, node.name_offset + ptr)[0].decode('utf-8')
 				node.name = filename
 				if self.calc_hash(filename) != node.hash:
 					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash), 305)
@@ -73,7 +73,9 @@ class extractSARC (rawutil.TypeReader):
 	
 	def extract(self):
 		for node in self.nodes:
-			filedata = self.data[self.dataoffset + node.data_start:self.dataoffset + node.data_end]
+			self.data.seek(self.dataoffset + node.data_start)
+			length = node.data_end - node.data_start
+			filedata = self.data.read(length)
 			if node.name.endswith('.noname'):
 				node.name += get_ext(filedata)
 			makedirs(self.outdir + node.name)

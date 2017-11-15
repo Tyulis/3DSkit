@@ -203,3 +203,5 @@
 	*	Added the use of file objects instead of bytes objects in certain modules. This make them MUCH faster.
 	*	Converted unpack.GARC to use file objects
 	*	Fixed an error which prevents recognition of file names in pack.SARC
+*	v1.18.38:
+	*	Optimized unpack.BL, unpack.SARC and unpack.ALYT
