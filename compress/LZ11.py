@@ -102,15 +102,15 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 					disp = (-disp) - 1
 					assert 0 <= disp <= 0xfff
 					if count <= 0xf + 0x1:
-						count -= 3
-						assert 0 <= count <= 0xfff
+						count -= 1
+						assert 0 <= count <= 0xf
 						sh = (count << 12) | disp
 						final += self.uint16(sh)
 						length += 2
 					elif count <= 0xff + 0x11:
 						count -= 0x11
 						assert 0 <= count <= 0xff
-						sh = (count << 12) + disp
+						sh = (count << 12) | disp
 						final += self.pack('U', sh)
 						length += 3
 					elif count <= 0xfff + 0x111:

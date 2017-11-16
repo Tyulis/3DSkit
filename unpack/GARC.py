@@ -44,7 +44,7 @@ class extractGARC (rawutil.TypeReader):
 		self.byteorder = ENDIANS[rawutil.unpack_from('>H', data, 8)[0]]
 		hdata, ptr = self.unpack_from(GARC_HEADER_STRUCT, data, 0, getptr=True)
 		if hdata[0] != b'CRAG':
-			error('Invalid magic %s, expected CRAG' % buterepr(hdata[0]), 301)
+			error('Invalid magic %s, expected CRAG' % byterepr(hdata[0]), 301)
 		#headerlen = hdata[1]
 		#bom = hdata[2]
 		self.version = hdata[3]
@@ -69,7 +69,7 @@ class extractGARC (rawutil.TypeReader):
 		fato, ptr = self.unpack_from(GARC_FATO_SECTION, data, ptr, getptr=True)
 		if fato[0] != b'OTAF':
 			error('Invalid FATO magic %s, expected OTAF' % byterepr(fato[0]), 301)
-		#headerlen = fato[1]
+		#sectionlen = fato[1]
 		entrycount = fato[2]
 		self.filenum = entrycount
 		#padding = fato[3]
@@ -92,15 +92,14 @@ class extractGARC (rawutil.TypeReader):
 			flags = flags[0]
 			entry.flags = flags
 			for j in range(0, 32):
-				exists = (flags & 1) == 1
+				exists = (flags & 1)
 				flags >>= 1
 				if exists:
 					subentry = FATBSubEntry()
 					subdata, ptr = self.unpack_from('3I', data, ptr, getptr=True)
 					subentry.start, subentry.end, subentry.length = subdata
 					entry.subentries.append(subentry)
-			if len(entry.subentries) > 1:
-				entry.isfolder = True
+			entry.isfolder = len(entry.subentries) > 1
 			self.fatb.append(entry)
 		return ptr
 					

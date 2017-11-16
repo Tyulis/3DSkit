@@ -200,8 +200,15 @@
 *	v1.18.37
 	*	Updated rawutil to add transparent handling of file objects
 	*	Fixed an offset calculation error in unpack.DARC
-	*	Added the use of file objects instead of bytes objects in certain modules. This make them MUCH faster.
+	*	Added the use of file objects instead of bytes objects in certain modules. This make them MUCH faster, especially on huge files
 	*	Converted unpack.GARC to use file objects
 	*	Fixed an error which prevents recognition of file names in pack.SARC
 *	v1.18.38:
 	*	Optimized unpack.BL, unpack.SARC and unpack.ALYT
+
+**v1.19**
+
+*	v1.19.38
+	*	Added LZ11 compression
+	*	Added pack.GARC
+	*	Fixed a stupid bug in rawutil which prevents use of TypeWriter.pack() with file-like objects

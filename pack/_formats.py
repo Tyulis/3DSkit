@@ -7,4 +7,5 @@ formats = (
 	'ALYT',
 	'BFLIM',
 	'BL',
+	'GARC',
 )

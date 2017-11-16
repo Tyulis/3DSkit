@@ -6,7 +6,7 @@ import struct
 import builtins
 import binascii
 
-__version__ = '2.2.3'
+__version__ = '2.2.4'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -67,9 +67,10 @@ class TypeUser (object):
 			for sub in SUBS.keys():
 				stct = stct.replace(sub, SUBS[sub])
 		data = list(data)
-		for i, el in enumerate(data):
-			if isinstance(el, str):
-				data[i] = el.encode('utf-8')
+		if hasattr(data[-1], 'write'):
+			out = data.pop(-1)
+		else:
+			out = None
 		packed = _pack(stct, data, byteorder, out)
 		return packed
 	

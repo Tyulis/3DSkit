@@ -9,6 +9,8 @@ These are the different error codes, and their explaination.
 	104: The file is uncompressed
 		You tried to decompress with the -D option an uncompressed file, or a file with an unsupported compression
 	105: Unsupported color format
+	106: Unsupported file version
+		The format version you specified is not supported or doesn't exist
 ;;;;
 200: User error
 	201: You have to specify the output file name at packing

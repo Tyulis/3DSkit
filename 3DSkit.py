@@ -11,7 +11,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.18.38'
+__version__ = '1.19.38'
 
 
 def parse_opts(s):
@@ -151,7 +151,7 @@ if __name__ == '__main__':
 				extract_files(filename, args.big, args.format, args.verbose, opts)
 	elif args.pack:
 		files = []
-		basedir = os.getcwd()
+		basedir = os.getcwd() + os.path.sep
 		if args.out is None:
 			error('You have to specify the output name', 201)
 		if args.format is None:
