@@ -25,7 +25,6 @@ class extractALYT (rawutil.TypeReader):
 		self.byteorder = '<'
 		self.readmeta(data)
 		self.extractor = extractSARC(filename, BytesIO(self.sarc), self.verbose)
-		self.list = self.extractor.list
 
 	def readmeta(self, data):
 		meta, ptr = self.unpack_from(ALYT_META_STRUCT, data, 0, getptr=True)

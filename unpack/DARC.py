@@ -54,13 +54,6 @@ class extractDARC (rawutil.TypeReader):
 		for i, entry in enumerate(self.table):
 			self.table[i].name, end = self.utf16string(data, entry.nameoffset + ptr)
 	
-	def list(self):
-		print('Directories:')
-		print('\n'.join([entry.name for entry in self.table if entry.isdir]))
-		print('')
-		print('Files:')
-		print('\n'.join([entry.name for entry in self.table if not entry.isdir]))
-	
 	def extract(self):
 		actfolder = [self.outdir]
 		folderend = -1

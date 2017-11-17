@@ -17,6 +17,3 @@ import util.rawutil as rawutil
 >a
 >a	def extract(self):
 >a		#Code to really extract files
->a
->a	def list(self):
->a		#Code to list contained files names

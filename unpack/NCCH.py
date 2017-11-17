@@ -208,7 +208,3 @@ class extractNCCH (rawutil.TypeReader):
 			romfspath = self.outdir + 'romfs.bin'
 			romfs_extractor = extractRomFS(romfspath, bread(romfspath), self.verbose, opts={'dochecks': str(self.dochecks)})
 			romfs_extractor.extract()
-
-	def list(self):
-		#Code to list contained files names
-		pass

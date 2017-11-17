@@ -6,4 +6,4 @@ def pack(filenames, outname, format, endian, verbose, opts):
 	mod = __import__('pack.%s' % format)
 	func = eval('mod.%s.pack%s' % (format, format))
 	args = [filenames, outname, endian, verbose, opts]
-	func(*args)
+	return func(*args)

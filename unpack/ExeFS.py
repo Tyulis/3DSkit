@@ -40,7 +40,3 @@ class extractExeFS (rawutil.TypeReader):
 					paf
 					error('File %s hash mismatch' % file.name, 305)
 			bwrite(content, self.outdir + file.name)
-
-	def list(self):
-		print('\n'.join([el.name for el in 
-		self.files]))

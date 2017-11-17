@@ -3,9 +3,9 @@ These are the different error codes, and their explaination.
 ;;;;
 100: Not implemented or unsupported
 	101: Unsupported format to unpack
-	102: Unsupported format to unpack
+	102: Unsupported format to pack
 	103: Unrecognized format to unpack
-		Try to precise the format with the -f option. All supported formats are listes in the help.
+		Try to precise the format with the -f option. All supported formats are listed in the help.
 	104: The file is uncompressed
 		You tried to decompress with the -D option an uncompressed file, or a file with an unsupported compression
 	105: Unsupported color format
@@ -38,5 +38,5 @@ These are the different error codes, and their explaination.
 		You tried to repack a folder which wasn't an extracted ALYT file
 	402: Needed file not found
 		You tried to pack something without the needed file, or you deleted it
-	403: File not found
+	404: File not found
 		The file or directory you wanted to pack or unpack with 3DSkit doesn't exist

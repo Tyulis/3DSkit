@@ -26,7 +26,7 @@ BFLYT  | x |   | x | .bflyt              | TX
 BL     | e |   | e | .bl                 | files
 CBMD   | e |   |   | .bnr banner[.bin]   | files
 DARC   | x | e |   | .arc .bcma (...)    | files
-GARC   | x |   |   | .garc (none)        | files
+GARC   | x |   | x | .garc (none)        | files
 GFA    | x |   |   | .gfa                | files
 NCCH   | x |   |   | .app .cxi .cfa      | sections
 NDS    | x |   |   | .nds                | files
@@ -61,11 +61,11 @@ C: Compressible
 
 Compression | D | C | Extensions
 -------------------------------------------------
-LZ10        | x | x | (none) .cmp .l -_LZ.bin .LZ
-LZ11        | x | x | (none) .cmp .l -_LZ.bin .LZ
+LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ
+LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ
 LZH8        | x |   | .cx
 Yaz0        | x |   | .szs
-ETC1        | x |   | Texture compression in B_LIM
+ETC1        | x |   | Texture compression in BFLIM
 ;;;;
 
 Format-Specific options
@@ -81,5 +81,5 @@ At packing:
 		
 		swizzle: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
 	
-	GARC: (Actually not implemented)
+	GARC:
 		version: Specify the file version. Can be 4 or 6, see console output at extraction

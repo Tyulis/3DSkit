@@ -285,9 +285,6 @@ class extractNDS (rawutil.TypeReader):
 				dir[name] = self.files[actfile]
 				actfile += 1
 	
-	def list(self):
-		print(dump(self.tree))
-	
 	def extract(self):
 		romout = self.outdir + 'rom' + os.path.sep
 		exeout = self.outdir + 'exe' + os.path.sep

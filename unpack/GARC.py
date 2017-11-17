@@ -6,6 +6,7 @@ from util.fileops import *
 from util.funcops import byterepr
 import util.rawutil as rawutil
 from ._formats import get_ext
+from io import BytesIO
 
 GARC_HEADER_STRUCT = '4sI2H3I'
 GARC_HEADER_END = {
@@ -102,9 +103,6 @@ class extractGARC (rawutil.TypeReader):
 			entry.isfolder = len(entry.subentries) > 1
 			self.fatb.append(entry)
 		return ptr
-					
-	def list(self):
-		print('%d files found' % self.filenum)
 	
 	def extract(self):
 		data = self.data
@@ -133,12 +131,15 @@ class extractGARC (rawutil.TypeReader):
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
 				data.seek(start)
-				filedata = data.read(subentry.length)
+				filedata = BytesIO(data.read(subentry.length))
 				comp = compress.recognize(filedata)
 				ext = get_ext(filedata)
 				outname = self.outdir + str(i) + ext
 				if comp == 'LZ11':
-					filedata = compress.decompress(filedata, comp, self.verbose)
 					ext = get_ext(filedata)
 					outname = self.outdir + 'dec_%d%s' % (i, ext)
-				bwrite(filedata, outname)
+					outfile = open(outname, 'wb')
+					compress.decompress(filedata, outfile, comp, self.verbose)
+					outfile.close()
+				else:
+					bwrite(filedata.read(), outname)

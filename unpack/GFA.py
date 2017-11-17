@@ -66,10 +66,6 @@ class extractGFA (rawutil.TypeReader):
 		node.offset = entry[3] - self.dataoffset
 		return node
 	
-	def list(self):
-		for node in self.nodes:
-			print(node.name)
-	
 	def extract(self):
 		data = self.gfcp
 		magic, version, comp, self.decsize, compsize = self.unpack_from(GFCP_HEADER_STRUCT, data)

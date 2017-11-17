@@ -55,7 +55,3 @@ class extractRomFS (rawutil.TypeReader):
 	def extract(self):
 		#Code to really extract files
 		pass
-
-	def list(self):
-		#Code to list contained files names
-		pass

@@ -1,22 +1,43 @@
-def recognize(cnt):
-	if cnt[0] == 0x10:
+DEC_USE_FILE_OBJS = (
+	'Yaz0',
+)
+
+CMP_USE_FILE_OBJS = (
+)
+
+
+def recognize(file):
+	magic = file.read(4)
+	if magic[0] == 0x10:
 		return 'LZ10'
-	elif cnt[0] == 0x11:
+	elif magic[0] == 0x11:
 		return 'LZ11'
-	elif cnt[0] == 0x40:
+	elif magic[0] == 0x40:
 		return 'LZH8'
-	elif cnt[0:4] == b'Yaz0':
+	elif magic == b'Yaz0':
 		return 'Yaz0'
 	return None
 
 
-def decompress(cnt, format, verbose):
+def decompress(file, out, format, verbose):
+	file.seek(0)
+	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.decompress%s' % (format, format))
-	return func(cnt, verbose)
+	if format in DEC_USE_FILE_OBJS:
+		func(file, out, verbose)
+	else:
+		final = func(file.read(), verbose)
+		out.write(final)
 
 
-def compress(cnt, format, verbose):
+def compress(file, out, format, verbose):
+	file.seek(0)
+	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.compress%s' % (format, format))
-	return func(cnt, verbose)
+	if format in CMP_USE_FILE_OBJS:
+		func(file, out, verbose)
+	else:
+		final = func(file.read(), verbose)
+		out.write(final)

@@ -4,6 +4,8 @@ import util.rawutil as rawutil
 from collections import defaultdict
 from operator import itemgetter
 
+#inspirated from nlzss
+
 
 class LZ11SlidingWindow (object):
 	def __init__(self, data):
@@ -111,7 +113,7 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 						count -= 0x11
 						assert 0 <= count <= 0xff
 						sh = (count << 12) | disp
-						final += self.pack('U', sh)
+						final += self.uint24(sh)
 						length += 3
 					elif count <= 0xfff + 0x111:
 						count -= 0x111

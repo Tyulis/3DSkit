@@ -66,20 +66,16 @@ def recognize(filename, format=None):
 	file.seek(0)
 	magic = file.read(4)
 	if magic in MAGICS.keys():
-		file.close()
 		return MAGICS[magic]
 	if magic[0:2] in MAGICS.keys():
-		file.close()
 		return MAGICS[magic[0:2]]
 	file.seek(-0x28, 2)
 	magic = file.read(4)
 	if magic in (b'FLIM', b'CLIM'):
-		file.close()
 		return MAGICS[magic]
 	file.seek(0x100)
 	magic = file.read(4)
 	if magic == b'NCCH':
-		file.close()
 		return 'NCCH'
 	if type(filename) == str:
 		try:
@@ -94,7 +90,11 @@ def recognize(filename, format=None):
 
 
 def get_ext(data):
-	format = recognize(BytesIO(data))
+	if hasattr(data, 'read'):
+		format = recognize(data)
+		data.seek(0)
+	else:
+		format = recognize(BytesIO(data))
 	if format is not None:
 		return '.' + format.lower()
 	else:

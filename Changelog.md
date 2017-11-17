@@ -212,3 +212,10 @@
 	*	Added LZ11 compression
 	*	Added pack.GARC
 	*	Fixed a stupid bug in rawutil which prevents use of TypeWriter.pack() with file-like objects
+*	v1.19.39
+	*	Updated help and readme
+	*	Several fixes in packed files compression
+	*	Prepared use of file-like objects in compressors and decompressors
+*	v1.19.40
+	*	Rewritten the Yaz0 decompressor for more efficience and less errors, thanks to NWPlayer123
+	*	Now prints the help if no arguments are specified

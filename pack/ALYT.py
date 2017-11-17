@@ -55,7 +55,7 @@ class packALYT (ClsFunc, TypeWriter):
 	def repack_all(self):
 		if self.verbose:
 			print('Packing SARC')
-		sarc = bytearray(packSARC(self.files, None, endian=self.byteorder, embedded=True))
+		sarc = bytearray(packSARC(self.files, None, self.byteorder, self.verbose, embedded=True))
 		if self.verbose:
 			print('Packing ALYT')
 		final = self.alyt + sarc

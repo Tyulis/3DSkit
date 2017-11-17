@@ -11,7 +11,7 @@ What does 3DSkit?
 
 *	Extract and convert many files formats found in 3DS, WiiU, and why not NDS games
 *	Pack or repack them
-*	Decompress, and soon compress these files with their original compression
+*	Decompress, compress these files with their original compression
 
 How to use
 ==========
@@ -106,6 +106,20 @@ There is also:
 	*	Unpack ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
 *	unpack.RomFS:
 	*	Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized [Actually not completely implemented]
+
+Compressions:
+
+D: Decompressible
+
+C: Compressible
+
+	Compression | D | C | Extensions
+	-------------------------------------------------
+	LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ
+	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ
+	LZH8        | x |   | .cx
+	Yaz0        | x |   | .szs
+	ETC1        | x |   | Texture compression in BFLIM
 
 Dependencies
 ============

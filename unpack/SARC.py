@@ -83,11 +83,6 @@ class extractSARC (rawutil.TypeReader):
 				print('Extracting %s' % self.outdir + node.name)
 			bwrite(filedata, self.outdir + node.name)
 	
-	def list(self):
-		print('')
-		for node in self.nodes:
-			print(node.name + (' [not real name]' if not node.has_name else ''))
-	
 	def calc_hash(self, name):
 		result = 0
 		for c in name:
