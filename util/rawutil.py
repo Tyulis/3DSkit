@@ -403,7 +403,6 @@ class _unpack (_ClsFunc, _StructParser):
 		stct = self.parse_struct(stct, refdata)
 		if hasattr(self.data, 'read'):
 			if ptr is not None:
-				pag
 				self.data.seek(ptr)
 			return self.unpack_file(stct)
 		else:

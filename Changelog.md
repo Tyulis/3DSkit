@@ -222,3 +222,5 @@
 *	v1.19.41
 	*	(Very) slightly enhanced the LZ11 decompressor
 	*	Optimized unpack.BFLIM
+*	v1.19.42
+	*	Cleanup
