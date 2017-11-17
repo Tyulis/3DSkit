@@ -12,7 +12,7 @@ from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.19.40'
+__version__ = '1.19.41'
 
 
 def parse_opts(s):

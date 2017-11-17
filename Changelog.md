@@ -217,5 +217,8 @@
 	*	Several fixes in packed files compression
 	*	Prepared use of file-like objects in compressors and decompressors
 *	v1.19.40
-	*	Rewritten the Yaz0 decompressor for more efficience and less errors, thanks to NWPlayer123
+	*	Rewritten the Yaz0 decompressor for more efficience and less errors (thanks to NWPlayer123)
 	*	Now prints the help if no arguments are specified
+*	v1.19.41
+	*	(Very) slightly enhanced the LZ11 decompressor
+	*	Optimized unpack.BFLIM

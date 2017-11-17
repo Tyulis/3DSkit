@@ -171,11 +171,12 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 		ptr = 0
 		final = []
 		while len(final) < self.decsize:
-			flags = self.tobits(self.data[ptr], 8)
+			flags = self.data[ptr]
 			ptr += 1
-			for flag in flags:
+			mask = 1 << 7
+			for i in range(8):
 				#Todo: Make this a bit less horrible
-				if flag == 0:
+				if flags & mask == 0:
 					byte = self.data[ptr]
 					ptr += 1
 					final.append(byte)
@@ -202,6 +203,7 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 				l = len(final)
 				if len(final) >= self.decsize:
 					break
+				mask >>= 1
 			if len(final) >= self.decsize:
 					break
 		return bytes(final)

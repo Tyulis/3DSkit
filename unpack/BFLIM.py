@@ -2,7 +2,7 @@
 import math
 from util import error, ENDIANS
 import util.rawutil as rawutil
-from util.funcops import ClsFunc
+from util.funcops import ClsFunc, byterepr
 from util.fileops import *
 from PIL import Image
 
@@ -77,22 +77,22 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, verbose, opts={}):
 		self.outfile = make_outfile(filename, 'png')
 		self.verbose = verbose
-		data = self.readheader(data)
+		self.readheader(data)
 		if self.format in (ETC1, ETC1A4, ETC1_2):
 			self.decompress_ETC1(data)
 		else:
 			self.extract(data)
 			
 	def readheader(self, data):
-		flim = data[-0x28:-0x14]
-		imag = data[-0x14:]
-		self.readFLIMheader(flim)
-		self.readimagheader(imag)
-		return data[:-0x28]
+		self.readFLIMheader(data)
+		self.readimagheader(data)
+		data.seek(0)
 		
-	def readFLIMheader(self, hdr):
-		self.byteorder = ENDIANS[rawutil.unpack_from('>H', hdr, 4)[0]]
-		hdata = self.unpack(BFLIM_FLIM_HDR_STRUCT, hdr)
+	def readFLIMheader(self, data):
+		data.seek(-0x24, 2)
+		self.byteorder = ENDIANS[rawutil.unpack_from('>H', data)[0]]
+		data.seek(-0x28, 2)
+		hdata = self.unpack_from(BFLIM_FLIM_HDR_STRUCT, data)
 		if hdata[0] != b'FLIM':
 			error('Invalid magic %s, expected FLIM' % byterepr(hdata[0]), 301)
 		#bom = hdata[1]
@@ -102,8 +102,9 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		#datablocksnum = hdata[5] #always 0x01
 		#padding = hdata[6]
 		
-	def readimagheader(self, hdr):
-		hdata = self.unpack(BFLIM_IMAG_HDR_STRUCT, hdr)
+	def readimagheader(self, data):
+		data.seek(-0x14, 2)
+		hdata = self.unpack_from(BFLIM_IMAG_HDR_STRUCT, data)
 		if hdata[0] != b'imag':
 			error('Invalid magic for imag header: %s' % byterepr(hdata[0]), 301)
 		#headerlen = hdata[1] #0x10
@@ -131,12 +132,14 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		
 		tiles_x = math.ceil(self.width / 8)
 		tiles_y = math.ceil(self.height / 8)
+		tilelen = int(64 * self.pxsize)
 		
 		#8x8px tiles
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
 				tilepos = int(((ytile * 64 * tiles_x) + (xtile * 64)) * self.pxsize)
-				tile = data[tilepos:int(tilepos + 64 * self.pxsize)]
+				data.seek(tilepos)
+				tile = data.read(tilelen)
 				self.extract_tile(tile, xtile, ytile)
 				
 		img = self.deswizzle(img)
@@ -244,7 +247,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		
 	def decompress_ETC1(self, data):
 		#Based on ObsidianX's BFLIM ETC1 decompression algorithm (https://github.com/ObsidianX/3dstools)
-		if verbose:
+		if self.verbose:
 			print('Decompressing pixel data')
 		has_alpha = (self.format == ETC1A4)
 		blklen = (16 if has_alpha else 8)
@@ -254,13 +257,11 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		tile_w = math.ceil(self.height / 8)
 		tile_h = 1 << math.ceil(math.log(tile_h, 2))
 		tile_w = 1 << math.ceil(math.log(tile_w, 2))
-		ptr = 0
 		for tiley in range(0, tile_h):
 			for tilex in range(0, tile_w):
 				for blocky in range(0, 2):
 					for blockx in range(0, 2):
-						block = data[ptr:ptr + blklen]
-						ptr += blklen
+						block = data.read(blklen)
 						if has_alpha:
 							alphas = self.unpack_from('Q', block, 0)[0]
 							block = block[8:]

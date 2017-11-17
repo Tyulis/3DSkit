@@ -6,7 +6,7 @@ import struct
 import builtins
 import binascii
 
-__version__ = '2.2.4'
+__version__ = '2.2.5'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -81,11 +81,11 @@ class TypeUser (object):
 		if len(SUBS) > 0:
 			for sub in SUBS.keys():
 				stct = stct.replace(sub, SUBS[sub])
-		unpacked, ptr = _unpack(stct, data, 0, byteorder, refdata)
+		unpacked, ptr = _unpack(stct, data, None, byteorder, refdata)
 		return unpacked
 	
-	def unpack_from(self, stct, data, offset=0, refdata=(), getptr=False):
-		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
+	def unpack_from(self, stct, data, offset=None, refdata=(), getptr=False):
+		byteorder = stct[0] if stct[0] in '@=><!' else '@'
 		stct = stct.lstrip('<>=!@')
 		stct = stct.replace(' ', '')
 		if len(SUBS) > 0:
@@ -402,9 +402,12 @@ class _unpack (_ClsFunc, _StructParser):
 		self.endianname = ENDIANNAMES[byteorder]
 		stct = self.parse_struct(stct, refdata)
 		if hasattr(self.data, 'read'):
-			self.data.seek(ptr)
+			if ptr is not None:
+				pag
+				self.data.seek(ptr)
 			return self.unpack_file(stct)
 		else:
+			ptr = ptr if ptr is not None else 0
 			self.offset = ptr
 			self.data = self.data[ptr:]
 			self.ptr = 0
@@ -701,11 +704,11 @@ def unpack(stct, data, refdata=()):
 	if len(SUBS) > 0:
 		for sub in SUBS.keys():
 			stct = stct.replace(sub, SUBS[sub])
-	unpacked, ptr = _unpack(stct, data, 0, byteorder, refdata)
+	unpacked, ptr = _unpack(stct, data, None, byteorder, refdata)
 	return unpacked
 
 
-def unpack_from(stct, data, offset=0, refdata=(), getptr=False):
+def unpack_from(stct, data, offset=None, refdata=(), getptr=False):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
