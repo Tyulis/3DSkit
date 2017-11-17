@@ -45,7 +45,7 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 
 def extract_files(filename, isbigendian, format, verbose, opts):
 	endian = '>' if isbigendian else '<'
-	#content = bread(filename)
+	content = None
 	format = unpack.recognize(filename, format)
 	if format not in unpack.SKIP_DECOMPRESSION:
 		content = bread(filename)
