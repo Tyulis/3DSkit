@@ -224,3 +224,4 @@
 	*	Optimized unpack.BFLIM
 *	v1.19.42
 	*	Cleanup
+	*	Rewritten the LZ11 compressor. Now, it takes 0.25s instead of 45s to compress 20KB.

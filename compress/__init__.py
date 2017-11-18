@@ -3,6 +3,7 @@ DEC_USE_FILE_OBJS = (
 )
 
 CMP_USE_FILE_OBJS = (
+	'LZ11',
 )
 
 

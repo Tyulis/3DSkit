@@ -76,7 +76,7 @@ def decompress_file(filename, verbose):
 	sname = list(filename.partition('.'))
 	sname[0] += '_dec'
 	filename = ''.join(sname)
-	out = open(filename, 'wb+')
+	out = open(filename.replace('.cmp', ''), 'wb+')
 	compression = compress.recognize(file)
 	if compression is None:
 		error('The file is not compressed', 104)
