@@ -121,44 +121,44 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 		outlen = 0
 		self.out.write(b'\x00' * self.decsize)
 		self.out.seek(0)
+		block = -1
 		while outlen < self.decsize:
-			flags = ord(self.file.read(1))
-			mask = 1 << 7
-			for i in range(8):
-				#Todo: Make this a bit less horrible
-				if flags & mask == 0:
-					byte = self.file.read(1)
-					self.out.write(byte)
+			if block == -1:
+				flags = ord(self.file.read(1))
+				block = 7
+			mask = 1 << block
+			if flags & mask == 0:
+				byte = self.file.read(1)
+				self.out.write(byte)
+			else:
+				byte1 = ord(self.file.read(1))
+				indic = byte1 >> 4
+				if indic == 0:
+					byte2, byte3 = self.file.read(2)
+					count = (byte1 << 4) + (byte2 >> 4) + 0x11
+					disp = ((byte2 & 0xf) << 8) + byte3 + 1
+				elif indic == 1:
+					byte2, byte3, byte4 = self.file.read(3)
+					count = ((byte1 & 0xf) << 12) + (byte2 << 4) + (byte3 >> 4) + 0x111
+					disp = ((byte3 & 0xf) << 8) + byte4 + 1
 				else:
-					byte1 = ord(self.file.read(1))
-					indic = byte1 >> 4
-					if indic == 0:
-						byte2, byte3 = self.file.read(2)
-						count = (byte1 << 4) + (byte2 >> 4) + 0x11
-						disp = ((byte2 & 0xf) << 8) + byte3 + 1
-					elif indic == 1:
-						byte2, byte3, byte4 = self.file.read(3)
-						count = ((byte1 & 0xf) << 12) + (byte2 << 4) + (byte3 >> 4) + 0x111
-						disp = ((byte3 & 0xf) << 8) + byte4 + 1
-					else:
-						byte2 = ord(self.file.read(1))
-						count = indic + 1
-						disp = ((byte1 & 0xf) << 8) + byte2 + 1
-					if count > disp:
-						self.out.seek(-disp, 1)
-						buf = bytearray(self.out.read(disp + count))
-						for j in range(count):
-							buf[disp + j] = buf[j]
-						self.out.seek(-(disp + count), 1)
-						self.out.write(buf)
-					else:
-						self.out.seek(-disp, 1)
-						ref = self.out.read(count)
-						self.out.seek((disp - count), 1)
-						self.out.write(ref)
-				outlen = self.out.tell()
-				if outlen >= self.decsize:
-					break
-				mask >>= 1
+					byte2 = ord(self.file.read(1))
+					count = indic + 1
+					disp = ((byte1 & 0xf) << 8) + byte2 + 1
+				if count > disp:
+					self.out.seek(-disp, 1)
+					buf = bytearray(self.out.read(disp + count))
+					buf[disp: disp + count] = buf[0: count]
+					#for j in range(count):
+					#	buf[disp + j] = buf[j]
+					self.out.seek(-(disp + count), 1)
+					self.out.write(buf)
+				else:
+					self.out.seek(-disp, 1)
+					ref = self.out.read(count)
+					self.out.seek((disp - count), 1)
+					self.out.write(ref)
+			outlen = self.out.tell()
 			if outlen >= self.decsize:
 				break
+			block -= 1

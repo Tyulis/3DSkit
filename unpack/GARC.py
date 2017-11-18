@@ -141,7 +141,7 @@ class extractGARC (rawutil.TypeReader):
 				if comp == 'LZ11':
 					ext = get_ext(filedata)
 					outname = self.outdir + 'dec_%d%s' % (i, ext)
-					outfile = open(outname, 'wb')
+					outfile = open(outname, 'wb+')
 					compress.decompress(filedata, outfile, comp, self.verbose)
 					outfile.close()
 				else:

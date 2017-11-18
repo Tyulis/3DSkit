@@ -11,12 +11,12 @@ What does 3DSkit?
 
 *	Extract and convert many files formats found in 3DS, WiiU, and why not NDS games
 *	Pack or repack them
-*	Decompress, compress these files with their original compression
+*	Decompress and compress these files from and to their original compression
 
 How to use
 ==========
 
-	usage: 3DSkit.py [-h] [-H] [-t | -x | -p | -D | -C | -g PLUGIN] [-d] [-f FORMAT] [-l | -b] [-o OUT] [-c COMPRESSION] [-O OPTIONS] [files [files ...]]
+	usage: 3DSkit.py [-h] [-H] [-x | -p | -D | -C | -g PLUGIN] [-d] [-f FORMAT] [-l | -b] [-o OUT] [-c COMPRESSION] [-O OPTIONS] [files [files ...]]
 
 	positional arguments:
 		files                 Name of file to convert or to pack into an archive
@@ -25,7 +25,6 @@ How to use
 		-h, --help            show this help message and exit
 		-H, --detailed_help   Detailed help (you should read it the first time you use 3DSkit)
 		-v, --verbose         Increases the 3DSkit's verbosity
-		-t, --list            Lists the files contained in an archive
 		-x, --extract         Extract files contained in the archive / decompress the file if necessary and convert it to a readable format
 		-p, --pack            Pack files into an archive, or convert it to a console format
 		-D, --decompress      Decompress the input files
@@ -57,9 +56,11 @@ You can specify them with -O{option=value} or -O{option1=value1;option2=value2}
 **At packing**:
 
 *	BFLIM:
-	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format  of original without any problem, for example for ETC1, not supported at packing. Defaults to RGBA8
+	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format from original without any problem, for example for ETC1, not supported for packing. Defaults to RGBA8
 		
 	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
+*	GARC:
+	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
 
 Supported formats
 =================
@@ -92,7 +93,7 @@ Output: Output format at extracting. See the output formats help for information
 	BL     | e |   | e | .bl (none)          | files
 	CBMD   | e |   |   | .bnr banner[.bin]   | files
 	DARC   | x | e |   | .arc .bcma (...)    | files
-	GARC   | x |   |   | .garc (none)        | files
+	GARC   | x |   | x | .garc (none)        | files
 	GFA    | x |   |   | .gfa                | files
 	NCCH   | x |   |   | .app .cxi .cfa      | sections
 	NDS    | x |   |   | .nds                | files
@@ -127,6 +128,7 @@ To access all 3DSkit functionnalities, you need:
 
 *	python3 (tested under python 3.5 and 3.6, but it should work from 3.2 to 3.6+)
 *	Pillow (Fork of PIL, use sudo apt-get install python3-pil)
+*	NumPy (not absolutely needed, but it's better to have it)
 *	struct (it should be installed by default with python3)
 
 Contributing

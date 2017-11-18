@@ -38,7 +38,7 @@ def bwrite(content, filename):
 
 def make_outdir(filename):
 	outdir = os.path.splitext(filename)[0]
-	if outdir == filename:
+	if outdir == filename or os.path.exists(outdir):
 		outdir += '_'
 	outdir += os.path.sep
 	try:

@@ -230,3 +230,9 @@
 	*	Fixed LZ11 compression
 	*	Fixed GARC packing and extraction
 	*	Style fixes and cleanup
+*	1.19.44
+	*	Fixed and updated the readme
+	*	Fixed the error which occured when the output directory has the same name as an existing file
+	*	Several fixes in compress.Yaz0 and rawutil
+	*	Fixed the unsupported operation error in unpack.GARC
+	*	Further optimization in the LZ11 decompressor (ca. 1%)
