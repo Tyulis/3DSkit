@@ -46,10 +46,10 @@ class extractDARC (rawutil.TypeReader):
 		return ptr
 	
 	def readtable(self, data, ptr):
-		rawtable = data[self.tableoffset:self.tableoffset + self.tablelen]
+		#rawtable = data[self.tableoffset:self.tableoffset + self.tablelen]
 		root = self.unpack_from('3I', data, ptr)
 		entrynum = root[2]
-		tablebs, ptr = self.unpack_from(DARC_TABLE_STRUCT, data, ptr, refdata = [entrynum], getptr=True)
+		tablebs, ptr = self.unpack_from(DARC_TABLE_STRUCT, data, ptr, refdata=[entrynum], getptr=True)
 		self.table = [DARCTableEntry(entry) for entry in tablebs[0]]
 		for i, entry in enumerate(self.table):
 			self.table[i].name, end = self.utf16string(data, entry.nameoffset + ptr)

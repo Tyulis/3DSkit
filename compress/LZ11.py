@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-import array
 from util.funcops import ClsFunc
 import util.rawutil as rawutil
 
@@ -54,16 +53,17 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 				size = 3
 				subptr = pos + 3
 				ptr += 3
-				prevbyte = data[subptr]
-				newbyte = data[ptr]
-				while prevbyte == newbyte and subptr < self.datalen - 1 and ptr < self.datalen - 1:
-					subptr += 1
-					ptr += 1
-					size += 1
-					if size >= 0x10110:
-						break
+				if ptr < self.datalen:
 					prevbyte = data[subptr]
 					newbyte = data[ptr]
+					while prevbyte == newbyte and subptr < self.datalen - 1 and ptr < self.datalen - 1:
+						subptr += 1
+						ptr += 1
+						size += 1
+						if size >= 0x10110:
+							break
+						prevbyte = data[subptr]
+						newbyte = data[ptr]
 				disp -= 1
 				if size > 0xff + 0x11:
 					#sh = (1 << 28) | ((size - 0x111) << 12) | (disp - 1)
@@ -102,55 +102,63 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 #inspirated from nlzss
 
 class decompressLZ11 (ClsFunc, rawutil.TypeReader):
-	def main(self, content, verbose):
+	def main(self, file, out, verbose):
 		self.byteorder = '>'
 		self.verbose = verbose
-		self.readhdr(content)
-		return self.decompress()
+		self.file = file
+		self.out = out
+		self.file.seek(0)
+		self.out.seek(0)
+		self.readhdr()
+		self.decompress()
 	
-	def readhdr(self, content):
-		if content[0] != 0x11:
-			error('Invalid magic 0x%02x, expected 0x11' % content[0], 301)
-		self.decsize = self.unpack_from('<U', content[:4], 1)[0]
-		self.data = content[4:]
+	def readhdr(self):
+		magic, self.decsize = self.unpack_from('<BU', self.file)
+		if magic != 0x11:
+			error('Invalid magic 0x%02x, expected 0x11' % magic, 301)
 	
 	def decompress(self):
-		ptr = 0
-		final = []
-		while len(final) < self.decsize:
-			flags = self.data[ptr]
-			ptr += 1
+		outlen = 0
+		self.out.write(b'\x00' * self.decsize)
+		self.out.seek(0)
+		while outlen < self.decsize:
+			flags = ord(self.file.read(1))
 			mask = 1 << 7
 			for i in range(8):
 				#Todo: Make this a bit less horrible
 				if flags & mask == 0:
-					byte = self.data[ptr]
-					ptr += 1
-					final.append(byte)
+					byte = self.file.read(1)
+					self.out.write(byte)
 				else:
-					byte1 = self.data[ptr]
-					ptr += 1
+					byte1 = ord(self.file.read(1))
 					indic = byte1 >> 4
 					if indic == 0:
-						byte2, byte3 = self.data[ptr: ptr + 2]
-						ptr += 2
+						byte2, byte3 = self.file.read(2)
 						count = (byte1 << 4) + (byte2 >> 4) + 0x11
 						disp = ((byte2 & 0xf) << 8) + byte3 + 1
 					elif indic == 1:
-						byte2, byte3, byte4 = self.data[ptr: ptr + 3]
-						ptr += 3
+						byte2, byte3, byte4 = self.file.read(3)
 						count = ((byte1 & 0xf) << 12) + (byte2 << 4) + (byte3 >> 4) + 0x111
 						disp = ((byte3 & 0xf) << 8) + byte4 + 1
 					else:
-						byte2, ptr = self.uint8(self.data, ptr)
+						byte2 = ord(self.file.read(1))
 						count = indic + 1
 						disp = ((byte1 & 0xf) << 8) + byte2 + 1
-					for i in range(0, count):
-						final.append(final[-disp])
-				l = len(final)
-				if len(final) >= self.decsize:
+					if count > disp:
+						self.out.seek(-disp, 1)
+						buf = bytearray(self.out.read(disp + count))
+						for j in range(count):
+							buf[disp + j] = buf[j]
+						self.out.seek(-(disp + count), 1)
+						self.out.write(buf)
+					else:
+						self.out.seek(-disp, 1)
+						ref = self.out.read(count)
+						self.out.seek((disp - count), 1)
+						self.out.write(ref)
+				outlen = self.out.tell()
+				if outlen >= self.decsize:
 					break
 				mask >>= 1
-			if len(final) >= self.decsize:
-					break
-		return bytes(final)
+			if outlen >= self.decsize:
+				break

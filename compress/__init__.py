@@ -1,5 +1,6 @@
 DEC_USE_FILE_OBJS = (
 	'Yaz0',
+	'LZ11',
 )
 
 CMP_USE_FILE_OBJS = (

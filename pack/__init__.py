@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from ._formats import *
 
+
 def pack(filenames, outname, format, endian, verbose, opts):
 	print('Packing %s' % format)
 	mod = __import__('pack.%s' % format)

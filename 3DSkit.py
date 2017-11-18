@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import os
-import sys
 import argparse
 import pack
 import unpack
 import compress
 import plugins
 from io import BytesIO
-from util.fileops import bread, bwrite
 from util.help import main_help
 from util import error
 
-__version__ = '1.19.42'
+__version__ = '1.19.43'
 
 
 def parse_opts(s):
@@ -33,7 +31,7 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 	endian = '>' if isbigendian else '<'
 	if format.upper() in pack.formats:
 		print('Packing...')
-		outname = pack.pack(filenames, output, format, endian, verbose, opts)
+		pack.pack(filenames, output, format, endian, verbose, opts)
 		print('Packed!')
 	else:
 		error('Unknown format for repacking', 102)
@@ -70,6 +68,7 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 	print('Extracting...')
 	unpack.extract(filename, file, format, endian, verbose, opts)
 	print('Extracted')
+
 
 def decompress_file(filename, verbose):
 	file = open(filename, 'rb')

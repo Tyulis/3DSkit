@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 import struct
+from util.fileops import *
 
-PCM=1
+PCM = 1
 
 
 class WAV (object):

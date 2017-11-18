@@ -117,7 +117,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		tiles_x = math.ceil(datawidth / 8)
 		tiles_y = math.ceil(dataheight / 8)
 		final = bytearray(datawidth * dataheight)
-		tilelen = 64 * self.pxsize
+		#tilelen = int(64 * self.pxsize)
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
 				for ysub in range(2):

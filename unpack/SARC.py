@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-import os
 from util import error, ENDIANS
 from util.fileops import *
 from util.funcops import byterepr

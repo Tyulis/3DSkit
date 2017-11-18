@@ -281,7 +281,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			for i in range(0, texref):
 				mat['texref-%d' % i] = OrderedDict()
 				flagnode = mat['texref-%d' % i]
-				flagnode['file'] = self.texturenames[self.uint16(data,  ptr)[0]]; ptr += 2
+				flagnode['file'] = self.texturenames[self.uint16(data, ptr)[0]]; ptr += 2
 				flagnode['wrap-S'] = WRAPS[self.uint8(data, ptr)[0]]; ptr += 1
 				flagnode['wrap-T'] = WRAPS[self.uint8(data, ptr)[0]]; ptr += 1
 			for i in range(0, textureSRT):
@@ -603,14 +603,14 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 				entrydata = data[entryoffset:entryoffset + length]
 				magic = entrydata[0:4].decode('ascii')
 				try:
-					method = eval('self.read'+magic)  # quicker to code than if magic=='txt1':...
+					method = eval('self.read' + magic)  # quicker to code than if magic=='txt1':...
 				except AttributeError:
 					print('Invalid section magic: %s' % magic)
 				method(entrydata)
 			if extraoffset != 0:
 				extraoffsets.append(extraoffset)
 				extra = data[extraoffset:extraoffset + 48].hex()
-				key = list(entry.keys())[-1]
+				#key = list(entry.keys())[-1]
 				entry['extra'] = extra
 			self.actnode = self.actnode['__parentnode']
 			entries.append(entry)

@@ -4,6 +4,7 @@ from util.funcops import ClsFunc
 from util.rawutil import TypeWriter
 from util.fileops import *
 from compress.LZ11 import compressLZ11
+from io import BytesIO
 import __main__ as _main
 
 GARC_HEADER_STRUCT = '4sI2H3I'
@@ -49,9 +50,15 @@ class packGARC(ClsFunc, TypeWriter):
 		self.entries = {}
 		larger = 0
 		for name in filenames:
-			filedata = bread(name)
+			file = open(name, 'rb')
 			if 'dec_' in name:
-				filedata = compressLZ11(filedata, self.verbose)
+				out = BytesIO()
+				compressLZ11(file, out, self.verbose)
+				out.seek(0)
+				filedata = out.read()
+			else:
+				filedata = file.read()
+			file.close()
 			filelen = len(filedata)
 			if filelen > larger:
 				larger = filelen
@@ -69,8 +76,7 @@ class packGARC(ClsFunc, TypeWriter):
 					entry.subentries = []
 					entry.isfolder = True
 					self.entries[folder] = entry
-				while len(self.entries[folder].subentries) < file:
-					self.entries[folder].subentries.append(None)
+				self.entries[folder].subentries += [None] * (file - len(self.entries[folder].subentries) + 1)
 				self.entries[folder].subentries[file] = subentry
 				self.entries[folder].flags |= 1 << file
 			else:
@@ -121,6 +127,8 @@ class packGARC(ClsFunc, TypeWriter):
 			self.pack('I', entry.flags, self.file)
 			actfatb += 4
 			for subentry in entry.subentries:
+				if subentry is None:
+					continue
 				start = len(self.fimb)
 				self.fimb += subentry.data
 				end = len(self.fimb)

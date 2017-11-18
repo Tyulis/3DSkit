@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from util.txtree import load
-from collections import OrderedDict
 from util import error, BOMS
 import util.rawutil as rawutil
 from util.funcops import ClsFunc
@@ -486,7 +485,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 		if len(nametbl) % 4 != 0:
 			nametbl += self.pad(4 - (len(nametbl) % 4))
 		i = 0
-		entryoffset = len(final)
+		#entryoffset = len(final)
 		for entry in data['entries']:  #1 entry in the table = 12B
 			entryrest = entrynum - (i + 1)
 			final += self.uint32((12 * entryrest) + len(datatbl) + nameoffsets[i] + 0x0c)

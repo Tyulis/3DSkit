@@ -3,6 +3,7 @@ from util.fileops import read
 from util.funcops import clearconsole
 import os
 
+
 def menu():
 	clearconsole()
 	print('3DSkit detailed help')
@@ -49,6 +50,7 @@ def plugins_help():
 			print(part)
 			input('----')
 		input('(return to menu)')
+
 
 def main_help():
 	opt = ''

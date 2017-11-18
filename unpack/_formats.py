@@ -27,7 +27,7 @@ MAGICS = {
 	b'CLIM': 'BCLIM',
 	b'CSAR': 'BCSAR',
 	b'CSTM': 'BCSTM',
-	b'BL':   'BL',
+	b'BL': 'BL',
 	b'NCCH': 'NCCH',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',

@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 import os
 import compress
-from util import error, ENDIANS
+from util import error
 from util.funcops import ClsFunc, byterepr
-from util.fileops import make_outdir, bread, bwrite, makedirs
+from util.fileops import make_outdir, bread, bwrite
 import util.rawutil as rawutil
 
 CBMD_HEADER_STRUCT = '4s2I(13I)44sI'

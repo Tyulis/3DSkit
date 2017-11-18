@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-import os
 from util import error, ENDIANS
 from util.funcops import getsup, byterepr
 from util.fileops import *
@@ -228,7 +227,6 @@ class extractBCSAR (rawutil.TypeReader):
 
 	def readSetTable(self, data):
 		entrycount, offsets, entrydata = self.readINFOsec(data)
-		entries = []
 		self.sets = [SetNode() for i in range(0, entrycount)]
 		for i, offset in enumerate(offsets):
 			hdr, ptr = self.uint32(entrydata, offset)

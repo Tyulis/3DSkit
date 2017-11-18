@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
-import os
 from util import error
-from util.funcops import byterepr, ClsFunc
+from util.funcops import ClsFunc
 from util.fileops import *
 import util.rawutil as rawutil
 import util.txtree as txtree
@@ -40,6 +39,7 @@ MEMORY_TYPES = {
 	3: 'Base',
 }
 
+
 class extractExtHeader (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
@@ -65,7 +65,7 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		root = self.tree['SCI']
 		data = self.unpack(EXTHEADER_SCI_STRUCT, self.sci)
 		root['App-Title'] = data[0].rstrip(b'\x00').decode('ascii')
-		reserved = data[1]
+		#reserved = data[1]
 		flags = data[2]
 		root['Compress-ExeFS-code'] = bool(flags & 1)
 		root['SD-Application'] = bool(flags & 2)
@@ -73,7 +73,7 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		text_codesetinfo = data[4]
 		root['Stack-size'] = data[5]
 		ro_codesetinfo = data[6]
-		reserved = data[7]
+		#reserved = data[7]
 		data_codesetinfo = data[8]
 		root['BSS-size'] = data[9]
 		dependencies = data[10]
@@ -102,7 +102,7 @@ class extractExtHeader (rawutil.TypeReader, ClsFunc):
 		sys = root['System-Info']
 		sys['Savedata-size'] = system_info[0]
 		sys['Jump-ID'] = rawutil.hex(system_info[1], 16)
-		reserved = system_info[2]
+		#reserved = system_info[2]
 	
 	def extract_aci(self, raw, root):
 		root['ARM11-Local-system-capabilities'] = OrderedDict()

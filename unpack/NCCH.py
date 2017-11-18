@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-import os
 from util import error
 from util.funcops import byterepr
 from util.fileops import *
@@ -29,7 +28,6 @@ PLATFORMS = {
 }
 	
 
-
 class extractNCCH (rawutil.TypeReader):
 	def __init__(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
@@ -55,12 +53,12 @@ class extractNCCH (rawutil.TypeReader):
 		self.id_hash = data[6]
 		self.tid_high = rawutil.hex(data[7] >> 32, 8)
 		self.tid_low = rawutil.hex(data[7] & 0xffffffff, 8)
-		reserved = data[8]
+		#reserved = data[8]
 		self.logo_hash = data[9]
 		self.product_code = data[10].decode('ascii')
 		self.extheader_hash = data[11]
 		self.extheader_size = data[12]  #in bytes
-		reserved = data[13]
+		#reserved = data[13]
 		ncchflags = data[14]
 		self.crypto_keyslot = CRYPTO_KEYSLOTS[ncchflags[3]]
 		self.platform = PLATFORMS[ncchflags[4]]
@@ -79,11 +77,11 @@ class extractNCCH (rawutil.TypeReader):
 		self.exefs_offset = data[19]
 		self.exefs_size = data[20]
 		self.exefs_hashregion_size = data[21]
-		reserved = data[22]
+		#reserved = data[22]
 		self.romfs_offset = data[23]
 		self.romfs_size = data[24]
 		self.romfs_hashregion_size = data[25]
-		reserved = data[26]
+		#reserved = data[26]
 		self.exefs_hash = data[27]
 		self.romfs_hash = data[28]
 	

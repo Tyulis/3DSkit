@@ -225,3 +225,8 @@
 *	v1.19.42
 	*	Cleanup
 	*	Rewritten the LZ11 compressor. Now, it takes 0.25s instead of 45s to compress 20KB.
+*	v1.19.43
+	*	Optimized the LZ11 decompressor
+	*	Fixed LZ11 compression
+	*	Fixed GARC packing and extraction
+	*	Style fixes and cleanup

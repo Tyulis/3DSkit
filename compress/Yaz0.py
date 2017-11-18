@@ -47,11 +47,11 @@ class decompressYaz0 (ClsFunc, rawutil.TypeReader):
 						size = ord(self.file.read(1)) + 0x12
 					if size > disp:
 						self.out.seek(-disp, 1)
-						buffer = list(self.out.read(disp + size))
+						buffer = bytearray(self.out.read(disp + size))
 						for j in range(size):
 							buffer[disp + j] = buffer[j]
 						self.out.seek(-(disp + size), 1)
-						self.out.write(bytes(buffer))
+						self.out.write(buffer)
 					else:
 						self.out.seek(-disp, 1)
 						ref = self.out.read(size)

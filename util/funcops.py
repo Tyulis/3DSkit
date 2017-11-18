@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
-import os, platform
+import os
+import platform
 try:
 	import console
 	has_console = True
@@ -8,15 +9,19 @@ except ImportError:
 from collections import OrderedDict
 from .rawutil import TypeReader
 
+
 class ClsFunc (object):
 	def __new__(cls, *args, **kwargs):
 		self = object.__new__(cls)
 		return self.main(*args, **kwargs)
+	
 	def main(self):
 		return
 
+
 class FreeObject (object):
 	pass
+
 
 class attrdict (OrderedDict):
 	def __setattr__(self, attr, val):
@@ -24,17 +29,19 @@ class attrdict (OrderedDict):
 	
 	def __getattr__(self, attr):
 		return self[attr]
-	
+
+
 class FakeFile (object):
 	def __init__(self, data, byteorder='@'):
 		self.ptr = 0
 		self.data = bytearray(data)
 		self.tp = TypeReader()
 		self.tp.byteorder = byteorder
-	def read(self, num = None):
+	
+	def read(self, num=None):
 		if num is None:
 			return self.data[self.ptr:]
-			self.ptr = len(data)
+			self.ptr = len(self.data)
 		else:
 			if self.ptr + num >= len(self.data):
 				raise IOError('Not enough data to read')
@@ -51,13 +58,14 @@ class FakeFile (object):
 				raise IOError('Tried to seek after the stream end')
 			self.ptr = num
 		elif mode == 1:
-			if self.ptr + num >= len(data):
+			if self.ptr + num >= len(self.data):
 				raise IOError('Tried to seek after the stream end')
 			self.ptr += num
 		elif mode == 2:
 			if len(self.data) - num < 0:
 				raise IOError('Tried to seek before the stream start')
 			self.ptr = len(self.data) - num
+	
 	def tell(self):
 		return self.ptr
 	
@@ -131,6 +139,7 @@ class FakeFile (object):
 		else:
 			raise IOError('Not enough data to unpack')
 
+
 def clearconsole():
 	if has_console:
 		console.clear()
@@ -138,17 +147,20 @@ def clearconsole():
 		os.system('cls')
 	else:
 		os.system('clear')
-	
+
+
 def getsup(lst, num):
 	lst = sorted(lst)
 	i = lst.index(num)
 	return lst[i + 1]
 
+
 def split(s, sep):
 	if type(sep) in (str, bytes):
 		return s.split(sep)
 	elif type(sep) == int:
-		return [s[i : i + sep] for i in range(0, len(s), sep)]
+		return [s[i: i + sep] for i in range(0, len(s), sep)]
+
 
 def toascii(string):
 	'''Converts accentuated or special chatacters in a string in ascii characters'''
@@ -168,6 +180,7 @@ def toascii(string):
 	s = s.replace('”', '"')
 	s = ''.join([c for c in s if ord(c) < 128])
 	return s
+
 
 def byterepr(s):
 	final = repr(s)

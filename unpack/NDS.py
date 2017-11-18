@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 #Thanks to gbatek...
 import os
-from util import error, ENDIANS
+from util import error
 from util.fileops import *
-from util.funcops import split, FreeObject, byterepr
+from util.funcops import split, FreeObject
 import util.rawutil as rawutil
 from util.txtree import dump
 from util.image2gif import writeGif
@@ -152,15 +152,15 @@ class extractNDS (rawutil.TypeReader):
 		self.secure.disable = hdata[33]
 		self.ntr_usedsize = hdata[34]  #only NDS parts
 		self.headerlen = hdata[35]  #0x4000
-		reserved = hdata[36]
+		#reserved = hdata[36]
 		self.nintendo_logo = hdata[37]
 		self.nintendo_logocrc = hdata[38]  #0xCF56
 		self.header_crc = hdata[39]  #CRC16 hdr[0x0000 : 0x015D]
 		self.debug_romoffset = hdata[40]
 		self.debug_size = hdata[41]
 		self.debug_ramadress = hdata[42]
-		reserved1 = hdata[42]
-		reserved2 = hdata[44]
+		#reserved = hdata[42]
+		#reserved = hdata[44]
 		if self.unitcode in ('DSI', 'NDS + DSI'):
 			self.read_TWLextheader(data)
 		if self.dochecks:
@@ -189,7 +189,7 @@ class extractNDS (rawutil.TypeReader):
 		self.use_bannersav = hdata[7] & 0b00000010
 		self.arm9i = FreeObject()
 		self.arm9i.offset = hdata[8]
-		reserved = hdata[9]
+		#reserved = hdata[9]
 		self.arm9i.ramaddress = hdata[10]
 		self.arm9i.size = hdata[11]
 		self.arm7i = FreeObject()
@@ -208,9 +208,9 @@ class extractNDS (rawutil.TypeReader):
 		self.sectorsize = hdata[24]
 		self.block_sectorcount = hdata[25]
 		self.icon_bannersize = hdata[26]  #0x23C0
-		unknown = hdata[27]
-		self.total_usedsize = hdata[28]  #Including TWL parts
-		unknown1 = hdata[29]
+		#unknown = hdata[27]
+		self.total_usedsize = hdata[28]  #Including #TWL parts
+		#unknown = hdata[29]
 		self.modcrypt_area1_offset = hdata[30]
 		self.modcrypt_area1_length = hdata[31]
 		self.modcrypt_area2_offset = hdata[32]
@@ -218,7 +218,7 @@ class extractNDS (rawutil.TypeReader):
 		self.titleid = hdata[34]
 		self.publicsav_size = hdata[35]
 		self.privatesav_size = hdata[36]
-		reserved1 = hdata[37]
+		#reserved1 = hdata[37]
 		self.age_ratings = hdata[38]
 		#SHA1 HMAC hashes
 		self.arm9.hash = hdata[39]
@@ -227,10 +227,10 @@ class extractNDS (rawutil.TypeReader):
 		self.bannerhash = hdata[42]
 		self.arm9i.hash = hdata[43]
 		self.arm7i.hash = hdata[44]
-		reserved2 = hdata[45]
+		#reserved = hdata[45]
 		self.arm9.hash_without_securearea = hdata[46]
-		reserved2 = hdata[47]
-		reserved3 = hdata[48]  #used to pass arguments for debug. Usually zeros
+		#reserved = hdata[47]
+		#reserved = hdata[48]  #used to pass arguments for debug. Usually zeros
 		self.rsa_signature = hdata[49]
 		
 	def extract_sections(self, data):

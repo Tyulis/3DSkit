@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 from io import BytesIO
-from util import error, ENDIANS
+from util import error
 from util.funcops import byterepr
 from util.fileops import *
 import util.rawutil as rawutil

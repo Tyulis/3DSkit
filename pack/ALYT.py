@@ -2,7 +2,7 @@
 from util.rawutil import TypeWriter
 from util.fileops import *
 from util.funcops import ClsFunc
-from util import error, BOMS
+from util import error
 from .SARC import packSARC
 
 
@@ -21,7 +21,7 @@ class packALYT (ClsFunc, TypeWriter):
 		if len(self.files) == len(filenames):
 			#no _alyt_ folder, aborting
 			error('No _alyt_ folder in the specified directory', 401)
-		self.alyt_folder = [os.path.dirname(name) for name in filenames if os.path.basename(os.path.dirname(name)) == '_alyt_'][0] # horrible hack; should probably be passed as an argument
+		self.alyt_folder = [os.path.dirname(name) for name in filenames if os.path.basename(os.path.dirname(name)) == '_alyt_'][0]  # horrible hack;
 		metadir = self.alyt_folder + os.path.sep
 		try:
 			file = metadir + 'LTBL.bin'

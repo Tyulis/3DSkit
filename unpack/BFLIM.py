@@ -73,6 +73,7 @@ ETC1_MODIFIERS = [
 	[47, 183]
 ]
 
+
 class extractBFLIM(ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, verbose, opts={}):
 		self.outfile = make_outfile(filename, 'png')
@@ -126,9 +127,6 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			print('Extracting pixel data')
 		img = Image.new('RGBA', (self.width, self.height))
 		self.pixels = img.load()
-		
-		datawidth = 1 << int(math.ceil(math.log(self.width, 2)))
-		dataheight = 1 << int(math.ceil(math.log(self.height, 2)))
 		
 		tiles_x = math.ceil(self.width / 8)
 		tiles_y = math.ceil(self.height / 8)

@@ -99,14 +99,14 @@ class extractGARC (rawutil.TypeReader):
 					subentry = FATBSubEntry()
 					subdata, ptr = self.unpack_from('3I', data, ptr, getptr=True)
 					subentry.start, subentry.end, subentry.length = subdata
-					entry.subentries.append(subentry)
+					entry.subentries += [None] * (j - len(entry.subentries) + 1)
+					entry.subentries[j] = subentry
 			entry.isfolder = len(entry.subentries) > 1
 			self.fatb.append(entry)
 		return ptr
 	
 	def extract(self):
 		data = self.data
-		ptr = self.ptr
 		for i, entry in enumerate(self.fatb):
 			if entry.isfolder:
 				outpath = self.outdir + str(i) + os.path.sep
@@ -114,19 +114,22 @@ class extractGARC (rawutil.TypeReader):
 					os.mkdir(outpath)
 				except:
 					pass
-				os.makedirs(outpath)
 				for j, subentry in enumerate(entry.subentries):
+					if subentry is None:
+						continue
 					start = subentry.start + self.dataoffset
 					data.seek(start)
-					filedata = data.read(subentry.length)
+					filedata = BytesIO(data.read(subentry.length))
 					comp = compress.recognize(filedata)
+					filedata.seek(0)
 					ext = get_ext(filedata)
 					outname = outpath + str(j) + ext
 					if comp == 'LZ11':
-						filedata = compress.decompress(filedata, comp, self.byteorder)
-						ext = get_ext(filedata)
 						outname = outpath + 'dec_' + str(j) + ext
-					bwrite(filedata, outname)
+						out = open(outname, 'wb+')
+						compress.decompress(filedata, out, comp, self.verbose)
+					else:
+						bwrite(filedata.read(), outname)
 			else:
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
