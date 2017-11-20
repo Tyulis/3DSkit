@@ -116,6 +116,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 		dataheight = 1 << int(math.ceil(math.log(height, 2)))
 		tiles_x = math.ceil(datawidth / 8)
 		tiles_y = math.ceil(dataheight / 8)
+		if self.verbose:
+			print('Packing %d x %d tiles of %dB each' % (tiles_x, tiles_y, int(64 * self.pxsize)))
 		final = bytearray(datawidth * dataheight)
 		#tilelen = int(64 * self.pxsize)
 		for ytile in range(tiles_y):

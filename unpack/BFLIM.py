@@ -131,7 +131,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		tiles_x = math.ceil(self.width / 8)
 		tiles_y = math.ceil(self.height / 8)
 		tilelen = int(64 * self.pxsize)
-		
+		if self.verbose:
+			print('%d x %d tiles of length %dB' % (tiles_x, tiles_y, tilelen))	
 		#8x8px tiles
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
@@ -147,11 +148,11 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		for ysub in range(2):
 			for xsub in range(2):
 				subpos = int(((ysub * 32) + (xsub * 16)) * self.pxsize)
-				sub = tile[subpos:int(subpos + 16 * self.pxsize)]
+				sub = tile[subpos: int(subpos + 16 * self.pxsize)]
 				for ygroup in range(2):
 					for xgroup in range(2):
 						grppos = int(((ygroup * 8) + (xgroup * 4)) * self.pxsize)
-						grp = sub[grppos:int(grppos + 4 * self.pxsize)]
+						grp = sub[grppos: int(grppos + 4 * self.pxsize)]
 						if self.pxsize == 0.5:
 							for ypix in range(2):
 								xpix = grp[ypix:ypix + 1]
@@ -172,9 +173,10 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 									outpos_y = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
 									outpos_x = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
 									if outpos_y >= self.height or outpos_x >= self.width:
+										if self.verbose:
+											print('Pixel at %d, %d not extracted' % (outpos_x, outpos_y))
 										continue
 									self.pixels[outpos_x, outpos_y] = rgba
-									#assert rgba[3] ==  0
 									
 	def getpixel(self, data, ptr=0, subpx=0):
 		if self.format == L8:
