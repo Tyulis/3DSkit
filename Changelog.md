@@ -236,3 +236,11 @@
 	*	Several fixes in compress.Yaz0 and rawutil
 	*	Fixed the unsupported operation error in unpack.GARC
 	*	Further optimization in the LZ11 decompressor (ca. 1%)
+*	v1.19.45
+	*	Fixed (avoided...) ANOTHER bug in BFLIM extraction
+	*	Fixed a little bug in output directory creation
+
+**v1.20**
+
+*	v1.20.44
+	*	Make BCSAR files extraction working fine

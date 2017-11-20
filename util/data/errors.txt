@@ -40,3 +40,9 @@ These are the different error codes, and their explaination.
 		You tried to pack something without the needed file, or you deleted it
 	404: File not found
 		The file or directory you wanted to pack or unpack with 3DSkit doesn't exist
+;;;;
+900: Warnings
+	901: Unexpected ID
+		In your file, a data has a strange identifier
+	902: Invalid file entry
+		File entry is invalid, so skipped

@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.19.44'
+__version__ = '1.19.45'
 
 
 def parse_opts(s):
@@ -37,7 +37,6 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 		error('Unknown format for repacking', 102)
 	if compression is not None:
 		compress_file(output, compression, verbose, False)
-
 
 def extract_files(filename, isbigendian, format, verbose, opts):
 	endian = '>' if isbigendian else '<'
@@ -105,7 +104,7 @@ def compress_file(filename, compression, verbose, separate=True):
 	print('Compressed')
 
 
-def main(args, opts, parser=None):
+def main(args, opts):
 	global basedir
 	if args.detailed_help:
 		main_help()
@@ -146,8 +145,8 @@ def main(args, opts, parser=None):
 	elif args.plugin is not None:
 		plugins.run_plugin(args.plugin, args.files, args.verbose)
 	else:
-		if parser is not None:
-			parser.print_help()
+		return 1
+	return 0
 
 
 if __name__ == '__main__':
@@ -171,4 +170,6 @@ if __name__ == '__main__':
 	parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')
 	args = parser.parse_args()
 	opts = parse_opts(args.options)
-	main(args, opts, parser)
+	result = main(args, opts)
+	if result == 1:
+		parser.print_help()

@@ -70,6 +70,12 @@ class packBFLIM(ClsFunc, TypeWriter):
 		self.verbose = verbose
 		filename = filenames[0]
 		img = Image.open(filename)
+		#Hacky and lazy.
+		if img.width % 8 != 8:
+			newwidth = img.width + (8 - (img.width % 8))
+			newimg = Image.new(img.mode, (newwidth, img.height))
+			newimg.paste(img, (0, 0))
+			img = newimg
 		if 'format' in opts.keys():
 			self.format = FORMATS[opts['format'].upper()]
 			self.strformat = opts['format'].upper()
