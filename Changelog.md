@@ -239,8 +239,12 @@
 *	v1.19.45
 	*	Fixed (avoided...) ANOTHER bug in BFLIM extraction
 	*	Fixed a little bug in output directory creation
+*	v1.19.46
+	*	Small fix in txtree
+	*	Fixed extraction of some Pokémon USUM GARCs
 
 **v1.20**
 
 *	v1.20.44
-	*	Make BCSAR files extraction working fine
+	*	TODO: Make BCSAR files extraction working better
+	*	Added unpack.BFLAN

@@ -10,10 +10,11 @@ import util.rawutil as rawutil
 >fclass extract{{FORMAT}} (rawutil.TypeReader, ClsFunc):
 >a	def __init__(self, filename, data, verbose, opts={}):
 >a		self.outdir = make_outdir(filename)
-		self.verbose = verbose
+>a		self.verbose = verbose
 >a		#Place your code here
->f	def main(self, filename, data, opts={}):
+>f	def main(self, filename, data, verbose, opts={}):
 >f		self.outfile = make_outfile(filename, '{{OUTEXT}}')
+>f		self.verbose = verbose
 >f		#Place your code here
 >a
 >a	def extract(self):

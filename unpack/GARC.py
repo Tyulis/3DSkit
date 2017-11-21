@@ -17,6 +17,7 @@ GARC_FATO_SECTION = '4sI2H/2[I]'
 GARC_FATB_HEADER = '4s2I'
 
 
+
 class FATBEntry (object):
 	def __init__(self):
 		self.flags = 0
@@ -86,10 +87,12 @@ class extractGARC (rawutil.TypeReader):
 			error('Invalid FATB magic %s, expected BTAF' % byterepr(hdr[0]), 301)
 		#headerlen = hdr[1]
 		entrycount = hdr[2]
+		tblstart = ptr
 		self.fatb = []
-		for i in range(0, entrycount):
+		#for i in range(0, entrycount):
+		for offset in self.fato:
 			entry = FATBEntry()
-			flags, ptr = self.unpack_from('I', data, ptr, getptr=True)
+			flags, ptr = self.unpack_from('I', data, tblstart + offset, getptr=True)
 			flags = flags[0]
 			entry.flags = flags
 			for j in range(0, 32):

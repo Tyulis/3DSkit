@@ -11,7 +11,7 @@ NEEDS_ENDIAN = (
 
 USE_FILE_OBJ = (
 	'GARC', 'BL', 'SARC', 'ALYT', 'BCSAR',
-	'BFLIM',
+	'BFLIM', 'BFLAN',
 )
 
 MAGICS = {
@@ -23,6 +23,7 @@ MAGICS = {
 	b'CLYT': 'BCLYT',
 	b'FLYT': 'BFLYT',
 	b'FLIM': 'BFLIM',
+	b'FLAN': 'BFLAN',
 	b'GFAC': 'GFA',
 	b'CLIM': 'BCLIM',
 	b'CSAR': 'BCSAR',
