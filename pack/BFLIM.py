@@ -110,7 +110,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		if swizzle == 4:
 			img = img.rotate(-90)
 		elif swizzle == 8:
-			img = img.transpose(Image.FLIP_LEFT_RIGHT)
+			img = img.transpose(Image.FLIP_TOP_BOTTOM)
 			img = img.rotate(-90)
 		return img
 	

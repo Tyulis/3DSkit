@@ -245,10 +245,12 @@
 
 **v1.20**
 
-*	v1.20.44
+*	v1.20.46
 	*	Added unpack.BFLAN
 	*	Minor fixes
-*	v1.20.45
+*	v1.20.47
 	*	Minor fixes
 	*	Little verbosity increase (now says the file name)
 	*	Fixed OSError on too short files
+	*	Fixed BFLIM transpose (8) swizzling orientation
+	*	Little fix in ETC1A4 decompression
