@@ -248,3 +248,7 @@
 *	v1.20.44
 	*	Added unpack.BFLAN
 	*	Minor fixes
+*	v1.20.45
+	*	Minor fixes
+	*	Little verbosity increase (now says the file name)
+	*	Fixed OSError on too short files

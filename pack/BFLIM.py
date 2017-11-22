@@ -72,6 +72,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 		img = Image.open(filename)
 		#Hacky and lazy.
 		if img.width % 8 != 8:
+			if self.verbose:
+				print('Applying padding to multiple of 8 width')
 			newwidth = img.width + (8 - (img.width % 8))
 			newimg = Image.new(img.mode, (newwidth, img.height))
 			newimg.paste(img, (0, 0))

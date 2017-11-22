@@ -65,20 +65,25 @@ def recognize(filename, format=None):
 			file = open(filename, 'rb')
 		except OSError:
 			error('File %s not found' % filename, 403)
+	file.seek(0, 2)
+	filelen = file.tell()
 	file.seek(0)
-	magic = file.read(4)
-	if magic in MAGICS.keys():
-		return MAGICS[magic]
-	if magic[0:2] in MAGICS.keys():
-		return MAGICS[magic[0:2]]
-	file.seek(-0x28, 2)
-	magic = file.read(4)
-	if magic in (b'FLIM', b'CLIM'):
-		return MAGICS[magic]
-	file.seek(0x100)
-	magic = file.read(4)
-	if magic == b'NCCH':
-		return 'NCCH'
+	if filelen >= 4:
+		magic = file.read(4)
+		if magic in MAGICS.keys():
+			return MAGICS[magic]
+		if magic[0:2] in MAGICS.keys():
+			return MAGICS[magic[0:2]]
+	if filelen >= 0x28:
+		file.seek(-0x28, 2)
+		magic = file.read(4)
+		if magic in (b'FLIM', b'CLIM'):
+			return MAGICS[magic]
+	if filelen >= 0x100:
+		file.seek(0x100)
+		magic = file.read(4)
+		if magic == b'NCCH':
+			return 'NCCH'
 	if type(filename) == str:
 		try:
 			ext = os.path.split(filename)[-1].lower().split('.')[-1]

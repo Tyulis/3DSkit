@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.20.46'
+__version__ = '1.20.47'
 
 
 def parse_opts(s):
@@ -30,7 +30,7 @@ def parse_opts(s):
 def pack_files(filenames, output, compression, format, isbigendian, verbose, opts):
 	endian = '>' if isbigendian else '<'
 	if format.upper() in pack.formats:
-		print('Packing...')
+		print('Packing %s...' % output)
 		pack.pack(filenames, output, format, endian, verbose, opts)
 		print('Packed!')
 	else:
@@ -64,7 +64,7 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 		if format is None:
 			error('Unrecognized format', 103)
 	print('%s file found' % format)
-	print('Extracting...')
+	print('Extracting %s...' % filename)
 	unpack.extract(filename, file, format, endian, verbose, opts)
 	print('Extracted')
 
