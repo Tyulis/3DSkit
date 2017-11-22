@@ -148,9 +148,9 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 				if count > disp:
 					self.out.seek(-disp, 1)
 					buf = bytearray(self.out.read(disp + count))
-					buf[disp: disp + count] = buf[0: count]
-					#for j in range(count):
-					#	buf[disp + j] = buf[j]
+					#buf[disp: disp + count] = buf[0: count]
+					for j in range(count):
+						buf[disp + j] = buf[j]
 					self.out.seek(-(disp + count), 1)
 					self.out.write(buf)
 				else:

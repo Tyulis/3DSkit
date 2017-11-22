@@ -254,3 +254,4 @@
 	*	Fixed OSError on too short files
 	*	Fixed BFLIM transpose (8) swizzling orientation
 	*	Little fix in ETC1A4 decompression
+	*	Fixed a problematic bug in LZ11 decompression
