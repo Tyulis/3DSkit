@@ -1,4 +1,4 @@
-TXTREE (here noted "TX") is an homemade format to represent tree data in a human-readable form. It is used by 3DSkit to represent some information formats (like layouts...) as a readable format. More info on the txtree repo at https://github.com/Tyulis/txtree
+TXTREE (here noted "TXtree") is an homemade format to represent tree data in a human-readable form. It is used by 3DSkit to represent some information formats (like layouts...) as a readable format. More info on the txtree repo at https://github.com/Tyulis/txtree
 ;;;;
 
 "files" means that the format is an archive format, and those files are simply extracted.

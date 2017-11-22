@@ -88,6 +88,7 @@ Output: Output format at extracting. See the output formats help for information
 	ALYT   | x |   | x | .alyt               | files
 	BCLYT  | p |   |   | .bclyt              | TX
 	BCSAR  | b |   |   | .bcsar              | files
+	BFLAN  | p |   |   | .bflan              | TX
 	BFLIM  | x | x |   | .bflim              | PNG
 	BFLYT  | x |   | x | .bflyt              | TX
 	BL     | e |   | e | .bl (none)          | files
@@ -126,7 +127,7 @@ Dependencies
 ============
 To access all 3DSkit functionnalities, you need:
 
-*	python3 (tested under python 3.5 and 3.6, but it should work from 3.2 to 3.6+)
+*	python 3.5+
 *	Pillow (Fork of PIL, use sudo apt-get install python3-pil)
 *	NumPy (not absolutely needed, but it's better to have it)
 *	struct (it should be installed by default with python3)

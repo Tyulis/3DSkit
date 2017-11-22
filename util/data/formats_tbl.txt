@@ -19,10 +19,11 @@ Output: Output format at extracting. See the output formats help for information
 Format | X | P | R | Extensions          | Output
 --------------------------------------------------
 ALYT   | x |   | x | .alyt               | files
-BCLYT  | p |   |   | .bclyt              | TX
+BCLYT  | p |   |   | .bclyt              | TXtree
 BCSAR  | b |   |   | .bcsar              | files
+BFLAN  | p |   |   | .bflan              | TXtree
 BFLIM  | x | x |   | .bflim              | PNG
-BFLYT  | x |   | x | .bflyt              | TX
+BFLYT  | x |   | x | .bflyt              | TXtree
 BL     | e |   | e | .bl                 | files
 CBMD   | e |   |   | .bnr banner[.bin]   | files
 DARC   | x | e |   | .arc .bcma (...)    | files

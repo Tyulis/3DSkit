@@ -246,5 +246,5 @@
 **v1.20**
 
 *	v1.20.44
-	*	TODO: Make BCSAR files extraction working better
 	*	Added unpack.BFLAN
+	*	Minor fixes
