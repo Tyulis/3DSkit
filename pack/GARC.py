@@ -40,7 +40,10 @@ class packGARC(ClsFunc, TypeWriter):
 				error('Unsupported file version', 106)
 		else:
 			self.version = 0x0600
-		self.file = open(_main.basedir + outname, 'wb')
+		if outname.startswith('/'):
+			self.file = open(outname, 'wb')
+		else:
+			self.file = open(_main.basedir + outname, 'wb')
 		self.make_entries(filenames)
 		self.pack_all(filenames)
 		self.file.close()
