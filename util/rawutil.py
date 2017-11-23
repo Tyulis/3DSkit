@@ -103,8 +103,8 @@ class TypeReader (TypeUser):
 		return [int(bit) for bit in bin(n, align)]
 		
 	def bit(self, n, bit, length=1):
-		mask = ((2 ** length) - 1) << bit
-		return (n & mask) >> (bit - length)
+		mask = (2 ** length) - 1
+		return (n >> bit) & mask
 	
 	def nibbles(self, n):
 		return (n >> 4, n & 0xf)

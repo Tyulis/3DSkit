@@ -267,16 +267,16 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 				mat['false-0x800'] = True
 			else:
 				mat['false-0x800'] = False
-			texref = self.bit(flags, 30, 2)
-			textureSRT = self.bit(flags, 28, 2)
-			mappingSettings = self.bit(flags, 26, 2)
-			textureCombiners = self.bit(flags, 24, 2)
-			alphaCompare = self.bit(flags, 22, 1)
-			blendMode = self.bit(flags, 20, 2)
-			blendAlpha = self.bit(flags, 18, 2)
-			indirect = self.bit(17, 1)
-			projectionMapping = self.bit(flags, 15, 2)
-			shadowBlending = self.bit(flags, 14, 1)
+			texref = flags & 0x00000003
+			textureSRT = (flags & 0x0000000c) >> 2
+			mappingSettings = (flags & 0x00000030) >> 4
+			textureCombiners = (flags & 0x000000c0) >> 6
+			alphaCompare = (flags & 0x00000100) >> 8
+			blendMode = (flags & 0x00000600) >> 9
+			blendAlpha = (flags & 0x00001800) >> 11
+			indirect = (flags & 0x00002000) >> 13
+			projectionMapping = (flags & 0x0000c000) >> 14
+			shadowBlending = (flags & 0x00030000) >> 16
 			
 			for i in range(0, texref):
 				mat['texref-%d' % i] = OrderedDict()
@@ -322,7 +322,8 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			for i in range(0, blendMode):
 				mat['blend-mode-%d' % i] = OrderedDict()
 				flagnode = mat['blend-mode-%d' % i]
-				flagnode['blend-operation'] = BLEND_CALC_OPS[self.uint8(data, ptr)[0]]; ptr += 1
+				op = self.uint8(data, ptr)[0]
+				flagnode['blend-operation'] = BLEND_CALC_OPS[op]; ptr += 1
 				flagnode['source'] = BLEND_CALC[self.uint8(data, ptr)[0]]; ptr += 1
 				flagnode['destination'] = BLEND_CALC[self.uint8(data, ptr)[0]]; ptr += 1
 				flagnode['logical-operation'] = LOGICAL_CALC_OPS[self.uint8(data, ptr)[0]]; ptr += 1
@@ -346,7 +347,8 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 				flagnode['Y-translate'], ptr = self.float32(data, ptr)
 				flagnode['X-scale'], ptr = self.float32(data, ptr)
 				flagnode['Y-scale'], ptr = self.float32(data, ptr)
-				flagnode['option'] = PROJECTION_MAPPING_TYPES[self.uint8(data, ptr)[0]]; ptr += 1
+				opt = self.uint8(data, ptr)[0]
+				flagnode['option'] = PROJECTION_MAPPING_TYPES[opt]; ptr += 1
 				flagnode['unknown-1'], ptr = self.uint8(data, ptr)
 				flagnode['unknown-2'], ptr = self.uint16(data, ptr)
 			if shadowBlending:
