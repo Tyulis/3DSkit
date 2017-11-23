@@ -118,11 +118,13 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		print('Color format: %s' % FORMAT_NAMES[self.format])
 		self.pxsize = PIXEL_SIZES[self.format]
 		self.swizzle = hdata[6]
-		print('Texture swizzling: %d' % self.swizzle)
-		#datalen = hdata[7]
 		if self.verbose:
 			print('Width: %d' % self.width)
 			print('Height: %d' % self.height)
+		if self.swizzle in (4, 8):
+			self.width, self.height = self.height, self.width
+		print('Texture swizzling: %d' % self.swizzle)
+		#datalen = hdata[7]
 		
 	def extract(self, data):
 		if self.verbose:
@@ -245,7 +247,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			img = img.rotate(90, expand=True)
 		elif self.swizzle == 8:
 			img = img.rotate(90, expand=True)
-			#img = img.transpose(Image.FLIP_LEFT_RIGHT)
+			img = img.crop((0, 0, self.height, self.width))
 			img = img.transpose(Image.FLIP_TOP_BOTTOM)
 		return img
 		
@@ -260,11 +262,10 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			print('Decompressing pixel data')
 		has_alpha = (self.format == ETC1A4)
 		blklen = (16 if has_alpha else 8)
-		print(self.height, self.width)
-		img = Image.new('RGBA', (self.height, self.width))
+		img = Image.new('RGBA', (self.width, self.height))
 		pixels = img.load()
-		tile_h = math.ceil(self.width / 8)
-		tile_w = math.ceil(self.height / 8)
+		tile_h = math.ceil(self.height / 8)
+		tile_w = math.ceil(self.width / 8)
 		tile_h = 1 << math.ceil(math.log(tile_h, 2))
 		tile_w = 1 << math.ceil(math.log(tile_w, 2))
 		for tiley in range(0, tile_h):
@@ -314,9 +315,9 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 							for pixelx in range(0, 4):
 								x = pixelx + (blockx * 4) + (tilex * 8)
 								y = pixely + (blocky * 4) + (tiley * 8)
-								if x >= self.height:
+								if x >= self.width:
 									continue
-								if y >= self.width:
+								if y >= self.height:
 									continue
 								offset = (pixelx * 4) + pixely
 								if horizontal:
