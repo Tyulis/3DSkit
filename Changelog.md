@@ -256,3 +256,6 @@
 	*	Little fix in ETC1A4 decompression
 	*	Fixed a problematic bug in LZ11 decompression (unexpected zeroes)
 	*	Added error handling for empty files
+*	v1.20.48
+	*	Fixed the bug with the rotation on deswizzling of BFLIMs
+	*	Fixed a bug with absolute path in pack.GARC

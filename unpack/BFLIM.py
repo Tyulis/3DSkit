@@ -99,6 +99,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		#bom = hdata[1]
 		#headerlen = hdata[2]
 		self.version = hdata[3]
+		if self.verbose:
+			print('Version: %08x' % self.version)
 		#filelen = hdata[4]
 		#datablocksnum = hdata[5] #always 0x01
 		#padding = hdata[6]
@@ -240,9 +242,9 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		if self.verbose and self.swizzle != 0:
 			print('Deswizzling')
 		if self.swizzle == 4:
-			img = img.rotate(90)
+			img = img.rotate(90, expand=True)
 		elif self.swizzle == 8:
-			img = img.rotate(90)
+			img = img.rotate(90, expand=True)
 			#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 			img = img.transpose(Image.FLIP_TOP_BOTTOM)
 		return img
@@ -258,6 +260,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			print('Decompressing pixel data')
 		has_alpha = (self.format == ETC1A4)
 		blklen = (16 if has_alpha else 8)
+		print(self.height, self.width)
 		img = Image.new('RGBA', (self.height, self.width))
 		pixels = img.load()
 		tile_h = math.ceil(self.width / 8)
