@@ -121,7 +121,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		if self.verbose:
 			print('Width: %d' % self.width)
 			print('Height: %d' % self.height)
-		if self.swizzle in (4, 8):
+		if self.swizzle in (4, 8) and self.version == 0x07020100:
 			self.width, self.height = self.height, self.width
 		print('Texture swizzling: %d' % self.swizzle)
 		#datalen = hdata[7]

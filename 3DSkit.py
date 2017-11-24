@@ -44,6 +44,8 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 		file = open(filename, 'rb')
 	except FileNotFoundError:
 		error('File %s does not exist' % filename, 404)
+	except IsADirectoryError:
+		error('You tried to unpack a directory', 403)
 	format = unpack.recognize(filename, format)
 	if format not in unpack.SKIP_DECOMPRESSION:
 		comp = compress.recognize(file)
