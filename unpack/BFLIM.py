@@ -245,6 +245,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			print('Deswizzling')
 		if self.swizzle == 4:
 			img = img.rotate(90, expand=True)
+			img = img.crop((0, 0, self.height, self.width))
 		elif self.swizzle == 8:
 			img = img.rotate(90, expand=True)
 			img = img.crop((0, 0, self.height, self.width))

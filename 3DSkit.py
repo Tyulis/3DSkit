@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.20.48'
+__version__ = '1.21.48'
 
 
 def parse_opts(s):
@@ -115,11 +115,14 @@ def main(args, opts):
 		files = []
 		basedir = os.getcwd() + os.path.sep
 		if args.out is None:
-			error('You have to specify the output name', 201)
+			args.out = '%s.%s' % (os.path.splitext(args.files[0])[0], args.format.lower())
 		if args.format is None:
 			error('You have to specify the output format', 202)
 		if args.dir:
-			os.chdir(args.files[0])
+			try:
+				os.chdir(args.files[0])
+			except FileNotFoundError:
+				error('The given directory %s does not exist' % args.files[0], 404)
 			for path, dirs, filenames in os.walk(os.path.curdir):
 				for filename in filenames:
 					files.append(os.path.join(path, filename)[2:])  #strip the ./ or :\
@@ -164,7 +167,7 @@ if __name__ == '__main__':
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument('-l', '--little', help='Little endian (for 3DS / NDS files)', action='store_true')
 	group.add_argument('-b', '--big', help='Big endian (for WiiU files)', action='store_true')
-	parser.add_argument('-o', '--out', help='Output file name (only for repacking)')
+	parser.add_argument('-o', '--out', help='Output file name (only for repacking). If not given, the output file name will be automatically determined')
 	parser.add_argument('-c', '--compression', help='Output compression type')
 	parser.add_argument('-O', '--options', help='Format-specific options, see help for details')
 	parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')

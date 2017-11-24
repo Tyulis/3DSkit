@@ -70,10 +70,9 @@ class packBFLIM(ClsFunc, TypeWriter):
 		self.verbose = verbose
 		filename = filenames[0]
 		img = Image.open(filename)
+		self.width, self.height = img.size
 		#Hacky and lazy.
-		if img.width % 8 != 8:
-			if self.verbose:
-				print('Applying padding to multiple of 8 width')
+		if img.width % 8 != 0:
 			newwidth = img.width + (8 - (img.width % 8))
 			newimg = Image.new(img.mode, (newwidth, img.height))
 			newimg.paste(img, (0, 0))
@@ -100,8 +99,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		return self.pack(BFLIM_FLIM_HDR_STRUCT, b'FLIM', 0xfeff, 0x14, VERSION, filelen, 1, 0)
 	
 	def repackIMAGheader(self, img, swizzle, datalen):
-		width, height = img.size
-		return self.pack(BFLIM_IMAG_HDR_STRUCT, b'imag', 0x10, width, height, ALIGNMENT, self.format, swizzle, datalen)
+		return self.pack(BFLIM_IMAG_HDR_STRUCT, b'imag', 0x10, self.width, self.height, ALIGNMENT, self.format, swizzle, datalen)
 	
 	def swizzle(self, img, swizzle):
 		if self.verbose and swizzle != '0':
@@ -109,9 +107,11 @@ class packBFLIM(ClsFunc, TypeWriter):
 		swizzle = int(swizzle)
 		if swizzle == 4:
 			img = img.rotate(-90)
+			img = img.crop((0, 0, self.height, self.width))
 		elif swizzle == 8:
 			img = img.transpose(Image.FLIP_TOP_BOTTOM)
 			img = img.rotate(-90)
+			img = img.crop((0, 0, self.height, self.width))
 		return img
 	
 	def repack_data(self, img):
@@ -126,8 +126,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 		tiles_y = math.ceil(dataheight / 8)
 		if self.verbose:
 			print('Packing %d x %d tiles of %dB each' % (tiles_x, tiles_y, int(64 * self.pxsize)))
-		final = bytearray(datawidth * dataheight)
-		#tilelen = int(64 * self.pxsize)
+		final = bytearray(datawidth * dataheight * self.pxsize)
+		tilelen = int(64 * self.pxsize)
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
 				for ysub in range(2):
@@ -138,15 +138,14 @@ class packBFLIM(ClsFunc, TypeWriter):
 									for xpix in range(2):
 										posy = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
 										posx = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
-										if posx >= width:
-											rgba = (0, 0, 0, 0)
-										elif posy >= height:
-											rgba = (0, 0, 0, 0)
+										if posx >= width or posy >= height:
+											#rgba = (0, 0, 0, 0)
+											continue
 										else:
 											rgba = pixels[posx, posy]
 										packed = self.pack_pixel(rgba)
 										finalx = (xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64))
-										finaly = ((ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * width * 8))
+										finaly = ((ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * tiles_x * tilelen))
 										pos = (finalx + finaly) * self.pxsize
 										final[pos:pos + self.pxsize] = packed
 		return final

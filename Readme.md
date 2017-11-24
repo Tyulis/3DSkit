@@ -36,7 +36,7 @@ How to use
 								Format to repack, or input format (to extract. See the formats section of the help for more infos)
 		-l, --little          Little endian (for 3DS / NDS files)
 		-b, --big             Big endian (for WiiU files)
-		-o OUT, --out OUT     Output file name (only for repacking)
+		-o OUT, --out OUT     Output file name (only for repacking). If not given, the output name is automatically determined
 		-c COMPRESSION, --compression COMPRESSION
 								Output compression type
 		-O OPTIONS, --options OPTIONS
@@ -46,7 +46,7 @@ Format-Specific options
 =======================
 
 Specify these options with the -O option (see options help)
-You can specify them with -O{option=value} or -O{option1=value1;option2=value2}
+You can specify them with -O(option=value) or -O(option1=value1;option2=value2)
 
 **At extraction**:
 
@@ -127,8 +127,8 @@ Dependencies
 ============
 To access all 3DSkit functionnalities, you need:
 
-*	python 3.5+
-*	Pillow (Fork of PIL, use sudo apt-get install python3-pil)
+*	Python 3.5+
+*	Pillow (Fork of PIL, use sudo apt-get install python3-pil or pip3 install pillow)
 *	NumPy (not absolutely needed, but it's better to have it)
 *	struct (it should be installed by default with python3)
 
