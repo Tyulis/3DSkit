@@ -46,7 +46,7 @@ Format-Specific options
 =======================
 
 Specify these options with the -O option (see options help)
-You can specify them with -O(option=value) or -O(option1=value1;option2=value2)
+You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 
 **At extraction**:
 

@@ -18,7 +18,7 @@ def parse_opts(s):
 		return {}
 	opts = {}
 	s = s.strip('()[]{}')
-	ls = [el.strip() for el in s.split(';')]
+	ls = [el.strip() for el in s.split(',')]
 	for opt in ls:
 		name, value = opt.split('=')
 		name = name.strip()

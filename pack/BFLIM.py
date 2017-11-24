@@ -78,6 +78,9 @@ class packBFLIM(ClsFunc, TypeWriter):
 			newimg.paste(img, (0, 0))
 			img = newimg
 		if 'format' in opts.keys():
+			if 'ETC1' in opts['format'].upper():
+				print('ETC1 not supported. Defaults to RGBA8')
+				opts['format'] = 'RGBA8'
 			self.format = FORMATS[opts['format'].upper()]
 			self.strformat = opts['format'].upper()
 		else:
@@ -106,11 +109,11 @@ class packBFLIM(ClsFunc, TypeWriter):
 			print('Swizzling image')
 		swizzle = int(swizzle)
 		if swizzle == 4:
-			img = img.rotate(-90)
+			img = img.rotate(-90, expand=True)
 			img = img.crop((0, 0, self.height, self.width))
 		elif swizzle == 8:
 			img = img.transpose(Image.FLIP_TOP_BOTTOM)
-			img = img.rotate(-90)
+			img = img.rotate(-90, expand=True)
 			img = img.crop((0, 0, self.height, self.width))
 		return img
 	
