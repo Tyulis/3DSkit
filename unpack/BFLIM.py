@@ -137,8 +137,6 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		
 		datawidth = 1 << int(math.ceil(math.log(self.width, 2)))
 		dataheight = 1 << int(math.ceil(math.log(self.height, 2)))
-		totaltiles_x = math.ceil(datawidth / 8)
-		totaltiles_y = math.ceil(dataheight / 8)
 		
 		tilelen = int(64 * self.pxsize)
 		if self.verbose:

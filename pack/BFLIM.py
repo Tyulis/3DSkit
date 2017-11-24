@@ -127,7 +127,6 @@ class packBFLIM(ClsFunc, TypeWriter):
 		if self.verbose:
 			print('Packing %d x %d tiles of %dB each' % (tiles_x, tiles_y, int(64 * self.pxsize)))
 		final = bytearray(datawidth * dataheight * self.pxsize)
-		tilelen = int(64 * self.pxsize)
 		for ytile in range(tiles_y):
 			for xtile in range(tiles_x):
 				for ysub in range(2):
@@ -144,8 +143,8 @@ class packBFLIM(ClsFunc, TypeWriter):
 										else:
 											rgba = pixels[posx, posy]
 										packed = self.pack_pixel(rgba)
-										finalx = (xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64))
-										finaly = ((ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * tiles_x * tilelen))
+										finalx = xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64)
+										finaly = (ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * width * 8)
 										pos = (finalx + finaly) * self.pxsize
 										final[pos:pos + self.pxsize] = packed
 		return final
@@ -164,8 +163,6 @@ class packBFLIM(ClsFunc, TypeWriter):
 		elif self.format == LA8:
 			l = math.ceil((r * 0.2126) + (g * 0.7152) + (b * 0.0722))
 			return self.pack('2B', l, a)
-		elif self.format == HILO8:
-			pass
 		elif self.format == RGB8:
 			return self.pack('3B', r, g, b)
 		elif self.format == RGB565:
