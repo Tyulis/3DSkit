@@ -70,6 +70,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		self.verbose = verbose
 		filename = filenames[0]
 		img = Image.open(filename)
+		img = img.convert('RGBA')
 		self.width, self.height = img.size
 		#Hacky and lazy.
 		if img.width % 8 != 0:
