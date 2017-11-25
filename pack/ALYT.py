@@ -46,19 +46,19 @@ class packALYT (ClsFunc, TypeWriter):
 		self.alyt += self.lmtl
 		self.lfnloffset = len(self.alyt)
 		self.alyt += self.lfnl
-		self.alyt += (128 - (len(self.alyt) % 128)) * b'\x00'
+		self.alyt += (0x80 - (len(self.alyt) % 0x80)) * b'\x00'
 		self.dataoffset = len(self.alyt)
 		self.alyt += self.pack('I/0[n64a]', len(self.nametable), self.nametable)
 		self.alyt += self.pack('I/0[n32a]', len(self.symtable), self.symtable)
-		self.alyt += (128 - (len(self.alyt) % 128)) * b'\x00'
+		self.alyt += (0x80 - (len(self.alyt) % 0x80)) * b'\x00'
 	
 	def repack_all(self):
 		if self.verbose:
 			print('Packing SARC')
-		sarc = bytearray(packSARC(self.files, None, self.byteorder, self.verbose, embedded=True))
+		sarc, sarc_endpad = packSARC(self.files, None, self.byteorder, self.verbose, embedded=True)
 		if self.verbose:
 			print('Packing ALYT')
 		final = self.alyt + sarc
-		hdr = self.pack('4s9I', 'ALYT', 0x00040002, self.ltbloffset, len(self.ltbl), self.lmtloffset, len(self.lmtl), self.lfnloffset, len(self.lfnl), self.dataoffset, len(final) + 0x28)
+		hdr = self.pack('4s9I', 'ALYT', 0x00040002, self.ltbloffset, len(self.ltbl), self.lmtloffset, len(self.lmtl), self.lfnloffset, len(self.lfnl), self.dataoffset, len(final) - sarc_endpad - self.dataoffset)
 		final[0:0x28] = hdr
 		return final

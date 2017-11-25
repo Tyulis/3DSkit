@@ -265,3 +265,4 @@
 *	v1.21.48
 	*	Now, when packing without the -o option, 3DSkit will determin an output name from the input name and the format
 	*	Fixed multiple bugs in pack.BFLIM
+	*	Fixed pack.ALYT and pack.SARC padding issues
