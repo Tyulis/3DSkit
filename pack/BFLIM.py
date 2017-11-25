@@ -9,7 +9,7 @@ BFLIM_FLIM_HDR_STRUCT = '4s2H2I2H'
 BFLIM_IMAG_HDR_STRUCT = '4sI3H2BI'
 
 ALIGNMENT = 0x80
-VERSION = 0x07020000
+VERSION = 0x07020100
 
 L8 = 0x00
 A8 = 0x01
@@ -102,7 +102,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 		return self.pack(BFLIM_FLIM_HDR_STRUCT, b'FLIM', 0xfeff, 0x14, VERSION, filelen, 1, 0)
 	
 	def repackIMAGheader(self, img, swizzle, datalen):
-		return self.pack(BFLIM_IMAG_HDR_STRUCT, b'imag', 0x10, img.width, img.height, ALIGNMENT, self.format, swizzle, datalen)
+		return self.pack(BFLIM_IMAG_HDR_STRUCT, b'imag', 0x10, self.width, self.height, ALIGNMENT, self.format, swizzle, datalen)
 	
 	def swizzle(self, img, swizzle):
 		if self.verbose and swizzle != '0':
@@ -149,7 +149,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 										if self.byteorder == '<':
 											packed = bytes(reversed(packed))
 										finalx = xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64)
-										finaly = (ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * width * 8)
+										finaly = (ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * tiles_x * 64)
 										pos = (finalx + finaly) * self.pxsize
 										final[pos:pos + self.pxsize] = packed
 		return final
