@@ -175,7 +175,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 	def parsedata(self):
 		ptr = 0
 		self.tree = OrderedDict()
-		self.tree['byte-order'] = self.byteorder
+		self.tree['byte order'] = self.byteorder
 		self.tree['version'] = self.version
 		self.tree['BFLYT'] = OrderedDict()
 		self.actnode = self.tree['BFLYT']  # creates a pointer in the tree, which can change later
@@ -271,10 +271,10 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			textureSRT = (flags & 0x0000000c) >> 2
 			mappingSettings = (flags & 0x00000030) >> 4
 			textureCombiners = (flags & 0x000000c0) >> 6
-			alphaCompare = (flags & 0x00000100) >> 8
-			blendMode = (flags & 0x00000600) >> 9
-			blendAlpha = (flags & 0x00001800) >> 11
-			indirect = (flags & 0x00002000) >> 13
+			blendMode = (flags & 0x00000300) >> 8
+			blendAlpha = (flags & 0x00000c00) >> 10
+			indirect = (flags & 0x00001000) >> 12
+			alphaCompare = (flags & 0x00002000) >> 13
 			projectionMapping = (flags & 0x0000c000) >> 14
 			shadowBlending = (flags & 0x00030000) >> 16
 			
@@ -584,30 +584,83 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 		localnode['section-count'] = count
 		localnode['section-scale-X'], ptr = self.float32(data, ptr)
 		localnode['section-scale-Y'], ptr = self.float32(data, ptr)
+		entryoffsets = []
+		extraoffsets = []
+		entries = []
+		for i in range(count):
+			entry = OrderedDict()
+			entry['name'] = self.string(data, ptr)[0]
+			ptr += 24
+			entry['unknown'], ptr = self.uint8(data, ptr)
+			entry['flags'], ptr = self.uint8(data, ptr)
+			padding, ptr = self.uint16(data, ptr)
+			entryoffset, ptr = self.uint32(data, ptr)
+			ptr += 4  #padding?
+			extraoffset, ptr = self.uint32(data, ptr)
+			entryoffsets.append(entryoffset)
+			extraoffsets.append(extraoffset)
+			entries.append(entry)
+		for i in range(count):
+			entry = entries[i]
+			parentnode = self.actnode
+			self.actnode = entry
+			self.actnode['__parentnode'] = parentnode
+			entryoffset = entryoffsets[i]
+			extraoffset = extraoffsets[i]
+			if entryoffset != 0:
+				length, ptr = self.uint32(data, entryoffset + 4)
+				entrydata = data[entryoffset: entryoffset + length]
+				magic = entrydata[0:4].decode('ascii')
+				try:
+					method = eval('self.read' + magic)  # quicker to code than if magic=='txt1':...
+				except AttributeError:
+					error('Invalid section magic: %s' % magic, 303)
+				method(entrydata)
+			if extraoffset != 0:
+				extra = data[extraoffset:extraoffset + 48].hex()
+				#key = list(entry.keys())[-1]
+				entry['extra'] = extra
+			self.actnode = self.actnode['__parentnode']
+		localnode['entries'] = entries
+		if len(extraoffsets) == 0:
+			if len(entryoffsets) == 0:
+				end = ptr
+			else:
+				lastentry = max(entryoffsets)
+				end = lastentry + self.uint16(data, lastentry + 4)[0]
+		else:
+			if sum(extraoffsets) != 0:  #no extras
+				end = max(extraoffsets) + 48
+			else:
+				end = entryoffset + length
+		if end < len(data):
+			localnode['dump'] = data[end:]
+		'''
 		entries = []
 		extraoffsets = []
 		entryoffsets = []
+		tblptr = ptr
 		for i in range(0, count):
 			entry = OrderedDict()
 			parentnode = self.actnode
 			self.actnode = entry
 			self.actnode['__parentnode'] = parentnode
-			entry['name'] = self.string(data, ptr)[0]; ptr += 24
-			entry['unknown-1'], ptr = self.uint8(data, ptr)
-			entry['flags'], ptr = self.uint8(data, ptr)
-			pad, ptr = self.uint16(data, ptr)
-			entryoffset, ptr = self.uint32(data, ptr)
-			extraoffset, ptr = self.uint32(data, ptr)
-			pad, ptr = self.uint32(data, ptr)
+			entry['name'] = self.string(data, tblptr)[0]; tblptr += 24
+			entry['unknown-1'], tblptr = self.uint8(data, tblptr)
+			entry['flags'], tblptr = self.uint8(data, tblptr)
+			pad, tblptr = self.uint16(data, tblptr)
+			entryoffset, tblptr = self.uint32(data, tblptr)
+			extraoffset, tblptr = self.uint32(data, tblptr)
+			pad, ptr = self.uint32(data, tblptr)
 			if entryoffset != 0:
 				entryoffsets.append(entryoffset)
 				length, ptr = self.uint32(data, entryoffset + 4)
-				entrydata = data[entryoffset:entryoffset + length]
+				entrydata = data[entryoffset: entryoffset + length]
 				magic = entrydata[0:4].decode('ascii')
 				try:
 					method = eval('self.read' + magic)  # quicker to code than if magic=='txt1':...
 				except AttributeError:
-					print('Invalid section magic: %s' % magic)
+					error('Invalid section magic: %s' % magic, 303)
 				method(entrydata)
 			if extraoffset != 0:
 				extraoffsets.append(extraoffset)
@@ -617,16 +670,18 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			self.actnode = self.actnode['__parentnode']
 			entries.append(entry)
 		localnode['entries'] = entries
-		if extraoffsets == []:
-			if entryoffsets == []:
+		if len(extraoffsets) == 0:
+			if len(entryoffsets) == 0:
 				end = ptr
 			else:
 				lastentry = max(entryoffsets)
-				end = lastentry + self.uint16(data, lastentry + 4)
+				end = lastentry + self.uint16(data, lastentry + 4)[0]
 		else:
 			end = max(extraoffsets) + 48
 		if end < len(data):
 			localnode['dump'] = data[end:]
+		'''
+		
 	
 	def readgrp1(self, data):
 		ptr = 8

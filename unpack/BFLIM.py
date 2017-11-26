@@ -73,7 +73,6 @@ ETC1_MODIFIERS = [
 	[47, 183]
 ]
 
-
 class extractBFLIM(ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, verbose, opts={}):
 		self.outfile = make_outfile(filename, 'png')
@@ -138,16 +137,20 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		datawidth = 1 << int(math.ceil(math.log(self.width, 2)))
 		dataheight = 1 << int(math.ceil(math.log(self.height, 2)))
 		
+		total_x = math.ceil(datawidth / 8)
+		total_y = math.ceil(dataheight / 8)
+		
 		tilelen = int(64 * self.pxsize)
 		if self.verbose:
-			print('%d x %d tiles of length %dB' % (tiles_x, tiles_y, tilelen))	
+			print('%d x %d tiles of length %dB' % (tiles_x, tiles_y, tilelen))
+		diffx = total_x - tiles_x
 		#8x8px tiles
-		for ytile in range(tiles_y):
-			for xtile in range(tiles_x):
-				tilepos = int(((ytile * 64 * tiles_x) + (xtile * 64)) * self.pxsize)
+		for ytile in range(0, tiles_y):
+			for xtile in range(diffx, diffx + tiles_x):
+				tilepos = int(((ytile * 64 * total_x) + (xtile * 64)) * self.pxsize)
 				data.seek(tilepos)
 				tile = data.read(tilelen)
-				self.extract_tile(tile, xtile, ytile)
+				self.extract_tile(tile, xtile - diffx, ytile)
 				
 		img = self.deswizzle(img)
 		img.save(self.outfile, 'PNG')
@@ -175,15 +178,13 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 						else:
 							for ypix in range(2):
 								for xpix in range(2):
-									pixpos = ((ypix * 2) + xpix) * self.pxsize
-									pixel = grp[pixpos:pixpos + self.pxsize]
-									rgba = self.getpixel(pixel)
 									outpos_y = (ytile * 8) + (ysub * 4) + (ygroup * 2) + ypix
 									outpos_x = (xtile * 8) + (xsub * 4) + (xgroup * 2) + xpix
 									if outpos_y >= self.height or outpos_x >= self.width:
-										#if self.verbose:
-										#	print('Pixel at %d, %d not extracted' % (outpos_x, outpos_y))
 										continue
+									pixpos = ((ypix * 2) + xpix) * self.pxsize
+									pixel = grp[pixpos: pixpos + self.pxsize]
+									rgba = self.getpixel(pixel)
 									self.pixels[outpos_x, outpos_y] = rgba
 									
 	def getpixel(self, data, ptr=0, subpx=0):
@@ -216,7 +217,12 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			a = (val & 1) * 255
 			px = (r, g, b, a)
 		elif self.format == RGBA8:
-			px = self.unpack_from('4B', data, ptr)
+			rgba = self.unpack_from('I', data, ptr)[0]
+			r = rgba >> 24
+			g = (rgba >> 16) & 0xff
+			b = (rgba >> 8) & 0xff
+			a = rgba & 0xff
+			px = (r, g, b, a)
 		elif self.format == RGBA4:
 			rg, ba = self.unpack_from('2B', data, ptr)
 			r = (rg >> 4) * 0x11
@@ -242,11 +248,9 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		if self.verbose and self.swizzle != 0:
 			print('Deswizzling')
 		if self.swizzle == 4:
-			img = img.rotate(90, expand=True)
-			img = img.crop((0, 0, self.height, self.width))
+			img = img.transpose(Image.ROTATE_90)
 		elif self.swizzle == 8:
-			img = img.rotate(90, expand=True)
-			img = img.crop((0, 0, self.height, self.width))
+			img = img.transpose(Image.ROTATE_90)
 			img = img.transpose(Image.FLIP_TOP_BOTTOM)
 		return img
 		

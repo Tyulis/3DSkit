@@ -263,6 +263,10 @@
 **v1.21**
 
 *	v1.21.48
-	*	Now, when packing without the -o option, 3DSkit will determin an output name from the input name and the format
+	*	Now, when packing without the -o option, 3DSkit will determine an output name from the input name and the format
 	*	Fixed multiple bugs in pack.BFLIM
 	*	Fixed pack.ALYT and pack.SARC padding issues
+*	v1.21.49
+	*	Fixed unpack.BFLYT
+	*	Enhanced txtree by removing all single-quotes and 'list' or 'tuple' mentions in output files
+	*	Using -x on a directory now unpacks all contained files recursively

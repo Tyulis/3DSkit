@@ -137,8 +137,10 @@ class extractGARC (rawutil.TypeReader):
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
 				data.seek(start)
-				filedata = BytesIO(data.read(subentry.length))
+				dat=data.read(subentry.length)
+				filedata = BytesIO(dat)
 				comp = compress.recognize(filedata)
+				filedata.seek(0)
 				ext = get_ext(filedata)
 				outname = self.outdir + str(i) + ext
 				if comp == 'LZ11':

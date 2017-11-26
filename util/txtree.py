@@ -28,16 +28,21 @@ class dump (ClsFunc):
 			if node[key].__class__ in [dict, OrderedDict] + self.customs:
 				blk = self.dumpNode(node[key])
 				blk = self.indent(blk)
-				final += '%s: \n' % repr(key)
+				final += '%s: \n' % key
 				final += blk
 			elif node[key].__class__ in (list, tuple):
 				dic = dict(enumerate(node[key]))
 				blk = self.dumpNode(dic)
 				blk = self.indent(blk)
-				final += '%s: %s\n' % (repr(key), str(node[key].__class__.__qualname__))
+				if node[key].__class__ == list:
+					final += '[%s]: \n' % key
+				elif node[key].__class__ == tuple:
+					final += '(%s): \n' % key
 				final += blk
+			elif node[key].__class__ == str:
+				final += '%s: %s\n' % (key, node[key].replace('\n', '\\n'))
 			else:
-				final += '%s: %s\n' % (repr(key), repr(node[key]))
+				final += '%s: %s\n' % (key, repr(node[key]).replace('\n', '\\n'))
 		return final
 	
 	def indent(self, s):
@@ -58,9 +63,15 @@ class load (ClsFunc):
 		while True:
 			try:
 				line = node[i].split(': ')
+				if len(line) == 1:
+					line.append('')
 			except IndexError:
 				break
-			if line[1].strip() in ('', 'list', 'tuple'):
+			if not line[0].isdigit() and "'" not in line[0] and '"' not in line[0]:
+				key = line[0]
+			else:
+				key = eval(line[0])
+			if line[1].strip() == '':
 				subnode = ''
 				for subline in node[i + 1:]:
 					if subline.startswith('\t|'):
@@ -69,15 +80,19 @@ class load (ClsFunc):
 					else:
 						break
 				res = self.loadNode(self.unindent(subnode))
-				if line[1] == 'list':
+				if line[0].startswith('[') and line[0].endswith(']'):
 					res = list(res.values())
-				elif line[1] == 'tuple':
+				if line[0].startswith('(') and line[0].endswith(')'):
 					res = tuple(res.values())
-				dic[eval(line[0])] = res
+				dic[line[0].strip('[]()')] = res
 			else:
 				if line[1] in ('true', 'false', 'none'):
-					line[1] = line[1].capitalize()
-				dic[eval(line[0])] = eval(line[1])
+					res = eval(line[1].capitalize())
+				elif not line[1].isdigit() and "'" not in line[1] and '"' not in line[1]:
+					res = line[1]
+				else:
+					res = eval(line[1])
+				dic[key] = res
 			i += 1
 		return dic
 	

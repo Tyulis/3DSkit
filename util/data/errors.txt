@@ -11,6 +11,8 @@ These are the different error codes, and their explaination.
 	105: Unsupported color format
 	106: Unsupported file version
 		The format version you specified is not supported or doesn't exist
+	107: Unsupported setting
+		There is something in your file that 3DSkit cannot currently read properly.
 ;;;;
 200: User error
 	201: You have to specify the output file name at packing

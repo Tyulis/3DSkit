@@ -25,7 +25,7 @@ How to use
 		-h, --help            show this help message and exit
 		-H, --detailed_help   Detailed help (you should read it the first time you use 3DSkit)
 		-v, --verbose         Increases the 3DSkit's verbosity
-		-x, --extract         Extract files contained in the archive / decompress the file if necessary and convert it to a readable format
+		-x, --extract         Extract files contained in the archive / decompress the file if necessary and convert it to a readable format. On a directory, recursively extracts all contained files
 		-p, --pack            Pack files into an archive, or convert it to a console format
 		-D, --decompress      Decompress the input files
 		-C, --compress        Compress the input file

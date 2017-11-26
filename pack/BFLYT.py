@@ -147,6 +147,11 @@ class packBFLYT(ClsFunc, TypeWriter):
 		self.sections = tree['BFLYT']
 		self.final = self.repackdata()
 		bwrite(self.final, outname)
+	
+	def string4(self, s):
+		s = s.encode('utf-8')
+		pad = 4 - (len(s) % 4 or 4)
+		return s + bytes(pad)
 
 	def repackdata(self):
 		self.secnum = 0

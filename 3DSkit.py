@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.21.48'
+__version__ = '1.21.49'
 
 
 def parse_opts(s):
@@ -40,35 +40,41 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 
 def extract_files(filename, isbigendian, format, verbose, opts):
 	endian = '>' if isbigendian else '<'
-	try:
-		file = open(filename, 'rb')
-	except FileNotFoundError:
-		error('File %s does not exist' % filename, 404)
-	except IsADirectoryError:
-		error('You tried to unpack a directory', 403)
-	format = unpack.recognize(filename, format)
-	if format not in unpack.SKIP_DECOMPRESSION:
-		comp = compress.recognize(file)
-		if comp is not None:
-			print('Compression: %s' % comp)
-			print('Decompressing...')
-			out = BytesIO()
-			compress.decompress(file, out, comp, verbose)
-			file.close()
-			file = out
-			print('Decompressed')
+	if os.path.isdir(filename):
+		filenames = []
+		for p, d, f in os.walk(filename):
+			for name in f:
+				filenames.append(os.path.join(p, name))
+	else:
+		filenames = [filename]
+	for filename in filenames:
+		try:
+			file = open(filename, 'rb')
+		except FileNotFoundError:
+			error('File %s does not exist' % filename, 404)
+		format = unpack.recognize(filename, format)
+		if format not in unpack.SKIP_DECOMPRESSION:
+			comp = compress.recognize(file)
+			if comp is not None:
+				print('Compression: %s' % comp)
+				print('Decompressing...')
+				out = BytesIO()
+				compress.decompress(file, out, comp, verbose)
+				file.close()
+				file = out
+				print('Decompressed')
+			else:
+				print('No compression')
 		else:
 			print('No compression')
-	else:
-		print('No compression')
-	if format is None:
-		format = unpack.recognize(file, format)
 		if format is None:
-			error('Unrecognized format', 103)
-	print('%s file found' % format)
-	print('Extracting %s...' % filename)
-	unpack.extract(filename, file, format, endian, verbose, opts)
-	print('Extracted')
+			format = unpack.recognize(file, format)
+			if format is None:
+				error('Unrecognized format', 103)
+		print('%s file found' % format)
+		print('Extracting %s...' % filename)
+		unpack.extract(filename, file, format, endian, verbose, opts)
+		print('Extracted')
 
 
 def decompress_file(filename, verbose):
@@ -159,7 +165,7 @@ if __name__ == '__main__':
 	parser.add_argument('-H', '--detailed_help', help='Detailed help (you should read it the first time you use 3DSkit)', action='store_true')
 	parser.add_argument('-v', '--verbose', help='Increases the verbosity of 3DSkit', action='store_true')
 	group = parser.add_mutually_exclusive_group()
-	group.add_argument('-x', '--extract', help='Extract files contained in the archive /  decompress the file if necessary and convert it to a readable format', action='store_true')
+	group.add_argument('-x', '--extract', help='Extract files contained in the archive /  decompress the file if necessary and convert it to a readable format. On a directory, recursively extracts all contained files', action='store_true')
 	group.add_argument('-p', '--pack', help='Pack files into an archive, or convert it to a console format', action='store_true')
 	group.add_argument('-D', '--decompress', help='Decompress the input files', action='store_true')
 	group.add_argument('-C', '--compress', help='Compress the input file', action='store_true')
