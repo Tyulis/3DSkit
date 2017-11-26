@@ -40,6 +40,9 @@ class dump (ClsFunc):
 					final += '(%s): \n' % key
 				final += blk
 			elif node[key].__class__ == str:
+				if len(node[key]) >= 1:
+					if node[key][0].isdigit():
+						node[key] = '"' + node[key] + '"'
 				final += '%s: %s\n' % (key, node[key].replace('\n', '\\n'))
 			else:
 				final += '%s: %s\n' % (key, repr(node[key]).replace('\n', '\\n'))
@@ -82,14 +85,16 @@ class load (ClsFunc):
 				res = self.loadNode(self.unindent(subnode))
 				if line[0].startswith('[') and line[0].endswith(']'):
 					res = list(res.values())
-				if line[0].startswith('(') and line[0].endswith(')'):
+				elif line[0].startswith('(') and line[0].endswith(')'):
 					res = tuple(res.values())
+				elif len(res) == 0:
+					res = ''
 				dic[line[0].strip('[]()')] = res
 			else:
-				if line[1] in ('true', 'false', 'none'):
+				if line[1].lower() in ('true', 'false', 'none'):
 					res = eval(line[1].capitalize())
-				elif not line[1].isdigit() and "'" not in line[1] and '"' not in line[1]:
-					res = line[1]
+				elif not line[1].strip('-+')[0].isdigit() and "'" not in line[1] and '"' not in line[1]:
+					res = line[1].replace('\\n', '\n')
 				else:
 					res = eval(line[1])
 				dic[key] = res

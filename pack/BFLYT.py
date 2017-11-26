@@ -449,12 +449,13 @@ class packBFLYT(ClsFunc, TypeWriter):
 		final += self.color(shadow['bottom-color'], 'RGBA8')
 		final += self.uint32(shadow['unknown-2'])
 		text = data['text'].encode('utf-16-%se' % ('l' if self.byteorder == '<' else 'b'))
+		final += self.pad(4)
 		final += text
 		if len(final) % 4 != 0:
 			final += self.pad(4 - (len(text) % 4))
 		final += data['call-name'].encode('ascii')  #because of padding issues
-		if len(final) % 4 != 0:
-			final += self.pad(4 - (len(text) % 4))
+		if not final.endswith(b'\x00\x00'):
+			final += self.pad(4 - (len(final) % 4))
 		hdr = self.sechdr(final, 'txt1')
 		return hdr + final
 
@@ -465,19 +466,18 @@ class packBFLYT(ClsFunc, TypeWriter):
 		final += self.uint16(data['unknown'])
 		nametbl = b''
 		datatbl = b''
-		nameoffsets = []
-		dataoffsets = []
-		for entry in data['entries']:
-			nameoffsets.append(len(nametbl))
+		for i, entry in enumerate(data['entries']):
+			entry['nameoffset'] = len(nametbl)
+			entry['dataoffset'] = len(datatbl)
 			nametbl += self.string(entry['name'])
-			dataoffsets.append(len(datatbl))
-			typename = entry['data'][0].__class__.__qualname__
-			if typename == 'float':
-				datatype = 2
-			elif typename == 'int':
-				datatype = 1
-			elif typename in ('str', 'unicode', 'bytes'):  #...
+			etype = type(entry['data'][0])
+			if etype in (str, bytes, bytearray):
 				datatype = 0
+			elif etype == int:
+				datatype = 1
+			elif etype == float:
+				datatype = 2
+			entry['datatype'] = datatype
 			for el in entry['data']:
 				if datatype == 0:
 					datatbl += self.string(el)
@@ -485,25 +485,19 @@ class packBFLYT(ClsFunc, TypeWriter):
 					datatbl += self.int32(el)
 				elif datatype == 2:
 					datatbl += self.float32(el)
-		if len(datatbl) % 4 != 0:
-			datatbl += self.pad(4 - (len(datatbl) % 4))
-		if len(nametbl) % 4 != 0:
-			nametbl += self.pad(4 - (len(nametbl) % 4))
-		i = 0
-		#entryoffset = len(final)
-		for entry in data['entries']:  #1 entry in the table = 12B
-			entryrest = entrynum - (i + 1)
-			final += self.uint32((12 * entryrest) + len(datatbl) + nameoffsets[i] + 0x0c)
-			final += self.uint32((12 * entryrest) + dataoffsets[i] + 0x0c)
+		datatbl += self.pad(4 - (len(datatbl) % 4 or 4))
+		nametbl += self.pad(4 - (len(nametbl) % 4 or 4))
+		for i, entry in enumerate(data['entries']):
+			entryoffset = len(final)
+			remaining_entries = entrynum - (i + 1)
+			nameoffset = entry['nameoffset']
+			dataoffset = entry['dataoffset']
+			nameoffset += remaining_entries * 0x0c + len(datatbl) + 0x0c
+			dataoffset += remaining_entries * 0x0c + 0x0c
+			final += self.uint32(nameoffset)
+			final += self.uint32(dataoffset)
 			final += self.uint16(len(entry['data']))
-			typename = entry['data'][0].__class__.__qualname__
-			if typename == 'float':
-				datatype = 2
-			elif typename == 'int':
-				datatype = 1
-			elif typename in ('str', 'unicode', 'bytes'):  #...
-				datatype = 0
-			final += self.uint8(datatype)
+			final += self.uint8(entry['datatype'])
 			final += self.uint8(entry['unknown'])
 		final += datatbl
 		final += nametbl
@@ -549,28 +543,32 @@ class packBFLYT(ClsFunc, TypeWriter):
 		for entry in data['entries']:
 			sec = self.repacktree(entry, safe=True)
 			if sec != b'':
-				dataoffsets.append(len(entrydata) + len(data['entries']) * 36 + 88)
+				dataoffsets.append(len(entrydata) + len(data['entries']) * 40 + 112)
 			else:
 				dataoffsets.append(0)
 			entrydata += sec
 		for entry in data['entries']:
 			if 'extra' in entry.keys():
-				extraoffsets.append(len(extradata) + len(entrydata) + len(data['entries']) * 36 + 88)
+				extraoffsets.append(len(extradata) + len(entrydata) + len(data['entries']) * 40 + 112)
 				extradata += bytes.fromhex(entry['extra'])
 			else:
 				extraoffsets.append(0)
 		i = 0
-		for entry in data['entries']:  #1 entry=36B
+		for entry in data['entries']:  #1 entry=40B
 			final += self.string(entry['name'], 24)
-			final += self.uint8(entry['unknown-1'])
+			final += self.uint8(entry['unknown'])
 			final += self.uint8(entry['flags'])
 			final += self.pad(2)
 			final += self.uint32(dataoffsets[i])
+			final += self.pad(4)
 			final += self.uint32(extraoffsets[i])
 			i += 1
 		if len(entrydata) % 4 != 0:
 			entrydata += self.pad(4 - (len(entrydata) % 4))
-		extradata += (self.pad(4 - (len(extradata) % 4)) if len(extradata) % 4 != 0 else b'')
+		extradata += self.pad(4 - (len(extradata) % 4 or 4))
+		if 'extra' in data.keys():
+			final += data['extra']
+			final += self.pad(4 - (len(final) % 4 or 4))
 		final += entrydata
 		final += extradata
 		if 'dump' in data.keys():
