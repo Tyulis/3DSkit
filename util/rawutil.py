@@ -6,7 +6,7 @@ import struct
 import builtins
 import binascii
 
-__version__ = '2.2.6'
+__version__ = '2.3.6'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -98,6 +98,13 @@ class TypeUser (object):
 			return unpacked
 
 
+def _readermethod(el):
+	def _TypeReader_Method(self, data, ptr=None):
+		(res, ), ptr = self.unpack_from(el, data, ptr, getptr=True)
+		return res, ptr
+	return _TypeReader_Method
+
+
 class TypeReader (TypeUser):
 	def tobits(self, n, align=8):
 		return [int(bit) for bit in bin(n, align)]
@@ -118,49 +125,19 @@ class TypeReader (TypeUser):
 			low -= 16
 		return high, low
 	
-	def uint8(self, data, ptr=0):
-		return struct.unpack_from('%sB' % self.byteorder, data, ptr)[0], ptr + 1
-	
-	def uint16(self, data, ptr=0):
-		return struct.unpack_from('%sH' % self.byteorder, data, ptr)[0], ptr + 2
-	
-	def uint24(self, data, ptr=0):
-		return unpack_from('%sU' % self.byteorder, data, ptr)[0], ptr + 3
-	
-	def uint32(self, data, ptr=0):
-		return struct.unpack_from('%sI' % self.byteorder, data, ptr)[0], ptr + 4
-		
-	def uint64(self, data, ptr=0):
-		return struct.unpack_from('%sQ' % self.byteorder, data, ptr)[0], ptr + 8
-	
-	def int8(self, data, ptr=0):
-		return struct.unpack_from('%sb' % self.byteorder, data, ptr)[0], ptr + 1
-	
-	def int16(self, data, ptr=0):
-		return struct.unpack_from('%sh' % self.byteorder, data, ptr)[0], ptr + 2
-	
-	def int24(self, data, ptr=0):
-		return unpack_from('%su' % self.byteorder, data, ptr)[0], ptr + 3
-	
-	def int32(self, data, ptr=0):
-		return struct.unpack_from('%si' % self.byteorder, data, ptr)[0], ptr + 4
-	
-	def int64(self, data, ptr=0):
-		return struct.unpack_from('%sq' % self.byteorder, data, ptr)[0], ptr + 8
-	
-	def float32(self, data, ptr=0):
-		return struct.unpack_from('%sf' % self.byteorder, data, ptr)[0], ptr + 4
-	
-	def string(self, data, ptr=0):
-		subdata = data[ptr:]
-		try:
-			end = subdata.index(0)
-		except:
-			end = -1
-		if end == -1:
-			return subdata.decode('utf-8'), ptr + len(subdata)
-		else:
-			return subdata[:end].decode('utf-8'), ptr + end + 1
+	uint8 = _readermethod('B')
+	uint16 = _readermethod('H')
+	uint24 = _readermethod('U')
+	uint32 = _readermethod('I')
+	uint64 = _readermethod('Q')
+	int8 = _readermethod('b')
+	int16 = _readermethod('h')
+	int24 = _readermethod('u')
+	int32 = _readermethod('i')
+	int64 = _readermethod('q')
+	float32 = float = _readermethod('f')
+	double = _readermethod('d')
+	string = _readermethod('n')
 	
 	def utf16string(self, data, ptr):
 		subdata = data[ptr:]
@@ -176,6 +153,15 @@ class TypeReader (TypeUser):
 				break
 		endian = 'le' if self.byteorder == '<' else 'be'
 		return bytes(s[:-2]).decode('utf-16-%s' % endian), ptr + i
+		
+
+def _writermethod(el):
+	def _TypeWriter_Method(self, data, out=None):
+		if out is None:
+			return self.pack(el, data)
+		else:
+			self.pack(el, data, out)
+	return _TypeWriter_Method
 
 
 class TypeWriter (TypeUser):
@@ -189,51 +175,39 @@ class TypeWriter (TypeUser):
 			low += 16
 		return (high << 4) + (low & 0xf)
 		
-	def uint8(self, data):
-		return struct.pack('%sB' % self.byteorder, data)
+	uint8 = _writermethod('B')
+	uint16 = _writermethod('H')
+	uint24 = _writermethod('U')
+	uint32 = _writermethod('I')
+	uint64 = _writermethod('Q')
+	int8 = _writermethod('b')
+	int16 = _writermethod('h')
+	int24 = _writermethod('u')
+	int32 = _writermethod('i')
+	int64 = _writermethod('q')
+	float32 = float = _writermethod('f')
+	double = _writermethod('d')
 	
-	def uint16(self, data):
-		return struct.pack('%sH' % self.byteorder, data)
-	
-	def uint24(self, data):
-		return pack('%sU' % self.byteorder, data)
-	
-	def uint32(self, data):
-		return struct.pack('%sI' % self.byteorder, data)
-	
-	def uint64(self, data):
-		return struct.pack('%sQ' % self.byteorder, data)
-	
-	def int8(self, data):
-		return struct.pack('%sb' % self.byteorder, data)
-	
-	def int16(self, data):
-		return struct.pack('%sh' % self.byteorder, data)
-	
-	def int24(self, data):
-		return pack('%su' % self.byteorder, data)
-	
-	def int32(self, data):
-		return struct.pack('%si' % self.byteorder, data)
-	
-	def int64(self, data):
-		return struct.pack('%sq' % self.byteorder, data)
-	
-	def float32(self, data):
-		return struct.pack('%sf' % self.byteorder, data)
-	
-	def string(self, data, align=0):
+	def string(self, data, align=0, out=None):
 		s = data.encode('utf-8')
 		if align < len(s) + 1:
 			align = len(s) + 1
-		return struct.pack('%s%ds' % (self.byteorder, align), s)
+		res = struct.pack('%s%ds' % (self.byteorder, align), s)
+		if out is None:
+			return res
+		else:
+			out.write(res)
 	
-	def utf16string(self, data, align=0):
+	def utf16string(self, data, align=0, out=None):
 		endian = 'le' if self.byteorder == '<' else 'be'
 		s = data.encode('utf-16-%s' % endian) + b'\x00\x00'
 		if align < len(s) + 2:
 			align = len(s) + 2
-		return struct.pack('%s%ds' % (self.byteorder, align), s)
+		res = struct.pack('%s%ds' % (self.byteorder, align), s)
+		if out is None:
+			return res
+		else:
+			out.write(res)
 	
 	def pad(self, num):
 		return b'\x00' * num

@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.21.49'
+__version__ = '1.21.50'
 
 
 def parse_opts(s):

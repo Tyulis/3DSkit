@@ -70,7 +70,7 @@ class load (ClsFunc):
 					line.append('')
 			except IndexError:
 				break
-			if not line[0].isdigit() and "'" not in line[0] and '"' not in line[0]:
+			if not line[0].isdigit() and not line[0].startswith(('b"', "b'")):
 				key = line[0]
 			else:
 				key = eval(line[0])
@@ -93,7 +93,7 @@ class load (ClsFunc):
 			else:
 				if line[1].lower() in ('true', 'false', 'none'):
 					res = eval(line[1].capitalize())
-				elif not line[1].strip('-+')[0].isdigit() and "'" not in line[1] and '"' not in line[1]:
+				elif not line[1].strip('-+')[0].isdigit() and not line[0].startswith(('b"', "b'")):
 					res = line[1].replace('\\n', '\n')
 				else:
 					res = eval(line[1])

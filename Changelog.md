@@ -269,5 +269,9 @@
 *	v1.21.49
 	*	Fixed unpack.BFLYT
 	*	Enhanced txtree by removing all single-quotes and 'list' or 'tuple' mentions in output files
+*	v1.21.50
+	*	Fixed pack.BFLYT
 	*	Using -x on a directory now unpacks all contained files recursively
 	*	Cleanup
+	*	Fixes in txtree
+	*	Updated rawutil
