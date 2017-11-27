@@ -6,7 +6,7 @@ import struct
 import builtins
 import binascii
 
-__version__ = '2.2.5'
+__version__ = '2.2.6'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -85,7 +85,7 @@ class TypeUser (object):
 		return unpacked
 	
 	def unpack_from(self, stct, data, offset=None, refdata=(), getptr=False):
-		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
+		byteorder = stct[0] if stct[0] in '@=><!' else '@'
 		stct = stct.lstrip('<>=!@')
 		stct = stct.replace(' ', '')
 		if len(SUBS) > 0:
@@ -103,8 +103,8 @@ class TypeReader (TypeUser):
 		return [int(bit) for bit in bin(n, align)]
 		
 	def bit(self, n, bit, length=1):
-		mask = (2 ** length) - 1
-		return (n >> bit) & mask
+		mask = ((2 ** length) - 1) << bit
+		return (n & mask) >> (bit - length)
 	
 	def nibbles(self, n):
 		return (n >> 4, n & 0xf)
@@ -241,82 +241,6 @@ class TypeWriter (TypeUser):
 	def align(self, data, alignment):
 		padding = alignment - (len(data) % alignment or alignment)
 		return b'\x00' * padding
-	
-	def color(self, data, format):
-		format = format.upper()
-		out = b''
-		if format in ('RGB8', 'RGBA8'):
-			out += self.uint8(data['RED'])
-			out += self.uint8(data['GREEN'])
-			out += self.uint8(data['BLUE'])
-			if format == 'RGBA8':
-				out += self.uint8(data['ALPHA'])
-		return out
-
-
-class FileReader (object):
-	def __init__(self, file, byteorder='@'):
-		self.file = file
-		self.read = self.file.read
-		self.write = self.file.write
-		self.seek = self.file.seek
-		self.tell = self.file.tell
-		bs = self.file.tell()
-		self.file.seek(0, 2)
-		self.filelen = self.file.tell()
-		self.file.seek(bs)
-		self.r = TypeReader(byteorder)
-
-	def uint8(self):
-		return self.r.uint8(self.file.read(1), 0)[0]
-	
-	def uint16(self):
-		return self.r.uint16(self.file.read(2), 0)[0]
-	
-	def uint24(self):
-		return self.r.uint24(self.file.read(3), 0)[0]
-	
-	def uint32(self):
-		return self.r.uint32(self.file.read(4), 0)[0]
-	
-	def uint64(self):
-		return self.r.uint64(self.file.read(8), 0)[0]
-	
-	def int8(self):
-		return self.r.int8(self.file.read(1), 8)[0]
-	
-	def int16(self):
-		return self.r.int16(self.file.read(2), 8)[0]
-	
-	def int24(self):
-		return self.r.int24(self.file.read(3), 0)[0]
-	
-	def int32(self):
-		return self.r.int32(self.file.read(4), 0)[0]
-	
-	def int64(self):
-		return self.r.int64(self.file.read(8), 0)[0]
-	
-	def float32(self):
-		return self.r.float32(self.file.read(4), 0)[0]
-	
-	def string(self):
-		c = 256
-		s = b''
-		while c not in (b'\x00', b''):
-			c = self.file.read(1)
-			if c != b'\x00':
-				s += c
-		return s
-	
-	def utf16string(self):
-		c = 256
-		s = ''
-		while c not in (b'\x00\x00', b''):
-			c = self.file.read(2)
-			if c != b'\x00\x00':
-				s += c.decode('utf-16-le' if self.r.byteorder == '<' else 'utf-16-be')
-		return s
 
 
 class _InternRef (object):
@@ -403,6 +327,7 @@ class _unpack (_ClsFunc, _StructParser):
 		stct = self.parse_struct(stct, refdata)
 		if hasattr(self.data, 'read'):
 			if ptr is not None:
+				pag
 				self.data.seek(ptr)
 			return self.unpack_file(stct)
 		else:

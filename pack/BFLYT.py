@@ -133,6 +133,22 @@ class TypeWriter (rawutil.TypeWriter):
 
 	def sechdr(self, data, name):
 		return self.pack('4sI', name.encode('ascii'), len(data) + 8)
+	
+	def color(self, data, format):
+		format = format.upper()
+		out = b''
+		if format in ('RGB8', 'RGBA8'):
+			out += self.uint8(data['RED'])
+			out += self.uint8(data['GREEN'])
+			out += self.uint8(data['BLUE'])
+			if format == 'RGBA8':
+				out += self.uint8(data['ALPHA'])
+		return out
+	
+	def string4(self, s):
+		s = s.encode('utf-8')
+		pad = 4 - (len(s) % 4 or 4)
+		return s + bytes(pad)
 
 
 class packBFLYT(ClsFunc, TypeWriter):
@@ -147,11 +163,6 @@ class packBFLYT(ClsFunc, TypeWriter):
 		self.sections = tree['BFLYT']
 		self.final = self.repackdata()
 		bwrite(self.final, outname)
-	
-	def string4(self, s):
-		s = s.encode('utf-8')
-		pad = 4 - (len(s) % 4 or 4)
-		return s + bytes(pad)
 
 	def repackdata(self):
 		self.secnum = 0
