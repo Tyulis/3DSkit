@@ -5,8 +5,9 @@ import sys
 import struct
 import builtins
 import binascii
+from collections import namedtuple
 
-__version__ = '2.3.6'
+__version__ = '2.4.7'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -74,7 +75,7 @@ class TypeUser (object):
 		packed = _pack(stct, data, byteorder, out)
 		return packed
 	
-	def unpack(self, stct, data, refdata=()):
+	def unpack(self, stct, data, names=None, refdata=()):
 		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
 		stct = stct.lstrip('<>=!@')
 		stct = stct.replace(' ', '')
@@ -82,9 +83,13 @@ class TypeUser (object):
 			for sub in SUBS.keys():
 				stct = stct.replace(sub, SUBS[sub])
 		unpacked, ptr = _unpack(stct, data, None, byteorder, refdata)
+		if isinstance(names, str):
+			unpacked = namedtuple('RawutilNameSpace', names)(*unpacked)
+		elif hasattr(names, '_fields') and hasattr(names, '_asdict'):  #trying to recognize a namedtuple
+			unpacked = names(unpacked)
 		return unpacked
 	
-	def unpack_from(self, stct, data, offset=None, refdata=(), getptr=False):
+	def unpack_from(self, stct, data, offset=None, names=None, refdata=(), getptr=False):
 		byteorder = stct[0] if stct[0] in '@=><!' else '@'
 		stct = stct.lstrip('<>=!@')
 		stct = stct.replace(' ', '')
@@ -92,6 +97,10 @@ class TypeUser (object):
 			for sub in SUBS.keys():
 				stct = stct.replace(sub, SUBS[sub])
 		unpacked, ptr = _unpack(stct, data, offset, byteorder, refdata)
+		if isinstance(names, str):
+			unpacked = namedtuple('RawutilNameSpace', names)(*unpacked)
+		elif hasattr(names, '_fields') and hasattr(names, '_asdict'):  #trying to recognize a namedtuple
+			unpacked = names(unpacked)
 		if getptr:
 			return unpacked, ptr
 		else:
@@ -301,7 +310,6 @@ class _unpack (_ClsFunc, _StructParser):
 		stct = self.parse_struct(stct, refdata)
 		if hasattr(self.data, 'read'):
 			if ptr is not None:
-				pag
 				self.data.seek(ptr)
 			return self.unpack_file(stct)
 		else:
@@ -595,7 +603,7 @@ class _pack (_StructParser, _ClsFunc):
 					self.final.write(struct.pack(substruct, *subdata))
 
 
-def unpack(stct, data, refdata=()):
+def unpack(stct, data, names=None, refdata=()):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
@@ -603,10 +611,14 @@ def unpack(stct, data, refdata=()):
 		for sub in SUBS.keys():
 			stct = stct.replace(sub, SUBS[sub])
 	unpacked, ptr = _unpack(stct, data, None, byteorder, refdata)
+	if isinstance(names, str):
+		unpacked = namedtuple('RawutilNameSpace', names)(*unpacked)
+	elif hasattr(names, '_fields') and hasattr(names, '_asdict'):  #trying to recognize a namedtuple
+		unpacked = names(unpacked)
 	return unpacked
 
 
-def unpack_from(stct, data, offset=None, refdata=(), getptr=False):
+def unpack_from(stct, data, offset=None, names=None, refdata=(), getptr=False):
 	byteorder = stct[0] if stct[0] in '@=><!' else '@'
 	stct = stct.lstrip('<>=!@')
 	stct = stct.replace(' ', '')
@@ -614,6 +626,10 @@ def unpack_from(stct, data, offset=None, refdata=(), getptr=False):
 		for sub in SUBS.keys():
 			stct = stct.replace(sub, SUBS[sub])
 	unpacked, ptr = _unpack(stct, data, offset, byteorder, refdata)
+	if isinstance(names, str):
+		unpacked = namedtuple('RawutilNameSpace', names)(*unpacked)
+	elif hasattr(names, '_fields') and hasattr(names, '_asdict'):  #trying to recognize a namedtuple
+		unpacked = names(unpacked)
 	if getptr:
 		return unpacked, ptr
 	else:
@@ -648,3 +664,6 @@ if __name__ == '__main__':
 	file = open('test.bin', 'rb')
 	d = unpack(s, file)
 	assert d == data
+	names = 'magic, int, entrycount, entries, somestring, hex, abool, int24_1, int24_2'
+	n = unpack(s, raw, names)
+	assert list(n) == d
