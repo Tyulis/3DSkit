@@ -1,4 +1,5 @@
 import sys
+import math
 
 BOMS = {
 	'>': 0xfeff,
@@ -13,9 +14,5 @@ ENDIANS = {
 
 def error(msg, errno):
 	print('Error: %s (%d)' % (msg, errno))
-	sys.exit(errno)
-		
-
-def warning(msg, errno):
-	print('Warning: %s (%d)' % (msg, errno))
-	return errno
+	if math.floor(errno / 100) != 9:
+		sys.exit(errno)

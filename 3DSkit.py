@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.21.50'
+__version__ = '1.21.51'
 
 
 def parse_opts(s):
@@ -38,7 +38,7 @@ def pack_files(filenames, output, compression, format, isbigendian, verbose, opt
 	if compression is not None:
 		compress_file(output, compression, verbose, False)
 
-def extract_files(filename, isbigendian, format, verbose, opts):
+def extract_files(filename, isbigendian, givenformat, verbose, opts):
 	endian = '>' if isbigendian else '<'
 	if os.path.isdir(filename):
 		filenames = []
@@ -48,11 +48,12 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 	else:
 		filenames = [filename]
 	for filename in filenames:
+		print('\n--------%s--------' % filename)
 		try:
 			file = open(filename, 'rb')
 		except FileNotFoundError:
 			error('File %s does not exist' % filename, 404)
-		format = unpack.recognize(filename, format)
+		format = unpack.recognize(filename, givenformat)
 		if format not in unpack.SKIP_DECOMPRESSION:
 			comp = compress.recognize(file)
 			if comp is not None:
@@ -70,9 +71,14 @@ def extract_files(filename, isbigendian, format, verbose, opts):
 		if format is None:
 			format = unpack.recognize(file, format)
 			if format is None:
-				error('Unrecognized format', 103)
+				if len(filenames) > 1:
+					errno = 903
+				else:
+					errno = 103
+				error('Unrecognized format', errno)
+				continue
 		print('%s file found' % format)
-		print('Extracting %s...' % filename)
+		print('Extracting...')
 		unpack.extract(filename, file, format, endian, verbose, opts)
 		print('Extracted')
 

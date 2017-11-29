@@ -275,3 +275,7 @@
 	*	Cleanup
 	*	Fixes in txtree
 	*	Updated rawutil
+*	v1.21.51
+	*	Added a warning system (error code 9XX)
+	*	Fixed a bug when recursively extract a folder containing different file formats
+	*	Improved readability of console output when recursively extracting a directory
