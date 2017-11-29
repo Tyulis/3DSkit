@@ -616,6 +616,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			if entryoffset != 0:
 				length, ptr = self.uint32(data, entryoffset + 4)
 				entrydata = data[entryoffset: entryoffset + length]
+				ptr = max(ptr, entryoffset + length)
 				magic = entrydata[0:4].decode('ascii')
 				try:
 					method = eval('self.read' + magic)  # quicker to code than if magic=='txt1':...
@@ -624,23 +625,13 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 				method(entrydata)
 			if extraoffset != 0:
 				extra = data[extraoffset:extraoffset + 48].hex()
+				ptr = max(ptr, extraoffset + 48)
 				#key = list(entry.keys())[-1]
 				entry['extra'] = extra
 			self.actnode = self.actnode['__parentnode']
 		localnode['entries'] = entries
-		if len(extraoffsets) == 0:
-			if len(entryoffsets) == 0:
-				end = ptr
-			else:
-				lastentry = max(entryoffsets)
-				end = lastentry + self.uint16(data, lastentry + 4)[0]
-		else:
-			if sum(extraoffsets) != 0:  #no extras
-				end = max(extraoffsets) + 48
-			else:
-				end = entryoffset + length
-		if end < len(data) and len(entryoffsets) != 0:
-			localnode['dump'] = data[end:]
+		if ptr < len(data):
+			localnode['dump'] = data[ptr:]
 	
 	def readgrp1(self, data):
 		ptr = 8
