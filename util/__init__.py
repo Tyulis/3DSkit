@@ -13,6 +13,9 @@ ENDIANS = {
 
 
 def error(msg, errno):
-	print('Error: %s (%d)' % (msg, errno))
 	if math.floor(errno / 100) != 9:
+		print('Error: %s (%d)' % (msg, errno))
 		sys.exit(errno)
+	else:
+		print('Warning: %s (%d)' % (msg, errno))
+		return errno

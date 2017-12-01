@@ -7,7 +7,7 @@ import builtins
 import binascii
 from collections import namedtuple
 
-__version__ = '2.4.7'
+__version__ = '2.4.8'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -404,7 +404,11 @@ class _unpack (_ClsFunc, _StructParser):
 					final.append([self.unpack_file(el.stct)[0] for i in range(count)])
 				elif el.type == '{}':
 					sub = []
-					while self.ptr < len(self.data):
+					ptr = self.data.tell()
+					self.data.seek(0, 2)
+					datalen = self.data.tell() - ptr
+					self.data.seek(ptr)
+					while self.data.tell() < datalen:
 						sub.append(self.unpack_file(el.stct)[0])
 					final.append(sub)
 					break

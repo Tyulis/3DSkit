@@ -26,16 +26,19 @@ def recognize(file):
 	return None
 
 
-def decompress(file, out, format, verbose):
+def decompress(file, out, format, verbose, errorcb=lambda e: error('Bad detection of the compression', 901)):
 	file.seek(0)
 	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.decompress%s' % (format, format))
-	if format in DEC_USE_FILE_OBJS:
-		func(file, out, verbose)
-	else:
-		final = func(file.read(), verbose)
-		out.write(final)
+	try:
+		if format in DEC_USE_FILE_OBJS:
+			func(file, out, verbose)
+		else:
+			final = func(file.read(), verbose)
+			out.write(final)
+	except Exception as e:  #Bad detection
+		return errorcb(e)
 
 
 def compress(file, out, format, verbose):

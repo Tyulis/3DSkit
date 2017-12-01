@@ -116,6 +116,8 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 		magic, self.decsize = self.unpack_from('<BU', self.file)
 		if magic != 0x11:
 			error('Invalid magic 0x%02x, expected 0x11' % magic, 301)
+		if self.decsize == 0:
+			raise IOError('Recognition error')
 	
 	def decompress(self):
 		outlen = 0

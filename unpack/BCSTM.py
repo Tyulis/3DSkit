@@ -198,7 +198,7 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			return value
 	
 	def readDATA(self):
-		#self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
+		self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
 		data = self.data[self.sampledata_ref.offset + 8:]  #Strips the magic
 		ptr = 0
 		channels = [[] for i in range(self.channel_count)]

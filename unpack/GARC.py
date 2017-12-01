@@ -130,24 +130,33 @@ class extractGARC (rawutil.TypeReader):
 					if comp == 'LZ11':
 						outname = outpath + 'dec_' + str(j) + ext
 						out = open(outname, 'wb+')
-						compress.decompress(filedata, out, comp, self.verbose)
+						result = compress.decompress(filedata, out, comp, self.verbose)
+						if result == 901:  #Ugly
+							outname = outpath + str(j) + ext
+							print('For %s' % outname)
+							filedata.seek(0)
+							bwrite(filedata.read(), outname)
 					else:
 						bwrite(filedata.read(), outname)
 			else:
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
 				data.seek(start)
-				dat=data.read(subentry.length)
-				filedata = BytesIO(dat)
+				filedata = BytesIO(data.read(subentry.length))
 				comp = compress.recognize(filedata)
 				filedata.seek(0)
 				ext = get_ext(filedata)
 				outname = self.outdir + str(i) + ext
 				if comp == 'LZ11':
-					ext = get_ext(filedata)
 					outname = self.outdir + 'dec_%d%s' % (i, ext)
-					outfile = open(outname, 'wb+')
-					compress.decompress(filedata, outfile, comp, self.verbose)
-					outfile.close()
+					out = open(outname, 'wb+')
+					result = compress.decompress(filedata, out, comp, self.verbose)
+					out.close()
+					if result == 901:  #Ugly
+						os.remove(outname)
+						outname = self.outdir + str(i) + ext
+						print('For %s' % outname)
+						filedata.seek(0)
+						bwrite(filedata.read(), outname)
 				else:
 					bwrite(filedata.read(), outname)

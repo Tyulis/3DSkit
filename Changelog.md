@@ -279,3 +279,4 @@
 	*	Added a warning system (error code 9XX)
 	*	Fixed a bug when recursively extract a folder containing different file formats
 	*	Improved readability of console output when recursively extracting a directory
+	*	"Fixed" the compression recognition bug in unpack.GARC
