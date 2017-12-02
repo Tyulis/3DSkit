@@ -10,7 +10,7 @@ NEEDS_ENDIAN = (
 )
 
 USE_FILE_OBJ = (
-	'GARC', 'BL', 'SARC', 'ALYT', 'BCSAR',
+	'GARC', 'mini', 'SARC', 'ALYT', 'BCSAR',
 	'BFLIM', 'BFLAN',
 )
 
@@ -28,7 +28,8 @@ MAGICS = {
 	b'CLIM': 'BCLIM',
 	b'CSAR': 'BCSAR',
 	b'CSTM': 'BCSTM',
-	b'BL': 'BL',
+	b'BL': 'mini',
+	b'WD': 'mini',
 	b'NCCH': 'NCCH',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',

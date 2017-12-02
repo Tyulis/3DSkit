@@ -7,7 +7,7 @@ from unpack._formats import get_ext
 BL_TABLE_STRUCT = '2sH /1[I] 128a'
 
 
-class extractBL (ClsFunc, rawutil.TypeReader):
+class extractmini (ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, verbose, endian, opts={}):
 		self.byteorder = endian
 		self.verbose = verbose
@@ -18,8 +18,6 @@ class extractBL (ClsFunc, rawutil.TypeReader):
 	
 	def read_table(self, data):
 		tbl = self.unpack_from(BL_TABLE_STRUCT, data, 0)
-		if tbl[0] != b'BL':
-			error('Invalid magic %s, expected BL' % byterepr(tbl[0]), 301)
 		filecount = tbl[1]
 		offsets = [el[0] for el in tbl[2]]
 		if self.verbose:

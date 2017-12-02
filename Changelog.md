@@ -279,4 +279,6 @@
 	*	Added a warning system (error code 9XX)
 	*	Fixed a bug when recursively extract a folder containing different file formats
 	*	Improved readability of console output when recursively extracting a directory
+*	v1.21.52
 	*	"Fixed" the compression recognition bug in unpack.GARC
+	*	Added support for all mini packed files, not only BL
