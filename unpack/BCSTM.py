@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
+import wave
+import numpy as np
 from util import error
 import util.rawutil as rawutil
 from util.fileops import *
 from util.funcops import ClsFunc, byterepr
-from util.wavy import WAV
 
 rawutil.register_sub('S', '(2H2I)')  #sized refs
 rawutil.register_sub('R', '(2HI)')  #references
@@ -11,6 +12,8 @@ rawutil.register_sub('T', 'I/p1[2HI]')  #ref table
 
 BCSTM_HEADER_STRUCT = '4s2H 2I2H SSS'
 BCSTM_INFO_STRUCT = '4sI RRR (4B11IR) $'
+BCSTM_SEEK_STRUCT = '4sI {H}'
+BCSTM_DATA_STRUCT = '4sI 24s $'
 BCSTM_TRACK_INFO_STRUCT = '2BHR I/p1[B]'
 BCSTM_DSPADPCM_INFO_STRUCT = '8[2h] (2B2h) (2B2h) H'
 BCSTM_IMAADPCM_INFO_STRUCT = '(H2B) (H2B)'
@@ -53,7 +56,7 @@ class TrackInfo (object):
 	def __init__(self, data):
 		self.volume = data[0]
 		self.pan = data[1]
-		self.channelindex = data[5]
+		self.channelindex = [el[0] for el in data[5]]
 
 
 class DSPADPCMContext (object):
@@ -83,10 +86,60 @@ class IMAADPCMInfo (object):
 		self.loopcontext = IMAADPCMContext(data[1])
 
 
+class DSPADPCMDecoder (object):
+	def __init__(self, info:'DSPADPCMInfo'):
+		self.info = info
+	
+	def updatelast(self, last1, last2):
+		self.last1 = last1
+		self.last2 = last2
+	
+	def getdata(self, offset, length, samplecount):
+		out = np.zeros(samplecount, dtype=np.int16)
+		sampleidx = 0
+		for i in range(offset + 1, offset + length, 8):
+			scale = 1 << (self.data[i - 1] & 0x0f)
+			coef = self.data[i - 1] >> 4
+			coef1, coef2 = self.info.param[coef]
+			for j in range(7):
+				if sampleidx >= samplecount:
+					break
+				high = self.data[i + j] >> 4
+				low = self.data[i + j] & 0x0f
+				if high >= 8:
+					high -= 16
+				if low >= 8:
+					low -= 16
+				val = (((high * scale) << 11) + 1024.0 + (coef1 * self.last1 + coef2 * self.last2)) / 2048.0
+				sample = self.clamp(val)
+				out[sampleidx] = sample
+				sampleidx += 1
+				if sampleidx >= samplecount:
+					break
+				self.last2 = self.last1
+				self.last1 = val
+				val = (((low * scale) << 11) + 1024.0 + (coef1 * self.last1 + coef2 * self.last2)) / 2048.0
+				sample = self.clamp(val)
+				out[sampleidx] = sample
+				sampleidx += 1
+				self.last2 = self.last1
+				self.last1 = val
+		return out
+				
+	
+	def clamp(self, val):
+		if val < -32768:
+			return -32768
+		elif val > 32767:
+			return 32767
+		else:
+			return int(val)
+
+
 class extractBCSTM (ClsFunc, rawutil.TypeReader):
 	def main(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
-		self.outname = os.path.splitext(filename)[0]
+		self.filename = filename
 		self.read_header(data)
 		self.readINFO()
 		self.readSEEK()
@@ -187,64 +240,79 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			print('Loop: %d - %d' % (self.loop_start, self.loop_end))
 	
 	def readSEEK(self):
-		NotImplemented
-	
-	def clamp(self, value):
-		if value < -32767:
-			return -32767
-		elif value > 32767:
-			return 32767
-		else:
-			return value
+		magic, length, samples = self.unpack(BCSTM_SEEK_STRUCT, self.seek)
+		if magic != b'SEEK':
+			error('Bad SEEK magic %s' % byterepr(magic), 301)
+		self.seek_samples = [el[0] for el in samples]
 	
 	def readDATA(self):
-		self.wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
-		data = self.data[self.sampledata_ref.offset + 8:]  #Strips the magic
-		ptr = 0
-		channels = [[] for i in range(self.channel_count)]
-		for i in range(self.sampleblock_count):
-			for c in range(self.channel_count):
-				block = data[ptr: ptr + self.sampleblock_size]
-				ptr += self.sampleblock_size
-				channels[c] += self.decode_block(block, self.channelinfo[c], i == self.sampleblock_count - 1)
+		magic, length, padding, self.audiodata = self.unpack(BCSTM_DATA_STRUCT, self.data)
+		self.samplecount = (len(self.audiodata) // (self.sampleblock_size * self.channel_count)) * self.sampleblock_samplecount + self.last_sampleblock_samplecount
+		if magic != b'DATA':
+			error('Bad DATA magic %s' % byterepr(magic), 301)
+		self.channels = []
+		if self.codec == DSPADPCM:
+			DSPADPCMDecoder.data = self.audiodata  #Avoid multiple transmissions of this
+		for channum in range(self.channel_count):
+			if self.verbose:
+				print('Reading channel %d' % (channum + 1))
+			if self.codec == PCM16:
+				self.channels.append(self.extractPCM16channel(channum))
+			elif self.codec == DSPADPCM:
+				self.channels.append(self.extractDSPADPCMchannel(channum))
 		if len(self.trackinfo) > 0:
 			for i, info in enumerate(self.trackinfo):
-				track = [channels[j] for j in info.channelindex]
-				wav = WAV.new(rate=self.sample_rate, channels=len(info.channelindex))
-				wav.samples = track
-				outname = self.outname + '_track%d' % i
-				wav.save(make_outfile(outname, 'wav'))
+				if self.verbose:
+					print('Extracting track %d' % (i + 1))
+				self.extract_track(info.channelindex)
 		else:
-			wav = WAV.new(rate=self.sample_rate, channels=self.channel_count)
-			wav.samples = channels
-			outname = self.outname
-			wav.save(make_outfile(outname, 'wav'))
+			if self.verbose:
+				print('Extracting the unique track')
+			self.extract_track(tuple(range(len(self.channels))))
+		
+	def extract_track(self, channelindex):
+		samples = np.array([[self.channels[i][j] for j in range(self.samplecount)] for i in channelindex], dtype=np.int16)
+		if len(self.trackinfo) > 1:
+			trackname = os.path.splitext(self.filename)[0] + '_track%d.wav' % (i + 1)
+		else:
+			trackname = os.path.splitext(self.filename)[0] + '.wav'
+		wav = wave.open(trackname, 'w')
+		wav.setframerate(self.sample_rate)
+		wav.setnchannels(len(channelindex))
+		wav.setsampwidth(2)
+		wav.writeframesraw(samples.tostring())
+		wav.close()
 	
-	def decode_block(self, block, info, last):
-		#Inspirated from vgmstream
-		hist1 = info.context.previous_sample
-		hist2 = info.context.second_previous_sample
-		sample = 0
-		ptr = 0
-		ret = []
-		samplecount = self.last_sampleblock_samplecount if last else self.sampleblock_samplecount
-		while len(ret) < samplecount:
-			try:
-				header, ptr = self.uint8(block, ptr)
-			except:
+	def extractPCM16channel(self, channum):
+		#Inspirated from EveryFileExplorer
+		samples = []
+		for i in range(0, len(self.audiodata), self.sampleblock_size * self.channel_count):
+			if i + self.sampleblock_size * self.channel_count < self.audiodata:
+				for j in range(0, self.sampleblock_size, 2):
+					pos = i + channum * self.sampleblock_size + j
+					samples.append(self.uint16(self.audiodata, pos)[0])
+			elif self.sampleblock_size != self.last_sampleblock_size:
+				for j in range(0, self.last_sampleblock_size, 2):
+					pos = i + channum * self.last_sampleblock_paddedsize + j
+					samples.append(self.uint16(self.audiodata, pos)[0])
+		return samples
+	
+	def extractDSPADPCMchannel(self, channum):
+		decoder = DSPADPCMDecoder(self.channelinfo[channum])
+		samples = np.zeros(self.samplecount, dtype=np.int16)
+		sampleidx = 0
+		for i in range(0, len(self.audiodata), self.sampleblock_size * self.channel_count):
+			prev2 = self.seek_samples[int((i / self.sampleblock_size) * 2 + channum * 2 + 1)]
+			prev1 = self.seek_samples[int((i / self.sampleblock_size) * 2 + channum * 2)]
+			if i != 0:
+				samples[sampleidx - 2] = prev2
+				samples[sampleidx- 1] = prev1
+			decoder.updatelast(prev1, prev2);
+			if i + self.sampleblock_size * self.channel_count < len(self.audiodata):
+				samples[sampleidx: sampleidx + self.sampleblock_samplecount] = decoder.getdata(i + channum * self.sampleblock_size, self.sampleblock_size, self.sampleblock_samplecount)
+				sampleidx += self.sampleblock_samplecount
+			elif self.sampleblock_size != self.last_sampleblock_paddedsize:
+				samples[sampleidx:] = decoder.getdata(i + channum * self.last_sampleblock_paddedsize, self.last_sampleblock_paddedsize, self.last_sampleblock_samplecount);
+			else:
 				break
-			scale, coef_index = self.nibbles(header)
-			scale = 1 << scale
-			coef1, coef2 = info.param[coef_index % 8]
-			for i in range(7):
-				byte, ptr = self.uint8(block, ptr)
-				nibbles = self.signed_nibbles(byte)
-				if i == 0:
-					adpcm_nibble = nibbles[0]
-				else:
-					adpcm_nibble = nibbles[1]
-				sample = self.clamp(((adpcm_nibble * scale) << 11) + 1024 + ((coef1 * hist1) + (coef2 * hist2)) >> 11)
-				hist2 = hist1
-				hist1 = sample
-				ret.append(sample / 32768)
-		return ret
+		return samples

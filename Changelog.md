@@ -282,3 +282,9 @@
 *	v1.21.52
 	*	"Fixed" the compression recognition bug in unpack.GARC
 	*	Added support for all mini packed files, not only BL
+
+**v1.22**
+
+*	v1.22.52
+	*	Added unpack.BCSTM
+	*	Minor fixed
