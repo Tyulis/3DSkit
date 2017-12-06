@@ -287,4 +287,7 @@
 
 *	v1.22.52
 	*	Added unpack.BCSTM
-	*	Minor fixed
+	*	Minor fixes
+*	v1.22.53
+	*	Fixed the frame rate issue in unpack.BCSTM
+	*	Updated the help and the README

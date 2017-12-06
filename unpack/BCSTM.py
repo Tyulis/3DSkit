@@ -271,7 +271,8 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			self.extract_track(tuple(range(len(self.channels))))
 		
 	def extract_track(self, channelindex):
-		samples = np.array([[self.channels[i][j] for j in range(self.samplecount)] for i in channelindex], dtype=np.int16)
+		#samples = np.array([[self.channels[i][j] for j in range(self.samplecount)] for i in channelindex], dtype=np.int16)
+		samples = np.array(tuple(zip(*[self.channels[i] for i in channelindex])), dtype=np.int16)
 		if len(self.trackinfo) > 1:
 			trackname = os.path.splitext(self.filename)[0] + '_track%d.wav' % (i + 1)
 		else:

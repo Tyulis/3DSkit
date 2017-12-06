@@ -86,8 +86,8 @@ Output: Output format at extracting. See the output formats help for information
 	Format | X | P | R | Extensions          | Output
 	--------------------------------------------------
 	ALYT   | x |   | x | .alyt               | files
-	BCLYT  | p |   |   | .bclyt              | TX
 	BCSAR  | b |   |   | .bcsar              | files
+	BCSTM  | x |   |   | .bcstm              | WAV
 	BFLAN  | p |   |   | .bflan              | TX
 	BFLIM  | x | x |   | .bflim              | PNG
 	BFLYT  | x |   | x | .bflyt              | TX
