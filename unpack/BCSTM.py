@@ -87,7 +87,7 @@ class IMAADPCMInfo (object):
 
 
 class DSPADPCMDecoder (object):
-	def __init__(self, info:'DSPADPCMInfo'):
+	def __init__(self, info: 'DSPADPCMInfo'):
 		self.info = info
 	
 	def updatelast(self, last1, last2):
@@ -98,14 +98,16 @@ class DSPADPCMDecoder (object):
 		out = np.zeros(samplecount, dtype=np.int16)
 		sampleidx = 0
 		for i in range(offset + 1, offset + length, 8):
-			scale = 1 << (self.data[i - 1] & 0x0f)
-			coef = self.data[i - 1] >> 4
+			info = self.data[i - 1]
+			scale = 1 << (info & 0x0f)
+			coef = info >> 4
 			coef1, coef2 = self.info.param[coef]
 			for j in range(7):
 				if sampleidx >= samplecount:
 					break
-				high = self.data[i + j] >> 4
-				low = self.data[i + j] & 0x0f
+				nibbles = self.data[i + j]
+				high = nibbles >> 4
+				low = nibbles & 0x0f
 				if high >= 8:
 					high -= 16
 				if low >= 8:
@@ -125,7 +127,6 @@ class DSPADPCMDecoder (object):
 				self.last2 = self.last1
 				self.last1 = val
 		return out
-				
 	
 	def clamp(self, val):
 		if val < -32768:
@@ -153,11 +154,11 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		if magic != b'CSTM':
 			error('Invalid magic %s, expected CSTM' % byterepr(magic))
 		bom = hdata[1]
-		headerlen = hdata[2]
+		#headerlen = hdata[2]
 		self.version = hdata[3]
-		filesize = hdata[4]
-		blockcount = hdata[5]  #Should be 3
-		padding = hdata[6]
+		#filesize = hdata[4]
+		#sectioncount = hdata[5]  #Should be 3
+		#padding = hdata[6]
 		inforef = SizedRef(hdata[7])
 		seekref = SizedRef(hdata[8])
 		dataref = SizedRef(hdata[9])
@@ -170,7 +171,7 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 	def readINFO(self):
 		data = self.unpack(BCSTM_INFO_STRUCT, self.info)
 		info = self.info
-		streaminforef = Reference(data[2])
+		#streaminforef = Reference(data[2])
 		trackinforef = Reference(data[3]) + 8
 		channelinforef = Reference(data[4]) + 8
 		streaminfo = data[5]
@@ -260,21 +261,22 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 				self.channels.append(self.extractPCM16channel(channum))
 			elif self.codec == DSPADPCM:
 				self.channels.append(self.extractDSPADPCMchannel(channum))
+			else:
+				error('Unsupported audio encoding', 108)
 		if len(self.trackinfo) > 0:
 			for i, info in enumerate(self.trackinfo):
 				if self.verbose:
 					print('Extracting track %d' % (i + 1))
-				self.extract_track(info.channelindex)
+				self.extract_track(info.channelindex, i)
 		else:
 			if self.verbose:
 				print('Extracting the unique track')
 			self.extract_track(tuple(range(len(self.channels))))
 		
-	def extract_track(self, channelindex):
-		#samples = np.array([[self.channels[i][j] for j in range(self.samplecount)] for i in channelindex], dtype=np.int16)
+	def extract_track(self, channelindex, tracknum=None):
 		samples = np.array(tuple(zip(*[self.channels[i] for i in channelindex])), dtype=np.int16)
 		if len(self.trackinfo) > 1:
-			trackname = os.path.splitext(self.filename)[0] + '_track%d.wav' % (i + 1)
+			trackname = os.path.splitext(self.filename)[0] + '_track%d.wav' % (tracknum + 1)
 		else:
 			trackname = os.path.splitext(self.filename)[0] + '.wav'
 		wav = wave.open(trackname, 'w')
@@ -307,13 +309,13 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			prev1 = self.seek_samples[int((i / self.sampleblock_size) * 2 + channum * 2)]
 			if i != 0:
 				samples[sampleidx - 2] = prev2
-				samples[sampleidx- 1] = prev1
-			decoder.updatelast(prev1, prev2);
+				samples[sampleidx - 1] = prev1
+			decoder.updatelast(prev1, prev2)
 			if i + self.sampleblock_size * self.channel_count < len(self.audiodata):
 				samples[sampleidx: sampleidx + self.sampleblock_samplecount] = decoder.getdata(i + channum * self.sampleblock_size, self.sampleblock_size, self.sampleblock_samplecount)
 				sampleidx += self.sampleblock_samplecount
 			elif self.sampleblock_size != self.last_sampleblock_paddedsize:
-				samples[sampleidx:] = decoder.getdata(i + channum * self.last_sampleblock_paddedsize, self.last_sampleblock_paddedsize, self.last_sampleblock_samplecount);
+				samples[sampleidx:] = decoder.getdata(i + channum * self.last_sampleblock_paddedsize, self.last_sampleblock_paddedsize, self.last_sampleblock_samplecount)
 			else:
 				break
 		return samples
