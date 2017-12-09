@@ -2,13 +2,17 @@
 import os
 import sys
 from util.fileops import *
+from util import error
 
 plugin_path = None
 
 def run_plugin(name, options, verbose):
 	global plugin_path
 	plugin_path = os.path.join(os.getcwd(), 'plugins', name, '')
-	mod = __import__('plugins.%s.main' % name)
+	try:
+		mod = __import__('plugins.%s.main' % name)
+	except ImportError:
+		error('Plugin %s not found' % name, error.pluginnotfound)
 	exec('mod.%s.main.main(options, verbose)' % name)
 
 def getpath():

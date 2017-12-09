@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+HELP = '''ui v1.0
+A GUI version of 3DSkit
+How to use:
+	Use this fantastic joke:
+   python3 3DSkit.py -gui
+'''
+
 def make_help():
 	'''Must return the plugin's help as a string.
 	To split into parts like this:
@@ -11,10 +18,4 @@ def make_help():
 		;;;;
 		A second part
 	'''
-	h = '''3DSkit UI v0.1
-		Use this to get a more user-friendly interface for 3DSkit
-		To use it, you need Tkinter
-		How to use:
-			3DSkit.py -gui
-	'''
-	return h
+	return HELP

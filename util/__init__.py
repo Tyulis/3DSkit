@@ -22,6 +22,7 @@ class error (ClsFunc):
 	unsupported_version = 106
 	unsupported_setting = 107
 	unsupported_coding = 108
+	pluginnotfound = 207
 	invalidmagic = 301
 	invalidsection_pack = 302
 	invalidsection_unpack = 303
