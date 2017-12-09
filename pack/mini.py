@@ -4,15 +4,17 @@ from util import error
 from util.funcops import ClsFunc
 from util.fileops import *
 
-BL_TABLE_STRUCT = '2sH /1[I] 128a'
+MINI_TABLE_STRUCT = '2sH /1[I] 128a'
 
 
-class packBL (ClsFunc, rawutil.TypeWriter):
+class packmini (ClsFunc, rawutil.TypeWriter):
 	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
 		self.verbose = verbose
 		self.magic = b'BL'
 		if 'magic' in opts.keys():
+			if len(opts['magic']) != 2:
+				error.InvalidOptionValueError('Mini file magic should be 2 characters length')
 			self.magic = opts['magic'].encode('ascii')
 		data, offsets = self.repack_files(filenames)
 		header = self.repack_headers(offsets)
@@ -39,5 +41,5 @@ class packBL (ClsFunc, rawutil.TypeWriter):
 		headerlen = 4 + len(offsets) * 4
 		headerlen += 0x80 - (headerlen % 0x80)
 		offsets = [[offset + headerlen] for offset in offsets]
-		header = self.pack(BL_TABLE_STRUCT, b'BL', len(offsets), offsets)
+		header = self.pack(MINI_TABLE_STRUCT, self.magic, len(offsets), offsets)
 		return header

@@ -301,3 +301,6 @@
 	*	Huge refactoring of the error/warning function, now much easier to use (internal)
 	*	Added support for custom magics on mini files repacking
 	*	Updated the README
+*	v1.23.54
+	*	Fixed some stupid errors in pack.mini
+	*	Added unpack.NARC

@@ -98,6 +98,7 @@ Output: Output format at extracting. See the output formats help for information
 	GARC   | x |   | x | .garc (none)        | files
 	GFA    | x |   |   | .gfa                | files
 	mini   | x |   | x | .mini .bl .wd (none)| files
+	NARC   | p |   |   | .narc               | files
 	NCCH   | x |   |   | .app .cxi .cfa      | sections
 	NDS    | x |   |   | .nds                | files
 	SARC   | x | x |   | .sarc .arc .szs     | files

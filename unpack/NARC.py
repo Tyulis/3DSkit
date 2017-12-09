@@ -4,6 +4,7 @@ from util import error, ENDIANS
 from util.funcops import byterepr
 from util.fileops import *
 import util.rawutil as rawutil
+from unpack._formats import get_ext
 
 NARC_HEADER_STRUCT = '4s2HI2H'
 NARC_HEADER_NAMES = 'magic, bom, unknown, filelen, headerlen, sectioncount'
@@ -33,9 +34,9 @@ class extractNARC (rawutil.TypeReader):
 			error.InvalidMagicError('Invalid FATB magic: %s' % byterepr(fatb.magic))
 		self.entrycount = fatb.entrycount
 		self.entries = fatb.entries
-		print(fatb)
 
 	def readFNTB(self):
+		offset = self.file.tell()
 		fntb = self.unpack_from(NARC_FNTB_SECTION, self.file, None, NARC_FNTB_NAMES)
 		if fntb.magic != b'BTNF':
 			error.InvalidMagicError('Invalid FNTB magic: %s' % byterepr(fntb.magic))
@@ -44,6 +45,15 @@ class extractNARC (rawutil.TypeReader):
 		else:
 			self.has_names = True
 			error.NotImplementedWarning('NARC with file names are not implemented yet. Continuing without them.')
+		self.fimgoffset = offset + fntb.sectionlen
 
 	def extract(self):
-		pass
+		for i, entry in enumerate(self.entries):
+			self.file.seek(self.fimgoffset + 8 + entry[0])
+			filedata = self.file.read(entry[1] - entry[0])
+			if self.has_names:
+				file = open(self.outdir + self.names[i], 'wb')
+			else:
+				file = open(self.outdir + str(i) + get_ext(filedata), 'wb')
+			file.write(filedata)
+			file.close()
