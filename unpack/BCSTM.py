@@ -152,7 +152,7 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 		hdata = self.unpack_from(BCSTM_HEADER_STRUCT, data)
 		magic = hdata[0]
 		if magic != b'CSTM':
-			error('Invalid magic %s, expected CSTM' % byterepr(magic))
+			error.InvalidMagicError('Invalid magic %s, expected CSTM' % byterepr(magic))
 		bom = hdata[1]
 		#headerlen = hdata[2]
 		self.version = hdata[3]
@@ -243,14 +243,14 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 	def readSEEK(self):
 		magic, length, samples = self.unpack(BCSTM_SEEK_STRUCT, self.seek)
 		if magic != b'SEEK':
-			error('Bad SEEK magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Bad SEEK magic %s' % byterepr(magic))
 		self.seek_samples = [el[0] for el in samples]
 	
 	def readDATA(self):
 		magic, length, padding, self.audiodata = self.unpack(BCSTM_DATA_STRUCT, self.data)
 		self.samplecount = (len(self.audiodata) // (self.sampleblock_size * self.channel_count)) * self.sampleblock_samplecount + self.last_sampleblock_samplecount
 		if magic != b'DATA':
-			error('Bad DATA magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Bad DATA magic %s' % byterepr(magic))
 		self.channels = []
 		if self.codec == DSPADPCM:
 			DSPADPCMDecoder.data = self.audiodata  #Avoid multiple transmissions of this
@@ -262,7 +262,7 @@ class extractBCSTM (ClsFunc, rawutil.TypeReader):
 			elif self.codec == DSPADPCM:
 				self.channels.append(self.extractDSPADPCMchannel(channum))
 			else:
-				error('Unsupported audio encoding', 108)
+				error.UnknownDataFormatError('Unsupported audio encoding', 108)
 		if len(self.trackinfo) > 0:
 			for i, info in enumerate(self.trackinfo):
 				if self.verbose:

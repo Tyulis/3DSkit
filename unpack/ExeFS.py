@@ -36,5 +36,5 @@ class extractExeFS (rawutil.TypeReader):
 			if self.dochecks:
 				if sha256(content).digest() != file.hash:
 					paf
-					error('File %s hash mismatch' % file.name, 305)
+					error.HashMismatchError('File %s hash mismatch' % file.name)
 			bwrite(content, self.outdir + file.name)

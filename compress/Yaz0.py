@@ -21,9 +21,10 @@ class decompressYaz0 (ClsFunc, rawutil.TypeReader):
 	def readheader(self):
 		magic, self.unco_len, unknown = self.unpack_from(Yaz0_HEADER_STRUCT, self.file, 0)
 		if magic != b'Yaz0':
-			error('Invalid magic %s, expected Yaz0' % byterepr(magic))
+			error.InvalidMagicError('Invalid magic %s, expected Yaz0' % byterepr(magic))
 	
 	def decompress(self):
+		#Thanks to NWPlayer123 for advises
 		self.out.write(b'\x00' * self.unco_len)
 		self.out.seek(0)
 		actlen = 0

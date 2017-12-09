@@ -50,33 +50,6 @@ class packSARC (ClsFunc, TypeWriter):
 			self.nodes.append(node)
 		self.nodes.sort(key=lambda node: node.hash)
 	
-	"""def repack_sections(self):
-		sfat = b''
-		sfnt = b''
-		data = b''
-		for node in self.nodes:
-			name_offset = len(sfnt) // 4
-			data_start = len(data)
-			data += bread(node.name)
-			data_end = len(data)
-			data += self.align(data, self.padding)
-			sfnt += self.pack('n', node.name)
-			sfnt += self.align(sfnt, 4)
-			sfat += self.pack(SFAT_NODE_STRUCT, node.hash, name_offset + (node.has_name << 24), data_start, data_end)
-		sfat = self.pack(SFAT_HEADER_STRUCT, b'SFAT', 12, len(self.nodes), self.hash_multiplier) + sfat
-		sfnt += self.align(sfat, 0x100)
-		sfnt = self.pack(SFNT_HEADER_STRUCT, b'SFNT', 8, 0) + sfnt
-		sfnt += self.align(sfnt, 0x100)
-		meta = sfat + sfnt
-		final = meta + data
-		sarchdr = self.pack(SARC_HEADER_STRUCT, b'SARC', 20, 0xfeff, len(final) + 20, len(meta) + 20, 0x00000100)
-		final = sarchdr + final
-		if self.embedded:
-			return final
-		else:
-			basedir()
-			bwrite(final, self.outname)"""
-	
 	def repack_sections(self):
 		if self.embedded:
 			file = BytesIO()

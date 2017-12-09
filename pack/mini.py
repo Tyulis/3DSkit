@@ -11,6 +11,9 @@ class packBL (ClsFunc, rawutil.TypeWriter):
 	def main(self, filenames, outname, endian, verbose, opts={}):
 		self.byteorder = endian
 		self.verbose = verbose
+		self.magic = b'BL'
+		if 'magic' in opts.keys():
+			self.magic = opts['magic'].encode('ascii')
 		data, offsets = self.repack_files(filenames)
 		header = self.repack_headers(offsets)
 		final = header + data
@@ -22,7 +25,7 @@ class packBL (ClsFunc, rawutil.TypeWriter):
 			try:
 				num = int(name)
 			except ValueError:
-				error('File name %s does not have the right format. It should be like 003.xxx', 205)
+				error.InvalidInputError('File name %s does not have the right format. It should be like 003.something')
 			content = bread(filenames)
 			contents[num] = content
 		final = b''

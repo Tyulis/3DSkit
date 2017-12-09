@@ -53,7 +53,7 @@ def recognize(filename, format=None):
 		if format in MAGICS.values():
 			return format
 		else:
-			error('Unsupported format to extract: %s. Read the formats section of the help for more infos.', 101)
+			error.UnsupportedFormatError('Unsupported format to extract: %s. Read the formats section of the help for more infos.')
 	if hasattr(filename, 'read'):  #by get_ext
 		file = filename
 	else:
@@ -66,7 +66,7 @@ def recognize(filename, format=None):
 		try:
 			file = open(filename, 'rb')
 		except OSError:
-			error('File %s not found' % filename, 403)
+			error.FileNotFoundError('File %s not found' % filename)
 	file.seek(0, 2)
 	filelen = file.tell()
 	file.seek(0)

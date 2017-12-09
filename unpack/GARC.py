@@ -46,7 +46,7 @@ class extractGARC (rawutil.TypeReader):
 		self.byteorder = ENDIANS[rawutil.unpack_from('>H', data, 8)[0]]
 		hdata, ptr = self.unpack_from(GARC_HEADER_STRUCT, data, 0, getptr=True)
 		if hdata[0] != b'CRAG':
-			error('Invalid magic %s, expected CRAG' % byterepr(hdata[0]), 301)
+			error.InvalidMagicError('Invalid magic %s, expected CRAG' % byterepr(hdata[0]))
 		#headerlen = hdata[1]
 		#bom = hdata[2]
 		self.version = hdata[3]
@@ -64,13 +64,13 @@ class extractGARC (rawutil.TypeReader):
 			self.larger_unpadded = padinfo[1]
 			self.pad_to_nearest = padinfo[2]
 		else:
-			error('Unsupported version 0x%04x' % self.version, 304)
+			error.UnsupportedVersionError('Unsupported version 0x%04x' % self.version)
 		return ptr
 	
 	def readFATO(self, data, ptr):
 		fato, ptr = self.unpack_from(GARC_FATO_SECTION, data, ptr, getptr=True)
 		if fato[0] != b'OTAF':
-			error('Invalid FATO magic %s, expected OTAF' % byterepr(fato[0]), 301)
+			error.InvalidMagicError('Invalid FATO magic %s, expected OTAF' % byterepr(fato[0]))
 		#sectionlen = fato[1]
 		entrycount = fato[2]
 		self.filenum = entrycount
@@ -84,7 +84,7 @@ class extractGARC (rawutil.TypeReader):
 	def readFATB(self, data, ptr):
 		hdr, ptr = self.unpack_from(GARC_FATB_HEADER, data, ptr, getptr=True)
 		if hdr[0] != b'BTAF':
-			error('Invalid FATB magic %s, expected BTAF' % byterepr(hdr[0]), 301)
+			error.InvalidMagicError('Invalid FATB magic %s, expected BTAF' % byterepr(hdr[0]))
 		#headerlen = hdr[1]
 		entrycount = hdr[2]
 		tblstart = ptr

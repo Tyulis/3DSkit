@@ -29,7 +29,7 @@ class extractDARC (rawutil.TypeReader):
 	def readhdr(self, data):
 		magic, endian = self.unpack_from('>4sH', data, 0)
 		if magic != b'darc':
-			error('Invalid magic %s, expected darc' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected darc' % byterepr(magic))
 		self.byteorder = ENDIANS[endian]
 		hdr, ptr = self.unpack_from(DARC_HEADER_STRUCT, data, 0, getptr=True)
 		#magic=hdr[0]

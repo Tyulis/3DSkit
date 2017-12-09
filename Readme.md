@@ -9,7 +9,7 @@ What does 3DSkit?
 
 3DSkit can:
 
-*	Extract and convert many files formats found in 3DS, WiiU, and why not NDS games
+*	Extract and convert many files formats found in 3DS, WiiU, and NDS games
 *	Pack or repack them
 *	Decompress and compress these files from and to their original compression
 
@@ -61,6 +61,8 @@ You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
 *	GARC:
 	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
+*	mini:
+	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevents the packed file to load. Defaults to BL.
 
 Supported formats
 =================
@@ -91,11 +93,11 @@ Output: Output format at extracting. See the output formats help for information
 	BFLAN  | p |   |   | .bflan              | TX
 	BFLIM  | x | x |   | .bflim              | PNG
 	BFLYT  | x |   | x | .bflyt              | TX
-	BL     | e |   | e | .bl (none)          | files
 	CBMD   | e |   |   | .bnr banner[.bin]   | files
 	DARC   | x | e |   | .arc .bcma (...)    | files
 	GARC   | x |   | x | .garc (none)        | files
 	GFA    | x |   |   | .gfa                | files
+	mini   | x |   | x | .mini .bl .wd (none)| files
 	NCCH   | x |   |   | .app .cxi .cfa      | sections
 	NDS    | x |   |   | .nds                | files
 	SARC   | x | x |   | .sarc .arc .szs     | files
@@ -128,9 +130,11 @@ Dependencies
 To access all 3DSkit functionnalities, you need:
 
 *	Python 3.5+
-*	Pillow (Fork of PIL, use sudo apt-get install python3-pil or pip3 install pillow)
-*	NumPy (not absolutely needed, but it's better to have it)
 *	struct (it should be installed by default with python3)
+*	Pillow (Fork of PIL, use sudo apt-get install python3-pil or pip3 install pillow)
+*	Numpy
+
+Note that all the non-built-in dependencies are only needed by some modules -- if you don't have them, you can still use the others
 
 Contributing
 ============
@@ -141,7 +145,7 @@ Check also if you have the last commit
 Then, if you really found a new issue, you should precise:
 
 *	Your python version
-*	The error output in the console
+*	The console output (with the verbose mode enabled, -v option)
 *	Attach the concerned file and if possible and necessary, a screenshot of the problem in the game.
 
-Pull requests are grantly appreciated. You can see a guide for the 3DSkit's developper interface in the program's help (-H option), and a documentation for rawutil in the [rawutil's repo](https://github.com/Tyulis/rawutil)
+Pull requests are gladly appreciated. You can see a guide for the 3DSkit's developer interface in the program's help (-H option), and a documentation for rawutil in the [rawutil's repo](https://github.com/Tyulis/rawutil)

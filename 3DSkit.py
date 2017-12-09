@@ -10,7 +10,7 @@ from io import BytesIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.22.53'
+__version__ = '1.23.53'
 
 
 def parse_opts(s):
@@ -29,12 +29,15 @@ def parse_opts(s):
 
 def pack_files(filenames, output, compression, format, isbigendian, verbose, opts):
 	endian = '>' if isbigendian else '<'
+	for name in filenames:
+		if not os.path.exists(name):
+			error.FileNotFoundError('Input file %s is not found' % name)
 	if format.upper() in pack.formats:
 		print('Packing %s...' % output)
 		pack.pack(filenames, output, format, endian, verbose, opts)
 		print('Packed!')
 	else:
-		error('Unknown format for repacking', 102)
+		error.UnsupportedFormatError('3DSkit is currently unable to pack this format')
 	if compression is not None:
 		compress_file(output, compression, verbose, False)
 
@@ -52,7 +55,7 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 		try:
 			file = open(filename, 'rb')
 		except FileNotFoundError:
-			error('File %s does not exist' % filename, 404)
+			error.FileNotFoundError('File %s does not exist' % filename)
 		format = unpack.recognize(filename, givenformat)
 		if format not in unpack.SKIP_DECOMPRESSION:
 			comp = compress.recognize(file)
@@ -72,10 +75,10 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 			format = unpack.recognize(file, format)
 			if format is None:
 				if len(filenames) > 1:
-					errno = 903
+					err = error.UnrecognizedFormatWarning
 				else:
-					errno = 103
-				error('Unrecognized format', errno)
+					err = error.UnrecognizedFormatError
+				err('Unrecognized format')
 				continue
 		print('%s file found' % format)
 		print('Extracting...')
@@ -91,7 +94,7 @@ def decompress_file(filename, verbose):
 	out = open(filename.replace('.cmp', ''), 'wb+')
 	compression = compress.recognize(file)
 	if compression is None:
-		error('The file is not compressed', 104)
+		error.UnsupportedCompressionError('This file is not compressed, or 3DSkit currently does not support its compression')
 	else:
 		print('Compression: %s' % compression)
 	print('Decompression...')
@@ -131,12 +134,12 @@ def main(args, opts):
 		if args.out is None:
 			args.out = '%s.%s' % (os.path.splitext(args.files[0])[0], args.format.lower())
 		if args.format is None:
-			error('You have to specify the output format', 202)
+			error.ForgottenArgumentError('You have to specify the output format')
 		if args.dir:
 			try:
 				os.chdir(args.files[0])
 			except FileNotFoundError:
-				error('The given directory %s does not exist' % args.files[0], 404)
+				error.FileNotFoundError('The given directory %s does not exist' % args.files[0])
 			for path, dirs, filenames in os.walk(os.path.curdir):
 				for filename in filenames:
 					files.append(os.path.join(path, filename)[2:])  #strip the ./ or :\
@@ -156,7 +159,7 @@ def main(args, opts):
 
 	elif args.compress:
 		if args.compression is None:
-			error('You have to specify the compression type', 203)
+			error.ForgottenArgumentError('You have to specify the compression type')
 		for filename in args.files:
 			compress_file(filename, args.compression, args.verbose)
 	elif args.plugin is not None:

@@ -18,6 +18,8 @@ class extractmini (ClsFunc, rawutil.TypeReader):
 	
 	def read_table(self, data):
 		tbl = self.unpack_from(BL_TABLE_STRUCT, data, 0)
+		magic = tbl[0]
+		print('File magic: %s' % byterepr(magic))
 		filecount = tbl[1]
 		offsets = [el[0] for el in tbl[2]]
 		if self.verbose:

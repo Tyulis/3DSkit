@@ -291,3 +291,13 @@
 *	v1.22.53
 	*	Fixed the frame rate issue in unpack.BCSTM
 	*	Updated the help and the README
+
+**v1.23**
+
+*	v1.23.53
+	*	Cleanup
+	*	Started unpack.NARC
+	*	Fixed some bad compression recognition issues
+	*	Huge refactoring of the error/warning function, now much easier to use (internal)
+	*	Added support for custom magics on mini files repacking
+	*	Updated the README

@@ -45,7 +45,7 @@ class extractNCCH (rawutil.TypeReader):
 		self.rsa_signature = data[0]
 		magic = data[1]
 		if magic != b'NCCH':
-			error('Invalid magic %s, expected NCCH' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected NCCH' % byterepr(magic))
 		self.content_size = data[2]  #In media units
 		self.partition_id = rawutil.hex(data[3], 16)
 		self.maker_code = data[4]
@@ -174,13 +174,13 @@ class extractNCCH (rawutil.TypeReader):
 			self.has_logo = False
 		if self.dochecks:
 			if sha256(self.data[0x200: 0x200 + self.extheader_size]).digest() != self.extheader_hash:
-				error('Extended header hash mismatch', 305)
+				error.HashMismatchError('Extended header hash mismatch')
 			if sha256(logo).digest() != self.logo_hash and logo != b'':
-				error('Logo hash mismatch', 305)
+				error.HashMismatchError('Logo hash mismatch')
 			if sha256(exefs[:self.exefs_hashregion_size]).digest() != self.exefs_hash:
-				error('ExeFS hash mismatch', 305)
+				error.HashMismatchError('ExeFS hash mismatch')
 			if sha256(romfs[:self.romfs_hashregion_size]).digest() != self.romfs_hash and self.has_romfs:
-				error('RomFS hash mismatch', 305)
+				error.HashMismatchError('RomFS hash mismatch')
 		bwrite(extheader, self.outdir + 'extheader.bin')
 		if len(plain) > 0:
 			bwrite(plain, self.outdir + 'plain.bin')

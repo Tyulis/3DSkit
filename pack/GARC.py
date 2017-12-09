@@ -37,7 +37,7 @@ class packGARC(ClsFunc, TypeWriter):
 		if 'version' in opts:
 			self.version = int(opts[version]) * 0x100
 			if self.version not in (0x0400, 0x0600):
-				error('Unsupported file version', 106)
+				error.InvalidOptionValue('You gave an unknown version number')
 		else:
 			self.version = 0x0600
 		if outname.startswith('/'):

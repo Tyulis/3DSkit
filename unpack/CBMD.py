@@ -35,7 +35,7 @@ class extractCBMD (ClsFunc, rawutil.TypeReader):
 	def readheader(self, data):
 		hdata = self.unpack_from(CBMD_HEADER_STRUCT, data, 0)
 		if hdata[0] != b'CBMD':
-			error('Invalid magic %s, expected CBMD' % byterepr(hdata[0]), 301)
+			error.InvalidMagicError('Invalid magic %s, expected CBMD' % byterepr(hdata[0]))
 		self.commonoffset = hdata[2]
 		self.regionoffsets = hdata[3]
 		self.cwavoffset = hdata[5]

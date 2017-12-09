@@ -69,7 +69,10 @@ class packBFLIM(ClsFunc, TypeWriter):
 		self.byteorder = endian
 		self.verbose = verbose
 		filename = filenames[0]
-		img = Image.open(filename)
+		try:
+			img = Image.open(filename)
+		except:
+			error.InvalidInputError('The given input file is not an image')	
 		img = img.convert('RGBA')
 		self.width, self.height = img.size
 		#Hacky and lazy.
@@ -80,7 +83,7 @@ class packBFLIM(ClsFunc, TypeWriter):
 			img = newimg
 		if 'format' in opts.keys():
 			if 'ETC1' in opts['format'].upper():
-				print('ETC1 not supported. Defaults to RGBA8')
+				error.UnsupportedDataFormatWarning('ETC1 is not supported, packing as RGBA8')
 				opts['format'] = 'RGBA8'
 			self.format = FORMATS[opts['format'].upper()]
 			self.strformat = opts['format'].upper()
@@ -191,4 +194,4 @@ class packBFLIM(ClsFunc, TypeWriter):
 		elif self.format == RGBA8:
 			return self.pack('4B', r, g, b, a)
 		else:
-			error('Unsupported format %s' % self.strformat, 105)
+			error.UnsupportedDataFormatError('Unsupported format %s' % self.strformat)

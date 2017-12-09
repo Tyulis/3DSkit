@@ -94,7 +94,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		data.seek(-0x28, 2)
 		hdata = self.unpack_from(BFLIM_FLIM_HDR_STRUCT, data)
 		if hdata[0] != b'FLIM':
-			error('Invalid magic %s, expected FLIM' % byterepr(hdata[0]), 301)
+			error.InvalidMagicError('Invalid magic %s, expected FLIM' % byterepr(hdata[0]))
 		#bom = hdata[1]
 		#headerlen = hdata[2]
 		self.version = hdata[3]
@@ -108,7 +108,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 		data.seek(-0x14, 2)
 		hdata = self.unpack_from(BFLIM_IMAG_HDR_STRUCT, data)
 		if hdata[0] != b'imag':
-			error('Invalid magic for imag header: %s' % byterepr(hdata[0]), 301)
+			error.InvalidMagicError('Invalid magic for imag header: %s' % byterepr(hdata[0]))
 		#headerlen = hdata[1] #0x10
 		self.width = hdata[2]
 		self.height = hdata[3]
@@ -241,7 +241,7 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			a = ((val >> shift) & 0x0f) * 0x11
 			px = (0, 0, 0, a)
 		else:
-			error('Unsupported texture format')
+			error.UnknownDataFormatError('Unsupported texture format')
 		return tuple(px)
 		
 	def deswizzle(self, img):

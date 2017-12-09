@@ -157,7 +157,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 		self.verbose = verbose
 		tree = load(read(filename))
 		if list(tree.keys())[2] != 'BFLYT':
-			error('This is not a converted BFLYT file', 203)
+			error.InvalidInputError('This is not a converted BFLYT file')
 		self.version = tree['version']
 		self.byteorder = endian
 		self.sections = tree['BFLYT']
@@ -189,7 +189,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 				method = eval('self.pack%s' % magic)
 			except AttributeError:
 				if not safe:
-					error('Invalid section: %s' % magic, 302)
+					error.InvalidSectionError('Invalid section: %s' % magic)
 				else:
 					continue
 			if top:

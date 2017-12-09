@@ -6,6 +6,7 @@ from collections import defaultdict
 from operator import itemgetter
 
 
+#TODO: Change to the new algorithm like LZ11
 class LZ10SlidingWindow (object):
 	def __init__(self, data):
 		self.hash = defaultdict(list)
@@ -148,9 +149,11 @@ class decompressLZ10 (ClsFunc, rawutil.TypeReader):
 	
 	def readhdr(self, content):
 		if content[0] != 0x10:
-			error('Invalid magic 0x%02x, expected 0x10' % content[0], 301)
+			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x10' % content[0])
 		self.data = content[4:]
 		self.decsize = self.unpack_from('<U', content, 1)[0]
+		if self.decsize == 0:
+			raise IOError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 	
 	def decompress(self):
 		ptr = 0

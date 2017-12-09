@@ -19,9 +19,9 @@ class extractRomFS (rawutil.TypeReader):
 		data = self.unpack(ROMFS_HEADER_STRUCT, raw)
 		magic = data[0]
 		if magic != b'IVFC':
-			error('Invalid magic %s, expected IVFC' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected IVFC' % byterepr(magic))
 		if data[1] != 0x10000:
-			error('Invalid magic 0x%08x, expected 0x00010000' % data[1], 301)
+			error.InvalidMagicError('Invalid magic 0x%08x, expected 0x00010000' % data[1])
 		self.masterhash_size = data[2]
 		self.level1_offset = data[3]
 		self.level1_hashdata_size = data[4]

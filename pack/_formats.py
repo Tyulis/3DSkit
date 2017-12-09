@@ -6,6 +6,6 @@ formats = (
 	'BFLYT',
 	'ALYT',
 	'BFLIM',
-	'BL',
+	'mini',
 	'GARC',
 )

@@ -34,7 +34,7 @@ class extractGFA (rawutil.TypeReader):
 		hdata, ptr = self.unpack_from(GFAC_META_STRUCT, data, 0, getptr=True)
 		magic = hdata[0]
 		if magic != b'GFAC':
-			error('Invalid magic %s, expected GFAC' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected GFAC' % byterepr(magic))
 		#unknown = hdata[1]
 		self.version = hdata[2]
 		#headerlen = hdata[3]
@@ -59,7 +59,7 @@ class extractGFA (rawutil.TypeReader):
 		node.hash = entry[0]
 		hash = self.calc_hash(name)
 		if hash != node.hash:
-			error('Invalid file name hash for %s (found %08x, expected %08x)' % (node.name, node.hash, hash), 305)
+			error.HashMismatchError('Invalid file name hash for %s (found %08x, expected %08x)' % (node.name, node.hash, hash))
 		# node.nameoffset  = entry[1]
 		node.length = entry[2]
 		node.offset = entry[3] - self.dataoffset
@@ -70,7 +70,7 @@ class extractGFA (rawutil.TypeReader):
 		magic, version, comp, self.decsize, compsize = self.unpack_from(GFCP_HEADER_STRUCT, data)
 		data = data[20:]
 		if magic != b'GFCP':
-			error('Invalid GFCP magic: %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid GFCP magic: %s' % byterepr(magic))
 		if comp in (2, 3):
 			if self.verbose:
 				print('Decompressing data...')
@@ -78,9 +78,9 @@ class extractGFA (rawutil.TypeReader):
 			if self.verbose:
 				print('Decompressed')
 		elif comp == 1:
-			error('Actually unsupported compression')
+			error.UnsupportedCompressionError('Actually unsupported compression')
 		else:
-			error('Invalid compression')
+			error.UnsupportedCompressionError('Invalid compression')
 		for node in self.nodes:
 			outname = self.outdir + node.name
 			if self.verbose:

@@ -156,7 +156,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 		header = self.bflyt[:0x14]
 		self.data = self.bflyt[0x14:]
 		if header[0:4] != b'FLYT':
-			error('Invalid magic %s, expected FLYT' % byterepr(header[0:4]), 301)
+			error.InvalidMagicError('Invalid magic %s, expected FLYT' % byterepr(header[0:4]))
 		self.byteorder = '<' if header[4:6] == b'\xff\xfe' else '>'
 		self.endianname = 'little' if self.byteorder == '<' else 'big'
 		hdata = self.unpack(FLYT_HEADER, header)

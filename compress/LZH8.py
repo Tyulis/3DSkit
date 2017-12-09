@@ -13,16 +13,18 @@ class decompressLZH8 (ClsFunc, rawutil.TypeReader):
 	
 	def readhdr(self, data):
 		if data[0] != 0x40:
-			error('Invalid magic 0x%02x, expected 0x40' % data[0])
+			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x40' % data[0])
 		self.unco_len = self.unpack_from('U', data, 1)[0]
 		hdrend = 4
 		if self.unco_len == 0:
 			self.unco_len = self.unpack_from('I', data, 4)[0]
 			hdrend = 8
+		if self.unco_len == 0:
+			raise IOError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 		return data[hdrend:]
 	
 	def getbits(self, bitnum):
-		bits = self.bits[self.bitptr:self.bitptr + bitnum]
+		bits = self.bits[self.bitptr: self.bitptr + bitnum]
 		self.bitptr += bitnum
 		return int(bits, 2)
 	

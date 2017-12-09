@@ -88,7 +88,7 @@ class extractNDS (rawutil.TypeReader):
 		self.verbose = verbose
 		self.outdir = make_outdir(filename)
 		self.dochecks = False
-		if 'docheck' in opts:
+		if 'dochecks' in opts:
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
 		header = data[:0x4000]
 		self.data = data
@@ -168,13 +168,13 @@ class extractNDS (rawutil.TypeReader):
 	
 	def do_checks(self, data):
 		if self.headerlen != 0x4000:
-			error('Invalid NDS ROM: Invalid header length', 306)
+			error.InvalidFormatError('Invalid NDS ROM: Invalid header length')
 		if self.nintendo_logocrc != 0xcf56:
-			error('Invalid NDS ROM: Invalid Nintendo logo CRC', 305)
+			error.HashMismatchError('Invalid NDS ROM: Invalid Nintendo logo CRC')
 		if self.crc16(self.nintendo_logo) != self.nintendo_logocrc:
-			error('Invalid NDS ROM: Invalid Nintendo logo', 301)
+			error.InvalidMagicError('Invalid NDS ROM: Invalid Nintendo logo')
 		if self.crc16(data[0:0x15e]) != self.header_crc:
-			error('Invalid NDS ROM: Invalid header checksum', 305)
+			error.HashMismatchError('Invalid NDS ROM: Invalid header checksum')
 	
 	def read_TWLextheader(self, data):
 		hdata = self.unpack_from(DSI_EXTHEADER_STRUCT, data, 0x180)
@@ -323,7 +323,7 @@ class extractNDS (rawutil.TypeReader):
 		version, ptr = self.uint16(data, 0)
 		crc, ptr = self.uint16(data, ptr)
 		if self.crc16(data[0x0020:0x0840]) != crc:
-			error('Invalid NDS ROM: Invalid icon CRC', 305)
+			error.HashMismatchError('Invalid NDS ROM: Invalid icon CRC')
 		if version < 0x0103:
 			bitmap, palette = self.unpack_from('512s16[H]', data, 0x20)
 			img = self.extractIconBitmap(bitmap, palette)
@@ -491,7 +491,7 @@ class extractNDS (rawutil.TypeReader):
 		return reg
 	
 	def maketitleid(self, l):
-		l = list(reversed(l))  #stupid non-subscriptable iterators...
+		l = tuple(reversed(l))  #stupid non-subscriptable iterators...
 		id = rawutil.hex(l[0:4])
 		gamecode = list(reversed(list(l[4])))
 		id += rawutil.hex(gamecode)

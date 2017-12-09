@@ -153,7 +153,7 @@ class STRG (BCSARSection):
 	def extract(self, data):
 		header = self.unpack_from(STRG_HEADER, data, self.offset)
 		if header[0] != b'STRG':
-			error('Invalid magic %s, expected STRG' % byterepr(header[0]), 301)
+			error.InvalidMagicError('Invalid magic %s, expected STRG' % byterepr(header[0]))
 		#sectionlen = header[1]
 		for i, el in enumerate(header[2]):
 			id, padding, offset = el
@@ -162,13 +162,13 @@ class STRG (BCSARSection):
 			elif id == 0x2401:  #Another offset table
 				self.othertbl_offset = offset + 8 + (8 * i)
 			else:
-				error('Invalid section ID in STRG 0x%04x' % id, 303)
+				error.InvalidSectionError('Invalid section ID in STRG 0x%04x' % id)
 		strtbl_offsettbl = self.unpack_from(STRG_STR_OFFSETTABLE, data, self.strtbl_offset + self.offset)
 		self.strings_count = strtbl_offsettbl[0]
 		for entry in strtbl_offsettbl[1]:
 			id, padding, offset, size = entry
 			if id != 0x1f01:
-				error('Invalid entry ID in strings table offsets 0x%04x, expected 0x1f01' % id, 303)
+				error.InvalidSectionError('Invalid entry ID in strings table offsets 0x%04x, expected 0x1f01' % id)
 			else:
 				self.strings.append(self.unpack_from('n', data, offset + self.strtbl_offset + 0x40)[0].decode('utf-8'))
 		
@@ -182,7 +182,7 @@ class INFO (BCSARSection):
 	def extract(self, data):
 		header = self.unpack_from(INFO_HEADER, data, self.offset)
 		if header[0] != b'INFO':
-			error('Invalid magic %s, expected INFO' % header[0], 301)
+			error.InvalidMagicError('Invalid magic %s, expected INFO' % header[0])
 		#sectionlen = header[1]
 		for i, el in enumerate(header[2]):
 			id, padding, offset = el
@@ -297,7 +297,7 @@ class extractBCSAR (rawutil.TypeReader):
 		header = self.unpack_from(CSAR_HEADER, self.data, 0)
 		magic = header[0]
 		if magic != b'CSAR':
-			error('Invalid magic %s, expected CSAR' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected CSAR' % byterepr(magic))
 		#bom = header[1]
 		#headerlen = header[2]
 		#version = header[3]  #?
@@ -316,7 +316,7 @@ class extractBCSAR (rawutil.TypeReader):
 				self.file.offset = offset
 				self.file.size = size
 			else:
-				error('Invalid section ID 0x%04x' % id, 303)
+				error.InvalidSectionError('Invalid section ID 0x%04x' % id)
 
 	def extract(self):
 		self.file.extract(self.data)

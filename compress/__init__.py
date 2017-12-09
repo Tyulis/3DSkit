@@ -14,7 +14,7 @@ CMP_USE_FILE_OBJS = (
 def recognize(file):
 	magic = file.read(4)
 	if len(magic) == 0:
-		error('Empty file', 206)
+		error.InvalidInputError('Empty file')
 	if magic[0] == 0x10:
 		return 'LZ10'
 	elif magic[0] == 0x11:
@@ -26,7 +26,7 @@ def recognize(file):
 	return None
 
 
-def decompress(file, out, format, verbose, errorcb=lambda e: error('Bad detection of the compression', 901)):
+def decompress(file, out, format, verbose, errorcb=lambda e: error.InternalCorrectionWarning('Bad detection of the compression')):
 	file.seek(0)
 	out.seek(0)
 	mod = __import__('compress.%s' % format)

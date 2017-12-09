@@ -45,7 +45,7 @@ class extractBFLAN (rawutil.TypeReader, ClsFunc):
 		self.byteorder = ENDIANS[rawutil.unpack_from('>H', self.file, 4)[0]]
 		header = self.unpack_from(FLAN_HEADER, self.file, 0)
 		if header[0] != b'FLAN':
-			error('Invalid magic %s, expected FLAN' % byterepr(header[0]))
+			error.InvalidMagicError('Invalid magic %s, expected FLAN' % byterepr(header[0]))
 		#bom = header[1]
 		headerlen = header[2]
 		self.version = header[3]
@@ -67,7 +67,7 @@ class extractBFLAN (rawutil.TypeReader, ClsFunc):
 		data = self.unpack_from(pat1_SECTION, self.file, ptr)
 		magic = data[0]
 		if magic != b'pat1':
-			error('Invalid pat1 magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid pat1 magic %s' % byterepr(magic))
 		seclen = data[1]
 		order = data[2]
 		seconds = data[3]
@@ -95,7 +95,7 @@ class extractBFLAN (rawutil.TypeReader, ClsFunc):
 		data = self.unpack_from(pai1_SECTION, self.file, ptr)
 		magic = data[0]
 		if magic != b'pai1':
-			error('Invalid pai1 magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid pai1 magic %s' % byterepr(magic))
 		seclen = data[1]
 		framesize = data[2]
 		flags = data[3]

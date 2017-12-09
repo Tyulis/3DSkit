@@ -31,7 +31,7 @@ class extractSARC (rawutil.TypeReader):
 	def readheader(self, data):
 		magic, hdrlen, bom = rawutil.unpack_from('>4s2H', data, 0)
 		if magic != b'SARC':
-			error('Invalid magic %s, expected SARC' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid magic %s, expected SARC' % byterepr(magic))
 		self.byteorder = ENDIANS[bom]
 		hdr, ptr = self.unpack_from(SARC_HEADER_STRUCT, data, 0, getptr=True)
 		#magic = hdr[0]
@@ -46,7 +46,7 @@ class extractSARC (rawutil.TypeReader):
 		sfat, ptr = self.unpack_from(SFAT_STRUCT, data, ptr, getptr=True)
 		magic = sfat[0]
 		if magic != b'SFAT':
-			error('Issue with SFAT: invalid magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Invalid SFAT magic %s' % byterepr(magic))
 		#headerlen = sfat[1]
 		self.node_count = sfat[2]
 		self.hash_multiplier = sfat[3]
@@ -57,7 +57,7 @@ class extractSARC (rawutil.TypeReader):
 		hdr, ptr = self.unpack_from(SFNT_HEADER_STRUCT, data, ptr, getptr=True)
 		magic = hdr[0]
 		if magic != b'SFNT':
-			error('Issue with SFNT: invalid magic %s' % byterepr(magic), 301)
+			error.InvalidMagicError('Issue with SFNT: invalid magic %s' % byterepr(magic))
 		#headerlen = hdr[1]
 		#unknown = hdr[2]
 		for i, node in enumerate(self.nodes):
@@ -65,7 +65,7 @@ class extractSARC (rawutil.TypeReader):
 				filename = self.unpack_from('n', data, node.name_offset + ptr)[0].decode('utf-8')
 				node.name = filename
 				if self.calc_hash(filename) != node.hash:
-					error('File name %s doesn\'t match his hash %08x' % (filename, node.hash), 305)
+					error.HashMismatchError('File name %s doesn\'t match his hash %08x' % (filename, node.hash))
 			else:
 				node.name = '0x%08x.noname' % node.hash
 			self.nodes[i] = node
