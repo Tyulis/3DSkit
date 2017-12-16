@@ -45,6 +45,7 @@ class error (ClsFunc):
 	UnrecognizedFormatWarning = staticmethod(_Warning(901))
 	UnsupportedDataFormatWarning = staticmethod(_Warning(902))
 	InternalCorrectionWarning = staticmethod(_Warning(903))
+	InvalidInputWarning = staticmethod(_Warning(904))
 	def main(self, msg, errno):
 		if math.floor(errno / 100) != 9:
 			print('Error: %s (%d)' % (msg, errno))

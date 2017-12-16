@@ -4,7 +4,7 @@ from util.fileops import *
 from util.funcops import ClsFunc, byterepr
 from unpack._formats import get_ext
 
-BL_TABLE_STRUCT = '2sH /1[I] 128a'
+MINI_TABLE_STRUCT = '2sH /1[I] 128a'
 
 
 class extractmini (ClsFunc, rawutil.TypeReader):
@@ -17,7 +17,7 @@ class extractmini (ClsFunc, rawutil.TypeReader):
 		self.write_files(files)
 	
 	def read_table(self, data):
-		tbl = self.unpack_from(BL_TABLE_STRUCT, data, 0)
+		tbl = self.unpack_from(MINI_TABLE_STRUCT, data, 0)
 		magic = tbl[0]
 		print('File magic: %s' % byterepr(magic))
 		filecount = tbl[1]
