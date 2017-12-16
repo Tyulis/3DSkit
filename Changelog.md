@@ -303,4 +303,6 @@
 	*	Updated the README
 *	v1.23.54
 	*	Fixed some stupid errors in pack.mini
-	*	Added unpack.NARC
+	*	Added unpack.NARC (partial)
+	*	Now in recursive mode empty file don't cause errors anymore
+	*	Added EM in recognized mini magics

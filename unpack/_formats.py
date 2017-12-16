@@ -30,14 +30,15 @@ MAGICS = {
 	b'CSAR': 'BCSAR',
 	b'CSTM': 'BCSTM',
 	b'NARC': 'NARC',
-	b'BL': 'mini',
-	b'WD': 'mini',
 	b'NCCH': 'NCCH',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',
 	b'---b': 'ExeFS',
 	b'---c': 'RomFS',
-	b'---d': 'NDS',
+	#Mini known magics
+	b'BL':   'mini',
+	b'WD':   'mini',
+	b'EM':   'mini',
 }
 
 EXTS = {

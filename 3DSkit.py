@@ -59,6 +59,13 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 		format = unpack.recognize(filename, givenformat)
 		if format not in unpack.SKIP_DECOMPRESSION:
 			comp = compress.recognize(file)
+			if comp == 0:
+				if len(filenames) > 1:
+					err = error.InvalidInputWarning
+				else:
+					err = error.InvalidInputError
+				err("The given file is empty")
+				continue
 			if comp is not None:
 				print('Compression: %s' % comp)
 				print('Decompressing...')
