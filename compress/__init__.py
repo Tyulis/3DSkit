@@ -37,7 +37,7 @@ def decompress(file, out, format, verbose, errorcb=lambda e: error.InternalCorre
 		else:
 			final = func(file.read(), verbose)
 			out.write(final)
-	except Exception as e:  #Bad detection
+	except RuntimeError as e:  #Bad detection
 		return errorcb(e)
 
 

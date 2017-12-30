@@ -1,6 +1,6 @@
 import sys
 import math
-from .funcops import ClsFunc
+from .utils import ClsFunc
 
 BOMS = {
 	'>': 0xfeff,
@@ -13,39 +13,45 @@ ENDIANS = {
 }
 
 def _Error(errno):
-	def _Error_Function(msg):
-		print('Error: %s (%d)' % (msg, errno))
-		sys.exit(errno)
+	def _Error_Function(cls, msg):
+		errormsg = 'Error: %s (%d)' % (msg, errno)
+		if cls.debug:
+			raise RuntimeError(errormsg)
+		else:
+			print(errormsg, file=sys.stderr)
+			sys.exit(errno)
 	return _Error_Function
 
 
 def _Warning(errno):
-	def _Warning_Function(msg):
-		print('Warning: %s (%d)' % (msg, errno))
+	def _Warning_Function(cls, msg):
+		print('Warning: %s (%d)' % (msg, errno), file=sys.stdout)
 	return _Warning_Function
 
 class error (ClsFunc):
-	UnsupportedFormatError = staticmethod(_Error(101))
-	UnrecognizedFormatError = staticmethod(_Error(102))
-	UnsupportedCompressionError = staticmethod(_Error(103))
-	UnknownDataFormatError = staticmethod(_Error(104))
-	UnsupportedVersionError = staticmethod(_Error(105))
-	UnsupportedSettingError = staticmethod(_Error(106))
-	PluginNotFoundError = staticmethod(_Error(107))
-	ForgottenArgumentError = staticmethod(_Error(201))
-	InvalidInputError = staticmethod(_Error(202))
-	InvalidOptionValueError = staticmethod(_Error(203))
-	InvalidMagicError = staticmethod(_Error(301))
-	InvalidSectionError = staticmethod(_Error(302))
-	HashMismatchError = staticmethod(_Error(303))
-	InvalidFormatError = staticmethod(_Error(304))
-	NeededDataNotFoundError = staticmethod(_Error(301))
-	FileNotFoundError = staticmethod(_Error(404))
+	debug = False  #-V option, turns errors into exceptions
+	UnsupportedFormatError = classmethod(_Error(101))
+	UnrecognizedFormatError = classmethod(_Error(102))
+	UnsupportedCompressionError = classmethod(_Error(103))
+	UnknownDataFormatError = classmethod(_Error(104))
+	UnsupportedVersionError = classmethod(_Error(105))
+	UnsupportedSettingError = classmethod(_Error(106))
+	PluginNotFoundError = classmethod(_Error(107))
+	ForgottenArgumentError = classmethod(_Error(201))
+	InvalidInputError = classmethod(_Error(202))
+	InvalidOptionValueError = classmethod(_Error(203))
+	InvalidMagicError = classmethod(_Error(301))
+	InvalidSectionError = classmethod(_Error(302))
+	HashMismatchError = classmethod(_Error(303))
+	InvalidFormatError = classmethod(_Error(304))
+	NeededDataNotFoundError = classmethod(_Error(301))
+	FileNotFoundError = classmethod(_Error(404))
 	
-	UnrecognizedFormatWarning = staticmethod(_Warning(901))
-	UnsupportedDataFormatWarning = staticmethod(_Warning(902))
-	InternalCorrectionWarning = staticmethod(_Warning(903))
-	InvalidInputWarning = staticmethod(_Warning(904))
+	UnrecognizedFormatWarning = classmethod(_Warning(901))
+	UnsupportedDataFormatWarning = classmethod(_Warning(902))
+	InternalCorrectionWarning = classmethod(_Warning(903))
+	InvalidInputWarning = classmethod(_Warning(904))
+	InvalidDataWarning = classmethod(_Warning(905))
 	def main(self, msg, errno):
 		if math.floor(errno / 100) != 9:
 			print('Error: %s (%d)' % (msg, errno))

@@ -2,8 +2,8 @@
 import os
 from io import BytesIO
 from util import error
-from util.funcops import byterepr
-from util.fileops import *
+from util.utils import byterepr
+from util.filesystem import *
 import util.rawutil as rawutil
 from unpack.SARC import extractSARC
 from collections import OrderedDict

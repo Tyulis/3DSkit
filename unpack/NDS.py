@@ -2,8 +2,8 @@
 #Thanks to gbatek...
 import os
 from util import error
-from util.fileops import *
-from util.funcops import split, FreeObject
+from util.filesystem import *
+from util.utils import split, FreeObject
 import util.rawutil as rawutil
 from util.txtree import dump
 from util.image2gif import writeGif

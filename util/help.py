@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
-from util.fileops import read
-from util.funcops import clearconsole
+from util.filesystem import read
+from util.utils import clearconsole
 import os
 
 

@@ -7,7 +7,7 @@ try:
 except ImportError:
 	has_console = False
 from collections import OrderedDict
-from .rawutil import TypeReader
+from util.rawutil import TypeReader
 
 
 class ClsFunc (object):

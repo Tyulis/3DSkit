@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import math
-from util.funcops import ClsFunc
+from util.utils import ClsFunc
 from util.rawutil import TypeWriter
-from util.fileops import *
+from util.filesystem import *
 from PIL import Image
 
 BFLIM_FLIM_HDR_STRUCT = '4s2H2I2H'

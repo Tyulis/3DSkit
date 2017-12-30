@@ -2,8 +2,8 @@
 import math
 from util import error, ENDIANS
 import util.rawutil as rawutil
-from util.funcops import ClsFunc, byterepr
-from util.fileops import *
+from util.utils import ClsFunc, byterepr
+from util.filesystem import *
 from PIL import Image
 
 BFLIM_FLIM_HDR_STRUCT = '4s2H2I2H'

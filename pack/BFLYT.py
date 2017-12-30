@@ -2,8 +2,8 @@
 from util.txtree import load
 from util import error, BOMS
 import util.rawutil as rawutil
-from util.funcops import ClsFunc
-from util.fileops import read, bwrite
+from util.utils import ClsFunc
+from util.filesystem import read, bwrite
 
 FLYT_HEADER = '%s4s4H I 2H'
 WRAPS = (

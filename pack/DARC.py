@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 from util.rawutil import TypeWriter
-from util.fileops import bread, bwrite, basedir
-from util.funcops import ClsFunc
+from util.filesystem import bread, bwrite, basedir
+from util.utils import ClsFunc
 from util import error, BOMS
 
 DARC_HEADER_STRUCT = '4s4H4I'

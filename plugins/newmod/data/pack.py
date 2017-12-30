@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.funcops import ClsFunc
+from util.utils import ClsFunc
 from util.rawutil import TypeWriter
-from util.fileops import *
+from util.filesystem import *
 
 class pack{{FORMAT}}(ClsFunc, TypeWriter):
 	def main(self, filenames, outname, endian, verbose, opts={}):

@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 from util import error
-from util.funcops import byterepr
-from util.fileops import *
+from util.utils import byterepr
+from util.filesystem import *
 import util.rawutil as rawutil
 
 ROMFS_HEADER_STRUCT = '4s2I 2Q2I 2Q2I 2Q2I 2I'

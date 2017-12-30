@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.fileops import *
-from util.funcops import byterepr
+from util.filesystem import *
+from util.utils import byterepr
 import util.rawutil as rawutil
 
 GFAC_META_STRUCT = '4s11I/11[4I]/11[n]128a'

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from util.rawutil import TypeWriter
-from util.fileops import *
-from util.funcops import ClsFunc
+from util.filesystem import *
+from util.utils import ClsFunc
 from util import error
 from .SARC import packSARC
 

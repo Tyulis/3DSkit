@@ -90,7 +90,7 @@ class TypeUser (object):
 		return unpacked
 	
 	def unpack_from(self, stct, data, offset=None, names=None, refdata=(), getptr=False):
-		byteorder = stct[0] if stct[0] in '@=><!' else '@'
+		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
 		stct = stct.lstrip('<>=!@')
 		stct = stct.replace(' ', '')
 		if len(SUBS) > 0:

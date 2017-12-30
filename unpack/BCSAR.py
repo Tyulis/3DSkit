@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
-from util import error, warning, ENDIANS
-from util.funcops import byterepr
-from util.fileops import *
+from util import error, ENDIANS
+from util.utils import byterepr
+from util.filesystem import *
 import util.rawutil as rawutil
 
 CSAR_HEADER = '4s2H2I2H /p2[2H2I]'
@@ -246,7 +246,7 @@ class FILE (BCSARSection):
 				else:
 					linked.append((entry.name, fileentry.path))
 			else:
-				warning('Invalid entry %d' % entry.fileid, 902)
+				error.InvalidDataWarning('Invalid entry %d' % entry.fileid)
 				continue
 		linkout = ''
 		for entry in linked:

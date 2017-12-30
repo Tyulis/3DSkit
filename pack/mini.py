@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import util.rawutil as rawutil
 from util import error
-from util.funcops import ClsFunc
-from util.fileops import *
+from util.utils import ClsFunc
+from util.filesystem import *
 
 MINI_TABLE_STRUCT = '2sH /1[I] 128a'
 
@@ -23,11 +23,12 @@ class packmini (ClsFunc, rawutil.TypeWriter):
 	
 	def repack_files(self, filenames):
 		contents = [b''] * len(filenames)
+		name = name.split('.')[0]
 		for name in filenames:
 			try:
 				num = int(name)
 			except ValueError:
-				error.InvalidInputError('File name %s does not have the right format. It should be like 003.something')
+				error.InvalidInputError('File name %s does not have the right format. It should be like <number>.<extension>')
 			content = bread(filenames)
 			contents[num] = content
 		final = b''

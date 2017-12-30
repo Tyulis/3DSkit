@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import sys
-from util.fileops import *
+from util.filesystem import *
 from util import error
 
 plugin_path = None

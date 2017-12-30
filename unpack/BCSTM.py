@@ -3,8 +3,8 @@ import wave
 import numpy as np
 from util import error
 import util.rawutil as rawutil
-from util.fileops import *
-from util.funcops import ClsFunc, byterepr
+from util.filesystem import *
+from util.utils import ClsFunc, byterepr
 
 rawutil.register_sub('S', '(2H2I)')  #sized refs
 rawutil.register_sub('R', '(2HI)')  #references

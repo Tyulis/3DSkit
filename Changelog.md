@@ -304,5 +304,12 @@
 *	v1.23.54
 	*	Fixed some stupid errors in pack.mini
 	*	Added unpack.NARC (partial)
-	*	Now in recursive mode empty file don't cause errors anymore
+	*	Now empty file don't cause any more errors in recursive extraction
 	*	Added EM in recognized mini magics
+*	v1.23.55
+	*	Fixed the non-extraction of the last file in unpack.mini
+*	v1.23.56
+	*	A little internal refactoring
+	*	Fixed a byte order issue in rawutil
+	*	Added a quiet (-q) option (no console output)
+	*	Added a debug (-V) option

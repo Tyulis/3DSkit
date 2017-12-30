@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.fileops import *
+from util.filesystem import *
 import util.rawutil as rawutil
 from hashlib import sha256
 

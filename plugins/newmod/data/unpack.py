@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 import os
 from util import error
->afrom util.funcops import byterepr
->ffrom util.funcops import byterepr, ClsFunc
-from util.fileops import *
+>afrom util.utils import byterepr
+>ffrom util.utils import byterepr, ClsFunc
+from util.filesystem import *
 import util.rawutil as rawutil
 
 >aclass extract{{FORMAT}} (rawutil.TypeReader):

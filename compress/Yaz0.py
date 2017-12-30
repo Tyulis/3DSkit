@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.funcops import ClsFunc, byterepr
+from util.utils import ClsFunc, byterepr
 import util.rawutil as rawutil
 
 Yaz0_HEADER_STRUCT = '4sI(2I)'

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 from plugins import *
-from util.funcops import clearconsole
-from util.fileops import *
+from util.utils import clearconsole
+from util.filesystem import *
 
 def menu():
 	print('1-Format unpacker')

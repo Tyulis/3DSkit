@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from util.funcops import ClsFunc
+from util.utils import ClsFunc
 import util.rawutil as rawutil
 
 
@@ -117,7 +117,7 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 		if magic != 0x11:
 			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x11' % magic)
 		if self.decsize == 0:
-			raise IOError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
+			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 	
 	def decompress(self):
 		outlen = 0

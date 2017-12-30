@@ -65,7 +65,7 @@ Usefull links
 """
 # todo: This module should be part of imageio (or at least based on)
 
-#This is a fixed version of the original image2gif for python3
+#Note: This is a fixed version of the original image2gif for python3
 
 import os
 import time

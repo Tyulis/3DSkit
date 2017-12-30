@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 import os
+import sys
 import argparse
 import pack
 import unpack
 import compress
 import plugins
-from io import BytesIO
+from io import BytesIO, StringIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.23.54'
+__version__ = '1.23.56'
 
 
 def parse_opts(s):
@@ -130,6 +131,12 @@ def compress_file(filename, compression, verbose, separate=True):
 
 def main(args, opts):
 	global basedir
+	if args.quiet:
+		initial_stdout = sys.stdout
+		sys.stdout = StringIO()
+	if args.debug:
+		args.verbose = True
+		error.debug = True
 	if args.detailed_help:
 		main_help()
 	elif args.extract:
@@ -172,7 +179,11 @@ def main(args, opts):
 	elif args.plugin is not None:
 		plugins.run_plugin(args.plugin, args.files, args.verbose)
 	else:
+		if args.quiet:
+			sys.stdout = initial_stdout
 		return 1
+	if args.quiet:
+		sys.stdout = initial_stdout
 	return 0
 
 
@@ -180,6 +191,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-H', '--detailed_help', help='Detailed help (you should read it the first time you use 3DSkit)', action='store_true')
 	parser.add_argument('-v', '--verbose', help='Increases the verbosity of 3DSkit', action='store_true')
+	parser.add_argument('-V', '--debug', help='Verbose mode, turns every 3DSkit error into Python exception (only useful for debugging)', action='store_true')
+	parser.add_argument('-q', '--quiet', help='Run without any terminal output', action='store_true')
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument('-x', '--extract', help='Extract files contained in the archive /  decompress the file if necessary and convert it to a readable format. On a directory, recursively extracts all contained files', action='store_true')
 	group.add_argument('-p', '--pack', help='Pack files into an archive, or convert it to a console format', action='store_true')

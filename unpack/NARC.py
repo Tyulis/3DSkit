@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 from util import error, ENDIANS
-from util.funcops import byterepr
-from util.fileops import *
+from util.utils import byterepr
+from util.filesystem import *
 import util.rawutil as rawutil
 from unpack._formats import get_ext
 

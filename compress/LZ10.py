@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.funcops import ClsFunc
+from util.utils import ClsFunc
 import util.rawutil as rawutil
 from collections import defaultdict
 from operator import itemgetter
@@ -153,7 +153,7 @@ class decompressLZ10 (ClsFunc, rawutil.TypeReader):
 		self.data = content[4:]
 		self.decsize = self.unpack_from('<U', content, 1)[0]
 		if self.decsize == 0:
-			raise IOError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
+			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 	
 	def decompress(self):
 		ptr = 0

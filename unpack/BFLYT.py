@@ -3,8 +3,8 @@ from util.txtree import dump
 from collections import OrderedDict
 from util import error
 import util.rawutil as rawutil
-from util.funcops import ClsFunc, byterepr
-from util.fileops import write, make_outfile
+from util.utils import ClsFunc, byterepr
+from util.filesystem import write, make_outfile
 
 FLYT_HEADER = '4s4HI2H'
 WRAPS = (

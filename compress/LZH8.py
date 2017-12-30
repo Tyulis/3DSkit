@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
-from util.funcops import ClsFunc
+from util.utils import ClsFunc
 import util.rawutil as rawutil
 
 
@@ -20,7 +20,7 @@ class decompressLZH8 (ClsFunc, rawutil.TypeReader):
 			self.unco_len = self.unpack_from('I', data, 4)[0]
 			hdrend = 8
 		if self.unco_len == 0:
-			raise IOError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
+			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 		return data[hdrend:]
 	
 	def getbits(self, bitnum):
