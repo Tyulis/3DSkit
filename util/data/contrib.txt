@@ -12,7 +12,7 @@
 
 -You don't have to edit anything else in unpack/__init__.py or 3DSkit.py
 ;;;;
--Then, use the newmod plugin to create your template
+-Then, use the newmod plugin to create your template and follow the instructions
 -run python3 3DSkit.py -g newmod
 -You can now edit your module.
 ;;;;

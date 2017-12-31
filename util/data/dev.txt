@@ -9,9 +9,8 @@ All these modules are accessible from any content included in 3DSkit: unpackers,
 The util package contains many utilities used by 3DSkit.
 The top-level module contains:
 
-error(msg, errno)
-	Shows an error and exits 3DSkit.
-	Look at errors help for further informations on errnos. Feel free to add new errnos if you don't find your error in the existing ones, but add them in the errors help (util/data/errors.txt)
+error.ErrorOrWarningName(msg)
+	Throws a 3DSkit error or warning, and exits if it is an error. Look at the util/__init__.py source code to see the available errors and warnings (feel free to add some if you want)
 
 BOMS = {'>': 0xfeff, '<': 0xfffe}
 	Converts the byte order symbols of rawutil to standard byte-order marks
@@ -23,7 +22,7 @@ ENDIANS = {0xfeff: '>', 0xfffe: '<'}
 
 This module is copied from my other repo https://github.com/Tyulis/rawutil. It is used to work with binary packed data. See its help in the rawutil repo's readme
 ;;;;
-=== util.fileops ===
+=== util.filesystem ===
 
 read(filename, encoding='utf-8')
 	Returns the content of a text file as a string, with the given encoding
@@ -57,7 +56,7 @@ path(*els)
 basedir()
 	Reverts the current working directory to the 3DSkit's root path
 ;;;;
-=== util.funcops ===
+=== util.utils ===
 
 class ClsFunc (object)
 	Creates a class which act as a function
@@ -74,6 +73,7 @@ class attrdict (collections.OrderedDict)
 
 
 class FakeFile (object)
+	DEPRECATED
 	Acts like a BytesIO object, but implements the methods of rawutil.TypeReader
 
 clearconsole()
@@ -126,25 +126,6 @@ load(data)
 	|	|2: 3'''
 	load(tree) -> {'Root':{'A': [1, 2, 3], 'B': 'Test', 'C': True}}
 
-;;;;
-=== util.wavy ===
-
-This module provides a simple interface to handle WAV files.
-
-Class methods:
-
-WAV.new(rate=44100, channels=2, format=wavy.PCM, bitspersample=16)
-	Creates a new wave file instance
-
-WAV.load(filename)
-	Loads a WAV file
-
-Methods:
-
-save(filename)
-	Saves the WAV file to the given file
-
-The WAV instance has a samples attribute, which is a list of lists. Each sublist represents a channel. All samples are floats between 0 and 1.
 ;;;;
 === plugins ===
 

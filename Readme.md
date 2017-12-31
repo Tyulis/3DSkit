@@ -55,6 +55,37 @@ How to use
 	  -O OPTIONS, --options OPTIONS
 	                        Format-specific options, see help for details
 
+Examples
+--------
+
+Extract a DARC archive:
+
+	python3 3DSkit.py -x archive.darc
+
+Convert a BFLIM image in verbose mode:
+
+	python3 3DSkit.py -xv myTexture.bflim
+
+Convert into a BFLYT file with a custom output name:
+
+	python3 3DSkit.py -pf BFLYT -o myLayout.bflyt a-layout.tflyt
+
+Pack a folder into a version 6 GARC archive in verbose mode
+
+	python3 3DSkit.py -pdvf GARC -O{version=6} any-directory
+
+Pack three files into an SARC file and compress it in LZ11
+
+	python3 3DSkit.py -pf SARC -c LZ11 file1 file2 file3
+
+Compress a DARC file without any console output with a specific output name
+
+	python3 3DSkit.py -Cqc LZ11 -o archive_LZ.darc archive.darc
+
+Decompress the previous DARC file
+
+	python3 3DSkit.py -D archive_LZ.darc
+
 Format-Specific options
 =======================
 
@@ -75,7 +106,7 @@ You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 *	GARC:
 	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
 *	mini:
-	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevents the packed file to load. Defaults to BL.
+	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevent the game to load the packed file. Defaults to BL.
 
 Supported formats
 =================
@@ -159,7 +190,7 @@ Check also if you have the last commit
 Then, if you really found a new issue, you should precise:
 
 *	Your python version
-*	The console output (with the verbose mode enabled, -v option)
+*	The console output (in verbose mode, -v option)
 *	Attach the concerned file and if possible and necessary, a screenshot of the problem in the game.
 
 Pull requests are gladly appreciated. You can see a guide for the 3DSkit's developer interface in the program's help (-H option), and a documentation for rawutil in the [rawutil's repo](https://github.com/Tyulis/rawutil)

@@ -4,6 +4,9 @@ Global
 Optional arguments:
 	-h: Shows the short help for options
 	-H: Shows the detailed help of 3DSkit
+	-v: Verbose mode
+	-q: Quiet mode (no console output)
+	-V: Debug mode (turns 3DSkit errors into Python exceptions)
 ;;;;
 	
 Unpacking
@@ -11,8 +14,6 @@ Unpacking
 
 Required arguments:
 	-x: Specify that you want to extract the file
-	OR
-	-t: lists the files contained in an archive
 ;;;;
 
 Packing
@@ -28,14 +29,13 @@ Required arguments:
 			Extracting...
 			(...)
 			Extracted!
-	
-	-l OR -b: Specify the endianness of the output file.
-		-l for little and -b for big endian.
-		It is default to little endian.
-		You have to use -l for 3DS files and -b for WiiU files
 ;;;;
 
 Optional arguments:
+	-l OR -b: Specify the endianness of the output file.
+		-l for little and -b for big endian.
+		Defaults to little endian.
+		You have to use -l for 3DS files and -b for WiiU files
 	-d: 
 		For packing archives, you can either specify each files like this:
 			python 3DSkit.py -xf SARC -o Help.sarc help/file1 help/file2 help/file3
@@ -59,4 +59,13 @@ Optional arguments:
 		These options are specific to the file format, so see supported formats help for more details
 	
 	-o [file name]:
-		Specify the output file name. If not specified, automatically determin the output file name
+		Specify the output file name. If not specified, automatically determine the output file name
+;;;;
+Compressing
+==============
+	-C: Compresses the input file(s) with the given compression (-c option) to the given output file (automatically determined if not given)
+
+;;;;
+Decompressing
+================
+	-D: Decompresses the input file(s)

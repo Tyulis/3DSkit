@@ -316,3 +316,4 @@
 *	v1.23.57
 	*	You can now give the output file name to the -C and -D (compression/decompression) options
 	*	Rewritten the LZ10 compression algorithm like the LZ11 one (~15% less compression, ~20x performance)
+	*	Updated the readme and the help
