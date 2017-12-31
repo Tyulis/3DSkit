@@ -8,6 +8,7 @@ DEC_USE_FILE_OBJS = (
 
 CMP_USE_FILE_OBJS = (
 	'LZ11',
+	'LZ10',
 )
 
 
@@ -37,7 +38,7 @@ def decompress(file, out, format, verbose, errorcb=lambda e: error.InternalCorre
 		else:
 			final = func(file.read(), verbose)
 			out.write(final)
-	except RuntimeError as e:  #Bad detection
+	except Exception as e:  #Bad detection
 		return errorcb(e)
 
 

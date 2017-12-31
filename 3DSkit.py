@@ -11,7 +11,7 @@ from io import BytesIO, StringIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.23.56'
+__version__ = '1.23.57'
 
 
 def parse_opts(s):
@@ -94,12 +94,13 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 		print('Extracted')
 
 
-def decompress_file(filename, verbose):
-	file = open(filename, 'rb')
-	sname = list(filename.partition('.'))
-	sname[0] += '_dec'
-	filename = ''.join(sname)
-	out = open(filename.replace('.cmp', ''), 'wb+')
+def decompress_file(inname, outname, verbose):
+	file = open(inname, 'rb')
+	if outname is None:
+		sname = list(inname.partition('.'))
+		sname[0] += '_dec'
+		outname = (''.join(sname)).replace('.cmp', '')
+	out = open(outname, 'wb+')
 	compression = compress.recognize(file)
 	if compression is None:
 		error.UnsupportedCompressionError('This file is not compressed, or 3DSkit currently does not support its compression')
@@ -111,16 +112,14 @@ def decompress_file(filename, verbose):
 	print('Decompressed!')
 
 
-def compress_file(filename, compression, verbose, separate=True):
-	file = open(filename, 'rb')
+def compress_file(inname, outname, compression, verbose):
+	file = open(inname, 'rb')
 	out = BytesIO()
 	print('Compressing...')
 	compress.compress(file, out, compression, verbose)
 	file.close()
-	if separate:
+	if outname is None:
 		outname = filename + '.cmp'
-	else:
-		outname = filename
 	out.seek(0)
 	outfile = open(outname, 'wb')
 	outfile.write(out.read())
@@ -168,14 +167,20 @@ def main(args, opts):
 		pack_files(files, args.out, args.compression, args.format, args.big, args.verbose, opts)
 		os.chdir(basedir)
 	elif args.decompress:
-		for filename in args.files:
-			decompress_file(filename, args.verbose)
+		if len(args.files) > 1:
+			for filename in args.files:
+				decompress_file(filename, None, args.verbose)
+		else:
+			decompress_file(args.files[0], args.out, args.verbose)
 
 	elif args.compress:
 		if args.compression is None:
 			error.ForgottenArgumentError('You have to specify the compression type')
-		for filename in args.files:
-			compress_file(filename, args.compression, args.verbose)
+		if len(args.files) > 1:
+			for filename in args.files:
+				compress_file(filename, None, args.compression, args.verbose)
+		else:
+			compress_file(args.files[0], args.out, args.compression, args.verbose)
 	elif args.plugin is not None:
 		plugins.run_plugin(args.plugin, args.files, args.verbose)
 	else:

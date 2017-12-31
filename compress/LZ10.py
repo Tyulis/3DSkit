@@ -7,137 +7,79 @@ from operator import itemgetter
 
 
 #TODO: Change to the new algorithm like LZ11
-class LZ10SlidingWindow (object):
-	def __init__(self, data):
-		self.hash = defaultdict(list)
-		self.data = data
-		self.full = False
-		self.start = 0
-		self.stop = 0
-		self.index = 0
-		#some constants
-		self.size = 4096
-		self.mindisp = 2
-		self.startdisp = 1
-		self.minmatch = 3
-		self.maxmatch = 0xf + 3
-	
-	def next(self):
-		if self.index < self.startdisp - 1:
-			self.index += 1
-			return
-		if self.full:
-			old = self.data[self.start]
-			assert self.hash[old][0] == self.start
-			self.hash[old].pop(0)
-		itm = self.data[self.stop]
-		self.hash[itm].append(self.stop)
-		self.stop += 1
-		self.index += 1
-		if self.full:
-			self.start += 1
-		else:
-			if self.size <= self.stop:
-				self.full = True
-	
-	def skip(self, num):
-		[self.next() for i in range(num)]
-	
-	def search(self):
-		counts = []
-		indices = self.hash[self.data[self.index]]
-		for idx in indices:
-			matchlen = self.match(idx, self.index)
-			if matchlen >= self.minmatch:
-				disp = self.index - idx
-				if disp >= self.mindisp:
-					counts.append((matchlen, -disp))
-					if matchlen >= self.maxmatch:
-						return counts[-1]
-		if counts:
-			return max(counts, key=itemgetter(0))
-	
-	def match(self, start, datastart):
-		size = self.index - start
-		if size == 0:
-			return 0
-		matchlen = 0
-		it = range(min(len(self.data) - datastart, self.maxmatch))
-		for i in it:
-			if self.data[start + (i % size)] == self.data[datastart + i]:
-				matchlen += 1
-			else:
-				break
-		return matchlen
-
-
 class compressLZ10 (ClsFunc, rawutil.TypeWriter):
-	def main(self, content, verbose):
+	def main(self, file, out, verbose):
 		self.byteorder = '>'
 		self.verbose = verbose
-		hdr = self.makeheader(content)
-		compressed = self.compress(content)
-		final = hdr + compressed
-		return final
+		self.file = file
+		self.out = out
+		self.file.seek(0, 2)
+		self.datalen = self.file.tell()
+		self.file.seek(0)
+		self.out.seek(0)
+		self.makeheader()
+		self.compress()
 	
-	def makeheader(self, content):
-		hdr = b'\x10'
-		hdr += self.pack('<U', len(content))
-		return hdr
+	def makeheader(self):
+		self.out.write(b'\x10')
+		self.pack('<U', self.datalen, self.out)
 	
-	def packflags(self, flags):
-		n = 0
-		for i, flag in enumerate(flags):
-			n |= flag << (7 - i)
-		return n
-	
-	def compress(self, data):
-		length = 0
-		final = b''
-		for tokens in self.chunkgen(self._compress(data), 8):
-			flags = [type(token) == tuple for token in tokens]
-			final += self.uint8(self.packflags(flags))
-			for token in tokens:
-				if type(token) == tuple:
-					count, disp = token
-					count -= 3
-					disp = -disp - 1
-					assert 0 <= disp < 4096
-					sh = (count << 12) | disp
-					final += self.uint16(sh)
-				else:
-					final += self.uint8(token)
-				length += 1
-				length += sum([2 if flag else 1 for flag in flags])
-		padding = 4 - (length % 4 or 4)
-		final += b'\xff' * padding
-		return final
-	
-	def chunkgen(self, it, n):
-		buffer = []
-		for x in it:
-			buffer.append(x)
-			if n <= len(buffer):
-				yield buffer
-				buffer = []
-		if buffer:
-			yield buffer
-	
-	def _compress(self, data):
-		window = LZ10SlidingWindow(data)
-		i = 0
-		while True:
-			if len(data) <= i:
-				break
-			match = window.search()
-			if match:
-				yield match
-				window.skip(match[0])
-				i += match[0]
+	def compress(self):
+		data = self.file.read()
+		ptr = 0
+		buf = bytearray(33)
+		bufpos = 1
+		bufblk = 0
+		while ptr < self.datalen:
+			if bufblk == 8:
+				self.out.write(buf[:bufpos])
+				buf[0] = 0
+				bufblk = 0
+				bufpos = 1
+			min = ptr - 4096
+			if min < 0:
+				min = 0
+			sub = data[ptr: ptr + 3]
+			if len(sub) < 3:
+				buf[bufpos] = data[ptr]
+				bufpos += 1
+				ptr += 1
+				bufblk += 1
+				continue
+			idx = data[min: ptr].find(sub)
+			if idx == -1:
+				buf[bufpos] = data[ptr]
+				ptr += 1
+				bufpos += 1
 			else:
-				yield data[i]
-				window.next()
-				i += 1
+				pos = idx + min
+				disp = ptr - pos
+				size = 3
+				subptr = pos + 3
+				ptr += 3
+				if ptr < self.datalen:
+					prevbyte = data[subptr]
+					newbyte = data[ptr]
+					while prevbyte == newbyte and subptr < self.datalen - 1 and ptr < self.datalen - 1:
+						subptr += 1
+						ptr += 1
+						size += 1
+						if size >= 0xf + 3:
+							break
+						prevbyte = data[subptr]
+						newbyte = data[ptr]
+				disp -= 1
+				count = size - 3
+				byte1 = (count << 4) + (disp >> 8)
+				byte2 = disp & 0xff
+				buf[bufpos: bufpos + 2] = (byte1, byte2)
+				bufpos += 2
+				buf[0] |= 1 << (7 - bufblk)
+			bufblk += 1
+		self.out.write(buf[:bufpos])
+		ptr = self.out.tell()
+		padding = 4 - (ptr % 4 or 4)
+		self.out.write(b'\x00' * padding)
 
 
 class decompressLZ10 (ClsFunc, rawutil.TypeReader):

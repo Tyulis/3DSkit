@@ -16,31 +16,44 @@ What does 3DSkit?
 How to use
 ==========
 
-	usage: 3DSkit.py [-h] [-H] [-x | -p | -D | -C | -g PLUGIN] [-d] [-f FORMAT] [-l | -b] [-o OUT] [-c COMPRESSION] [-O OPTIONS] [files [files ...]]
+	usage: 3DSkit.py [-h] [-H] [-v] [-V] [-q] [-x | -p | -D | -C | -g PLUGIN] [-d]
+                 [-f FORMAT] [-l | -b] [-o OUT] [-c COMPRESSION] [-O OPTIONS]
+                 [files [files ...]]
 
 	positional arguments:
-		files                 Name of file to convert or to pack into an archive
-
+	  files                 Name of the file(s) to convert or to pack into an archive
+	
 	optional arguments:
-		-h, --help            show this help message and exit
-		-H, --detailed_help   Detailed help (you should read it the first time you use 3DSkit)
-		-v, --verbose         Increases the 3DSkit's verbosity
-		-x, --extract         Extract files contained in the archive / decompress the file if necessary and convert it to a readable format. On a directory, recursively extracts all contained files
-		-p, --pack            Pack files into an archive, or convert it to a console format
-		-D, --decompress      Decompress the input files
-		-C, --compress        Compress the input file
-		-g PLUGIN, --plugin PLUGIN
-								Run a plugin
-		-d, --dir             Use a directory to pack an archive. The root will be the directory. Very recommended.
-		-f FORMAT, --format FORMAT
-								Format to repack, or input format (to extract. See the formats section of the help for more infos)
-		-l, --little          Little endian (for 3DS / NDS files)
-		-b, --big             Big endian (for WiiU files)
-		-o OUT, --out OUT     Output file name (only for repacking). If not given, the output name is automatically determined
-		-c COMPRESSION, --compression COMPRESSION
-								Output compression type
-		-O OPTIONS, --options OPTIONS
-								Format-specific options, see help for details
+	  -h, --help            show this help message and exit
+	  -H, --detailed_help   Detailed help (you should read it the first time you
+	                        use 3DSkit)
+	  -v, --verbose         Increases the verbosity of 3DSkit
+	  -V, --debug           Verbose mode, turns every 3DSkit error into Python
+	                        exception (only useful for debugging)
+	  -q, --quiet           Run without any terminal output
+	  -x, --extract         Extract files contained in the archive / decompress
+	                        the file if necessary and convert it to a readable
+	                        format. On a directory, recursively extracts all
+	                        contained files
+	  -p, --pack            Pack files into an archive, or convert it to a console
+	                        format
+	  -D, --decompress      Decompress the input files
+	  -C, --compress        Compress the input file
+	  -g PLUGIN, --plugin PLUGIN
+	                        Run a plugin
+	  -d, --dir             Use a directory to pack an archive. The root will be
+	                        the directory. Very recommended.
+	  -f FORMAT, --format FORMAT
+	                        Format to repack, or input format (to extract. See the
+	                        formats section of the help for more infos)
+	  -l, --little          Little endian (for 3DS / NDS files)
+	  -b, --big             Big endian (for WiiU files)
+	  -o OUT, --out OUT     Output file name (only for repacking). If not given,
+	                        the output file name will be automatically determined
+	  -c COMPRESSION, --compression COMPRESSION
+	                        Output compression type
+	  -O OPTIONS, --options OPTIONS
+	                        Format-specific options, see help for details
 
 Format-Specific options
 =======================
