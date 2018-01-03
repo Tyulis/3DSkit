@@ -12,7 +12,7 @@ NEEDS_ENDIAN = (
 USE_FILE_OBJ = (
 	'GARC', 'mini', 'SARC', 'ALYT', 'BCSAR',
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
-	'ExeFS', 'RomFS',
+	'ExeFS', 'RomFS', 'GFA',
 )
 
 MAGICS = {
@@ -113,7 +113,7 @@ def recognize_filename(filename, format=None):
 	elif filename.lower() in ('romfs.bin', 'decryptedromfs.bin'):
 		return 'RomFS'
 	try:
-		ext = os.path.splitext()[-1]
+		ext = os.path.splitext(filename)[-1]
 	except IndexError:
 		ext = None
 	if ext in EXTS:

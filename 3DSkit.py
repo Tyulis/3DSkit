@@ -59,15 +59,9 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 		except FileNotFoundError:
 			error.FileNotFoundError('File %s does not exist' % filename)
 		format = unpack.recognize_file(file, givenformat)
+		file.seek(0)
 		if format is None:
 			format = unpack.recognize_filename(filename, givenformat)
-		if format is None:  #still
-			if len(filenames) > 1:
-				err = error.UnrecognizedFormatWarning
-			else:
-				err = error.UnrecognizedFormatError
-			err('Unrecognized format')
-			continue
 		if format not in unpack.SKIP_DECOMPRESSION:
 			comp = compress.recognize(file)
 			if comp == 0:
@@ -89,6 +83,14 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 				print('No compression')
 		else:
 			print('No compression')
+		format = unpack.recognize_file(file, givenformat)
+		if format is None:  #still
+			if len(filenames) > 1:
+				err = error.UnrecognizedFormatWarning
+			else:
+				err = error.UnrecognizedFormatError
+			err('Unrecognized format')
+			continue
 		print('%s file found' % format)
 		print('Extracting...')
 		unpack.extract(filename, file, format, endian, verbose, opts)

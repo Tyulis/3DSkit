@@ -328,3 +328,5 @@
 	*	NCCH and ExeFS hash checks are now done by default (use -O{dochecks=false} if you don't want to do them)
 	*	Rewritten the format recognition function in a less hacky way
 	*	Fixed the non-recognition of ExeFS and RomFS files
+	*	Fixed compression recognition
+	*	Added some little scripts I use for the dev, if it can interest someone (util/dev_scripts)
