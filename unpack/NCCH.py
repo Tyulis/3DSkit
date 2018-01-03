@@ -6,6 +6,7 @@ import util.rawutil as rawutil
 import util.txtree as txtree
 from collections import OrderedDict
 from hashlib import sha256
+from io import BytesIO
 
 from compress.LZ11 import decompressLZ11
 from unpack.ExtHeader import extractExtHeader
@@ -32,16 +33,19 @@ class extractNCCH (rawutil.TypeReader):
 	def __init__(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
 		self.dochecks = False
+		self.dumpfs = False
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
+		if 'dumpfs' in opts.keys():
+			self.dumpfs = True if opts['dumpfs'].lower() == 'true' else False
 		self.outdir = make_outdir(filename)
 		self.byteorder = '<'
-		self.readheader(data[0:0x200])
-		self.convert_units()
 		self.data = data
+		self.readheader()
+		self.convert_units()
 	
-	def readheader(self, hdr):
-		data = self.unpack(NCCH_HEADER_STRUCT, hdr)
+	def readheader(self,):
+		data = self.unpack_from(NCCH_HEADER_STRUCT, self.data, 0)
 		self.rsa_signature = data[0]
 		magic = data[1]
 		if magic != b'NCCH':
@@ -163,46 +167,64 @@ class extractNCCH (rawutil.TypeReader):
 		write(final, self.outdir + 'header.txt')
 	
 	def extract_sections(self):
-		extheader = self.data[0x200: 0x200 + self.extheader_size * 2]
-		plain = self.data[self.plain_offset: self.plain_offset + self.plain_size]
-		logo = self.data[self.logo_offset: self.logo_offset + self.logo_size]
-		exefs = self.data[self.exefs_offset: self.exefs_offset + self.exefs_size]
-		romfs = self.data[self.romfs_offset: self.romfs_offset + self.romfs_size]
+		self.data.seek(0x200)
+		extheader = self.data.read(self.extheader_size * 2)
+		self.data.seek(self.plain_offset)
+		plain = self.data.read(self.plain_size)
+		self.data.seek(self.logo_offset)
+		logo = self.data.read(self.logo_size)
+		#exefs = self.data[self.exefs_offset: self.exefs_offset + self.exefs_size]
+		#romfs = self.data[self.romfs_offset: self.romfs_offset + self.romfs_size]
 		if len(logo) > 0:
 			self.has_logo = True
 		else:
 			self.has_logo = False
 		if self.dochecks:
-			if sha256(self.data[0x200: 0x200 + self.extheader_size]).digest() != self.extheader_hash:
+			self.data.seek(0x200)
+			if sha256(self.data.read(self.extheader_size)).digest() != self.extheader_hash:
 				error.HashMismatchError('Extended header hash mismatch')
 			if sha256(logo).digest() != self.logo_hash and logo != b'':
 				error.HashMismatchError('Logo hash mismatch')
-			if sha256(exefs[:self.exefs_hashregion_size]).digest() != self.exefs_hash:
-				error.HashMismatchError('ExeFS hash mismatch')
-			if sha256(romfs[:self.romfs_hashregion_size]).digest() != self.romfs_hash and self.has_romfs:
-				error.HashMismatchError('RomFS hash mismatch')
+			#if sha256(exefs[:self.exefs_hashregion_size]).digest() != self.exefs_hash:
+			#	error.HashMismatchError('ExeFS hash mismatch')
+			#if sha256(romfs[:self.romfs_hashregion_size]).digest() != self.romfs_hash and self.has_romfs:
+			#	error.HashMismatchError('RomFS hash mismatch')
 		bwrite(extheader, self.outdir + 'extheader.bin')
 		if len(plain) > 0:
 			bwrite(plain, self.outdir + 'plain.bin')
 		if len(logo) > 0:
 			bwrite(logo, self.outdir + 'logo.darc')
-		bwrite(exefs, self.outdir + 'exefs.bin')
-		if self.has_romfs:
-			bwrite(romfs, self.outdir + 'romfs.bin')
+		if self.dumpfs:
+			with open(self.outdir + 'exefs.bin', 'wb') as exefs_out:
+				self.data.seek(self.exefs_offset)
+				exefs_out.write(self.data.read(self.exefs_size))
+			if self.has_romfs:
+				with open(self.outdir + 'romfs.bin', 'wb') as romfs_out:
+					self.data.seek(self.romfs_offset)
+					romfs_out.write(self.data.read(self.romfs_size))
 
 	def extract_subs(self):
 		if self.has_logo:
 			logopath = self.outdir + 'logo.darc'
-			raw = bread(logopath)
-			content = decompressLZ11(raw, self.verbose)
-			logo_extractor = extractDARC(logopath, content, self.verbose)
+			self.data.seek(self.logo_offset)
+			input = BytesIO(self.data.read(self.logo_size))
+			output = BytesIO()
+			decompressLZ11(input, output, self.verbose)
+			output.seek(0)
+			logo_extractor = extractDARC(logopath, output.read(), self.verbose)
 			logo_extractor.extract()
 		extheaderpath = self.outdir + 'extheader.bin'
 		extractExtHeader(extheaderpath, bread(extheaderpath), self.verbose)
 		exefspath = self.outdir + 'exefs.bin'
-		exefs_extractor = extractExeFS(exefspath, bread(exefspath), self.verbose, opts={'dochecks': str(self.dochecks)})
+		#Not so huge -- we keep this for the moment
+		self.data.seek(self.exefs_offset)
+		exefs_extractor = extractExeFS(exefspath, self.data.read(self.exefs_size), self.verbose, opts={'dochecks': str(self.dochecks)})
 		exefs_extractor.extract()
 		if self.has_romfs:
+			#Keep a reference into the NCCH partition
+			#As a RomFS can take up to 3GB, we cannot map it into memory with a BytesIO
+			#Let's do that in a more hacky way
 			romfspath = self.outdir + 'romfs.bin'
-			romfs_extractor = extractRomFS(romfspath, bread(romfspath), self.verbose, opts={'dochecks': str(self.dochecks)})
+			opts = {'dochecks': str(self.dochecks), 'baseoffset': self.romfs_offset}
+			romfs_extractor = extractRomFS(romfspath, self.data, self.verbose, opts=opts)
 			romfs_extractor.extract()

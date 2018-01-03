@@ -94,8 +94,9 @@ You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 
 **At extraction**:
 
-*	NCCH / ExeFS:
+*	NCCH:
 	*	**dochecks**: If "true", checks if the contents hashes match. Defaults to false.
+	*	**dumpfs**: If "true", dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them
 
 **At packing**:
 
@@ -154,7 +155,7 @@ There is also:
 *	unpack.ExeFS:
 	*	Unpack ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
 *	unpack.RomFS:
-	*	Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized [Actually not completely implemented]
+	*	Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized
 
 Compressions:
 

@@ -317,3 +317,8 @@
 	*	You can now give the output file name to the -C and -D (compression/decompression) options
 	*	Rewritten the LZ10 compression algorithm like the LZ11 one (~15% less compression, ~20x performance)
 	*	Updated the readme and the help
+
+**v1.24**
+
+*	v1.24.57
+	*	Finally added the RomFS support, in a quite well optimized way (no annoying temporary 3GB file...)
