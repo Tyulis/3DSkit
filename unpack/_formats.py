@@ -6,7 +6,7 @@ from util import error
 
 
 NEEDS_ENDIAN = (
-	'GFA', 'BL'
+	'GFA', 'mini'
 )
 
 USE_FILE_OBJ = (
@@ -50,8 +50,9 @@ EXTS = {
 
 SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH')
 
-
+'''
 def recognize(filename, format=None):
+	print(filename)
 	if format is not None:
 		if format in MAGICS.values():
 			return format
@@ -99,14 +100,57 @@ def recognize(filename, format=None):
 				return EXTS[e]
 				sys.stdout.write('From extension: ')
 	return None
+'''
+
+def recognize_filename(filename, format=None):
+	filename = os.path.split(filename)[-1]
+	if format is not None:
+		return format
+	if filename.lower() in ('extheader.bin', 'exheader.bin', 'exh.bin', 'decryptedextheader.bin'):
+		return 'ExtHeader'
+	elif filename.lower() in ('exefs.bin', 'decryptedexefs.bin'):
+		return 'ExeFS'
+	elif filename.lower() in ('romfs.bin', 'decryptedromfs.bin'):
+		return 'RomFS'
+	try:
+		ext = os.path.splitext()[-1]
+	except IndexError:
+		ext = None
+	if ext in EXTS:
+		return EXTS[ext]
+	return None
+
+def recognize_file(file, format=None):
+	if format is not None:
+		return format
+	file.seek(0, 2)
+	filelen = file.tell()
+	file.seek(0)
+	if filelen >= 4:
+		magic = file.read(4)
+		if magic in MAGICS:
+			return MAGICS[magic]
+		if magic[0: 2] in MAGICS:
+			return MAGICS[magic[0: 2]]
+	if filelen >= 0x28:
+		file.seek(-0x28, 2)
+		magic = file.read(4)
+		if magic in (b'FLIM', b'CLIM'):
+			return MAGICS[magic]
+	if filelen >= 0x104:
+		file.seek(0x100)
+		magic = file.read(4)
+		if magic == b'NCCH':
+			return 'NCCH'
+	return None
 
 
 def get_ext(data):
 	if hasattr(data, 'read'):
-		format = recognize(data)
+		format = recognize_file(data)
 		data.seek(0)
 	else:
-		format = recognize(BytesIO(data))
+		format = recognize_file(BytesIO(data))
 	if format is not None:
 		return '.' + format.lower()
 	else:

@@ -326,3 +326,5 @@
 	*	Added handling of KeyboardInterrupts (error 204)
 	*	Fixed the NCCH and ExeFS hash check
 	*	NCCH and ExeFS hash checks are now done by default (use -O{dochecks=false} if you don't want to do them)
+	*	Rewritten the format recognition function in a less hacky way
+	*	Fixed the non-recognition of ExeFS and RomFS files

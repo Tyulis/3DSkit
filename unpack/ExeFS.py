@@ -23,16 +23,17 @@ class extractExeFS (rawutil.TypeReader):
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
 		self.byteorder = '<'
-		self.readheader(data[:0x200])
-		self.data = data[0x200:]
+		self.readheader(data)
+		self.data = data
 	
-	def readheader(self, raw):
-		hdrs, reserved, hashes = self.unpack_from(EXEFS_HEADER_STRUCT, raw)
+	def readheader(self, data):
+		hdrs, reserved, hashes = self.unpack_from(EXEFS_HEADER_STRUCT, data, 0)
 		self.files = [FileEntry(hdrs[i], hashes[-(i + 1)]) for i in range(10) if hdrs[i][0] != bytes(8)]
 
 	def extract(self):
 		for file in self.files:
-			content = self.data[file.offset: file.offset + file.size]
+			self.data.seek(file.offset + 0x200)
+			content = self.data.read(file.size)
 			if self.dochecks:
 				if sha256(content).digest() != file.hash:
 					error.HashMismatchError('File %s hash mismatch' % file.name)
