@@ -32,7 +32,7 @@ PLATFORMS = {
 class extractNCCH (rawutil.TypeReader):
 	def __init__(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
-		self.dochecks = False
+		self.dochecks = True
 		self.dumpfs = False
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
@@ -185,10 +185,13 @@ class extractNCCH (rawutil.TypeReader):
 				error.HashMismatchError('Extended header hash mismatch')
 			if sha256(logo).digest() != self.logo_hash and logo != b'':
 				error.HashMismatchError('Logo hash mismatch')
-			#if sha256(exefs[:self.exefs_hashregion_size]).digest() != self.exefs_hash:
-			#	error.HashMismatchError('ExeFS hash mismatch')
-			#if sha256(romfs[:self.romfs_hashregion_size]).digest() != self.romfs_hash and self.has_romfs:
-			#	error.HashMismatchError('RomFS hash mismatch')
+			self.data.seek(self.exefs_offset)
+			if sha256(self.data.read(self.exefs_hashregion_size)).digest() != self.exefs_hash:
+				error.HashMismatchError('ExeFS hash mismatch')
+			if self.romfs_hashregion_size < (2 ** 20) and self.has_romfs:
+				self.data.seek(self.romfs_offset)
+				if sha256(self.data.read(self.romfs_hashregion_size)).digest() != self.romfs_hash:
+					error.HashMismatchError('RomFS hash mismatch')
 		bwrite(extheader, self.outdir + 'extheader.bin')
 		if len(plain) > 0:
 			bwrite(plain, self.outdir + 'plain.bin')
@@ -222,8 +225,8 @@ class extractNCCH (rawutil.TypeReader):
 		exefs_extractor.extract()
 		if self.has_romfs:
 			#Keep a reference into the NCCH partition
-			#As a RomFS can take up to 3GB, we cannot map it into memory with a BytesIO
-			#Let's do that in a more hacky way
+			#Because a RomFS can take up to 3GB, we cannot map it into memory with a BytesIO
+			#Let's do that in a more hacky (and fast) way
 			romfspath = self.outdir + 'romfs.bin'
 			opts = {'dochecks': str(self.dochecks), 'baseoffset': self.romfs_offset}
 			romfs_extractor = extractRomFS(romfspath, self.data, self.verbose, opts=opts)

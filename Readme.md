@@ -62,6 +62,10 @@ Extract a DARC archive:
 
 	python3 3DSkit.py -x archive.darc
 
+Extract a 3DS ROM (NCCH) without doing hash checks
+
+	python3 3DSkit.py -x -O{dochecks=false} my_ncch_partition.cxi
+
 Convert a BFLIM image in verbose mode:
 
 	python3 3DSkit.py -xv myTexture.bflim
@@ -94,9 +98,9 @@ You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 
 **At extraction**:
 
-*	NCCH:
-	*	**dochecks**: If "true", checks if the contents hashes match. Defaults to false.
-	*	**dumpfs**: If "true", dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them
+*	NCCH/ExeFS:
+	*	**dochecks**: If "false", don't checks if the contents hashes match. Defaults to true.
+	*	**dumpfs**: If "true", dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them. Defaults to false
 
 **At packing**:
 

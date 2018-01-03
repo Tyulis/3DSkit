@@ -37,14 +37,18 @@ class error (ClsFunc):
 	UnsupportedVersionError = classmethod(_Error(105))
 	UnsupportedSettingError = classmethod(_Error(106))
 	PluginNotFoundError = classmethod(_Error(107))
+
 	ForgottenArgumentError = classmethod(_Error(201))
 	InvalidInputError = classmethod(_Error(202))
 	InvalidOptionValueError = classmethod(_Error(203))
+	UserInterrupt = classmethod(_Error(204))
+
 	InvalidMagicError = classmethod(_Error(301))
 	InvalidSectionError = classmethod(_Error(302))
 	HashMismatchError = classmethod(_Error(303))
 	InvalidFormatError = classmethod(_Error(304))
-	NeededDataNotFoundError = classmethod(_Error(301))
+
+	NeededDataNotFoundError = classmethod(_Error(401))
 	FileNotFoundError = classmethod(_Error(404))
 	
 	UnrecognizedFormatWarning = classmethod(_Warning(901))

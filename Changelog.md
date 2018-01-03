@@ -299,7 +299,7 @@
 	*	Started unpack.NARC
 	*	Fixed some bad compression recognition issues
 	*	Huge refactoring of the error/warning function, now much easier to use (internal)
-	*	Added support for custom magics on mini files repacking
+	*	Added support for custom magics at mini files repacking
 	*	Updated the README
 *	v1.23.54
 	*	Fixed some stupid errors in pack.mini
@@ -316,9 +316,13 @@
 *	v1.23.57
 	*	You can now give the output file name to the -C and -D (compression/decompression) options
 	*	Rewritten the LZ10 compression algorithm like the LZ11 one (~15% less compression, ~20x performance)
-	*	Updated the readme and the help
+	*	Updated the readme and the help, added some examples in the README
 
 **v1.24**
 
 *	v1.24.57
 	*	Finally added the RomFS support, in a quite well optimized way (no annoying temporary 3GB file...)
+*	v1.24.58
+	*	Added handling of KeyboardInterrupts (error 204)
+	*	Fixed the NCCH and ExeFS hash check
+	*	NCCH and ExeFS hash checks are now done by default (use -O{dochecks=false} if you don't want to do them)

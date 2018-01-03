@@ -19,7 +19,7 @@ class extractExeFS (rawutil.TypeReader):
 	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
 		self.verbose = verbose
-		self.dochecks = False
+		self.dochecks = True
 		if 'dochecks' in opts.keys():
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
 		self.byteorder = '<'
@@ -35,6 +35,5 @@ class extractExeFS (rawutil.TypeReader):
 			content = self.data[file.offset: file.offset + file.size]
 			if self.dochecks:
 				if sha256(content).digest() != file.hash:
-					paf
 					error.HashMismatchError('File %s hash mismatch' % file.name)
 			bwrite(content, self.outdir + file.name)
