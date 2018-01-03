@@ -23,7 +23,7 @@ class extractNARC (rawutil.TypeReader):
 		self.readFNTB()
 	
 	def readheader(self):
-		self.byteorder = ENDIANS[rawutil.unpack_from('>H', self.file, 4)[0]]
+		self.byteorder = ENDIANS[rawutil.unpack_from('<H', self.file, 4)[0]]
 		header = self.unpack_from(NARC_HEADER_STRUCT, self.file, 0, NARC_HEADER_NAMES)
 		if header.magic != b'NARC':
 			error.InvalidMagicError('Invalid NARC magic: %s' % byterepr(header.magic))

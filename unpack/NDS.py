@@ -90,9 +90,8 @@ class extractNDS (rawutil.TypeReader):
 		self.dochecks = False
 		if 'dochecks' in opts:
 			self.dochecks = True if opts['dochecks'].lower() == 'true' else False
-		header = data[:0x4000]
 		self.data = data
-		self.read_NTRheader(header)
+		self.read_NTRheader(data)
 		self.extract_sections(data)
 		self.read_FAT()
 		self.read_FNT()
@@ -110,7 +109,7 @@ class extractNDS (rawutil.TypeReader):
 		return crc
 	
 	def read_NTRheader(self, data):
-		hdata = self.unpack(NDS_HEADER_STRUCT, data)
+		hdata = self.unpack_from(NDS_HEADER_STRUCT, data, 0)
 		self.name = hdata[0].rstrip(b'\x00').decode('utf-8')
 		self.gamecode = hdata[1].decode('utf-8')
 		self.makercode = hdata[2]
@@ -168,12 +167,12 @@ class extractNDS (rawutil.TypeReader):
 	
 	def do_checks(self, data):
 		if self.headerlen != 0x4000:
-			error.InvalidFormatError('Invalid NDS ROM: Invalid header length')
+			error.InvalidFormatError('Invalid NDS ROM: Invalid header length (found 0x%04x, expected 0x4000)' % self.headerlen)
 		if self.nintendo_logocrc != 0xcf56:
-			error.HashMismatchError('Invalid NDS ROM: Invalid Nintendo logo CRC')
+			error.HashMismatchError('Invalid NDS ROM: Invalid Nintendo logo CRC (found 0x%04x, expected 0xcf56' % self.nintendo_logocrc)
 		if self.crc16(self.nintendo_logo) != self.nintendo_logocrc:
 			error.InvalidMagicError('Invalid NDS ROM: Invalid Nintendo logo')
-		if self.crc16(data[0:0x15e]) != self.header_crc:
+		if self.crc16(data[0: 0x15e]) != self.header_crc:
 			error.HashMismatchError('Invalid NDS ROM: Invalid header checksum')
 	
 	def read_TWLextheader(self, data):
@@ -234,16 +233,10 @@ class extractNDS (rawutil.TypeReader):
 		self.rsa_signature = hdata[49]
 		
 	def extract_sections(self, data):
-		self.arm9.data = data[self.arm9.offset: self.arm9.offset + self.arm9.size]
-		self.arm7.data = data[self.arm7.offset: self.arm7.offset + self.arm7.size]
-		self.fat.data = data[self.fat.offset: self.fat.offset + self.fat.size]
-		self.fnt.data = data[self.fnt.offset: self.fnt.offset + self.fnt.size]
-		if 'DSI' in self.unitcode:
-			self.arm9i.data = data[self.arm9i.offset: self.arm9i.offset + self.arm9i.size]
-			self.arm7i.data = data[self.arm7i.offset: self.arm7i.offset + self.arm7i.size]
-		self.arm9.overlay = data[self.arm9.overlayoffset: self.arm9.overlayoffset + self.arm9.overlaysize]
-		self.arm7.overlay = data[self.arm7.overlayoffset: self.arm7.overlayoffset + self.arm7.overlaysize]
-		self.icon = data[self.iconoffset: self.iconoffset + 0x23c0]
+		self.data.seek(self.fat.offset)
+		self.fat.data = data.read(self.fat.size)
+		self.data.seek(self.fnt.offset)
+		self.fnt.data = data.read(self.fnt.size)
 	
 	def read_FAT(self):
 		self.files = []
@@ -286,22 +279,47 @@ class extractNDS (rawutil.TypeReader):
 				actfile += 1
 	
 	def extract(self):
+		if self.verbose:
+			print('Now extracting the file system')
 		romout = self.outdir + 'rom' + os.path.sep
 		exeout = self.outdir + 'exe' + os.path.sep
 		makedirs(romout)
 		makedirs(exeout)
-		bwrite(self.arm9.data, exeout + 'arm9.bin')
-		bwrite(self.arm7.data, exeout + 'arm7.bin')
-		bwrite(self.arm9.overlay, exeout + 'arm9_overlay.bin')
-		bwrite(self.arm7.overlay, exeout + 'arm7_overlay.bin')
-		bwrite(self.data[0:0x4000], exeout + 'header.bin')
-		bwrite(self.data[self.arm9.offset:0x8000], exeout + 'secure.bin')
-		bwrite(self.icon, exeout + 'icon.bin')
+		data = self.data
+		data.seek(self.arm9.offset)
+		with open(exeout + 'arm9.bin', 'wb') as f:
+			f.write(data.read(self.arm9.size))
+		data.seek(self.arm7.offset)
+		with open(exeout + 'arm7.bin', 'wb') as f:
+			f.write(data.read(self.arm7.size))
 		if 'DSI' in self.unitcode:
-			bwrite(self.arm9i.data, exeout + 'arm9i.bin')
-			bwrite(self.arm7i.data, exeout + 'arm7i.bin')
+			data.seek(self.arm9i.offset)
+			with open(exeout + 'arm9i.bin', 'wb') as f:
+				f.write(data.read(self.arm9i.size))
+			data.seek(self.arm7i.offset)
+			with open(exeout + 'arm7i.bin', 'wb') as f:
+				f.write(data.read(self.arm7i.size))
+		data.seek(self.arm9.overlayoffset)
+		with open(exeout + 'arm9_overlay.bin', 'wb') as f:
+			f.write(data.read(self.arm9.overlaysize))
+		data.seek(self.arm7.overlayoffset)
+		with open(exeout + 'arm7_overlay.bin', 'wb') as f:
+			f.write(data.read(self.arm7.overlaysize))
+		data.seek(self.iconoffset)
+		with open(exeout + 'arm9_overlay.bin', 'wb') as f:
+			f.write(data.read(self.arm9.overlaysize))
+		data.seek(self.iconoffset)
+		self.icon = data.read(0x23c0)
+		with open(exeout + 'icon.bin', 'wb') as f:
+			f.write(self.icon)
+		data.seek(0)
+		with open(exeout + 'header.bin', 'wb') as f:
+			f.write(data.read(0x4000))
+		data.seek(self.arm9.offset)
+		with open(exeout + 'secure.bin', 'wb') as f:
+			f.write(data.read(0x8000))
 		self.extractIcon(self.icon, exeout)
-		self.extractHeader(self.data[0:0x4000], exeout + 'header.txt')
+		self.extractHeader(exeout + 'header.txt')
 		self.extractDir(self.tree, romout)
 	
 	def extractDir(self, dir, out):
@@ -312,10 +330,12 @@ class extractNDS (rawutil.TypeReader):
 				makedirs(subdir)
 				self.extractDir(el, subdir)
 			else:
-				filedata = self.data[el.start: el.end]
 				if self.verbose:
 					print('Extracting %s' % out + name)
-				bwrite(filedata, out + name)
+				self.data.seek(el.start)
+				length = el.end - el.start
+				with open(out + name, 'wb') as file:
+					file.write(self.data.read(length))
 	
 	def extractIcon(self, data, outdir):
 		info = OrderedDict()
@@ -413,7 +433,7 @@ class extractNDS (rawutil.TypeReader):
 						pixels[pxx + 1, pxy] = px2
 		return img
 	
-	def extractHeader(self, data, outname):
+	def extractHeader(self, outname):
 		info = OrderedDict()
 		ntr = OrderedDict()
 		twl = OrderedDict()

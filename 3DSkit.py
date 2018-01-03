@@ -11,7 +11,7 @@ from io import BytesIO, StringIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.24.58'
+__version__ = '1.24.59'
 
 
 def parse_opts(s):
@@ -84,6 +84,8 @@ def extract_files(filename, isbigendian, givenformat, verbose, opts):
 		else:
 			print('No compression')
 		format = unpack.recognize_file(file, givenformat)
+		if format is None:
+			format = unpack.recognize_filename(filename, givenformat)
 		if format is None:  #still
 			if len(filenames) > 1:
 				err = error.UnrecognizedFormatWarning
