@@ -217,11 +217,12 @@ class extractNCCH (rawutil.TypeReader):
 			logo_extractor = extractDARC(logopath, output.read(), self.verbose)
 			logo_extractor.extract()
 		extheaderpath = self.outdir + 'extheader.bin'
-		extractExtHeader(extheaderpath, bread(extheaderpath), self.verbose)
+		with open(extheaderpath, 'rb') as exh:
+			extractExtHeader(extheaderpath, exh, self.verbose)
 		exefspath = self.outdir + 'exefs.bin'
 		#Not so huge -- we keep this for the moment
 		self.data.seek(self.exefs_offset)
-		exefs_extractor = extractExeFS(exefspath, self.data.read(self.exefs_size), self.verbose, opts={'dochecks': str(self.dochecks)})
+		exefs_extractor = extractExeFS(exefspath, BytesIO(self.data.read(self.exefs_size)), self.verbose, opts={'dochecks': str(self.dochecks)})
 		exefs_extractor.extract()
 		if self.has_romfs:
 			#Keep a reference into the NCCH partition

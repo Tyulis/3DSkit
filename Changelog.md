@@ -333,3 +333,6 @@
 *	v1.24.59
 	*	Optimized unpack.GFA and unpack.NDS
 	*	Fixed a byte order error in unpack.NARC
+*	v1.24.60
+	*	Fixed NCCH's ExeFS extraction
+	*	Updated unpack.ExtHeader

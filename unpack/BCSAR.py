@@ -251,7 +251,6 @@ class FILE (BCSARSection):
 		linkout = ''
 		for entry in linked:
 			linkout += '%s: %s\n' % entry
-		paf
 		return linkout
 			
 	
