@@ -15,7 +15,7 @@
 
 *	v1.2.1:
 	*	Added unpack.DARC and introduced rawutil
-	*	rawutil is a module based on struct to handle binary data. It can be used as struct with strings as structures (but wit new elements), or as a TypeReader or TypeWriter object
+	*	rawutil is a module based on struct to handle binary data. It can be used as struct with strings as structures (but with new elements), or as a TypeReader or TypeWriter object
 *	v1.2.2:
 	*	Many fixes in rawutil (TypeReader didn't work...)
 *	v1.2.3:
@@ -155,14 +155,14 @@
 **v1.16**
 
 *	v1.16.30
-	*	Added BL archives extraction
+	*	Added mini archives extraction
 	*	Added the newmod plugin to replace and extend pluginCompiler
 *	v1.16.31
-	*	Added BL archive repacking
-	*	Fixed a stupid error in unpack.BL
+	*	Added mini archive repacking
+	*	Fixed a stupid error in unpack.mini
 *	v1.16.32
 	*	Added a substructure replacement function in rawutil
-	*	Completed the changelog and the readme
+	*	Completed the README
 
 **v1.17**
 
@@ -204,7 +204,7 @@
 	*	Converted unpack.GARC to use file objects
 	*	Fixed an error which prevents recognition of file names in pack.SARC
 *	v1.18.38:
-	*	Optimized unpack.BL, unpack.SARC and unpack.ALYT
+	*	Optimized unpack.mini, unpack.SARC and unpack.ALYT
 
 **v1.19**
 
@@ -235,7 +235,7 @@
 	*	Fixed the error which occured when the output directory has the same name as an existing file
 	*	Several fixes in compress.Yaz0 and rawutil
 	*	Fixed the unsupported operation error in unpack.GARC
-	*	Further optimization in the LZ11 decompressor (ca. 1%)
+	*	Further optimization of the LZ11 decompressor (ca. 1%)
 *	v1.19.45
 	*	Fixed (avoided...) ANOTHER bug in BFLIM extraction
 	*	Fixed a little bug in output directory creation
@@ -289,7 +289,7 @@
 	*	Added unpack.BCSTM
 	*	Minor fixes
 *	v1.22.53
-	*	Fixed the frame rate issue in unpack.BCSTM
+	*	Fixed the sample rate issue in unpack.BCSTM
 	*	Updated the help and the README
 
 **v1.23**
@@ -337,5 +337,8 @@
 	*	Fixed NCCH's ExeFS extraction
 	*	Updated unpack.ExtHeader
 	*	Rewritten the LZ10 decompressor like the LZ11 one
-	*	Updated the LZH8 decompressor for use of file objects (and optimized it, now runs ~1.5x faster)
+	*	Updated the LZH8 decompressor for use of file objects (and optimized it, now decompresses ~1.5x faster)
 	*	All compressors and decompressors now use file objects, removed the byte array compatibility code from compress/__init__.py
+	*	Added taken time display in debugging mode (-V option)
+	*	Little improvements to the README
+	*	Updated unpack.CBMD

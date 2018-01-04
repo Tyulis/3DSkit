@@ -2,7 +2,7 @@
 ======
 
 3DSkit is a tool to extract and repack many files formats found on the NDS, DSi, 3DS and WiiU
-For help and informations on use and options, read the wiki or use the -H option of 3DSkit
+For help and informations on usage and options, just read this readme or use the -H option of 3DSkit for more complete info
 
 What does 3DSkit?
 =================
@@ -81,6 +81,10 @@ Pack a folder into a version 6 GARC archive in verbose mode
 Pack three files into an SARC file and compress it in LZ11
 
 	python3 3DSkit.py -pf SARC -c LZ11 file1 file2 file3
+
+Pack a BFLIM texture for the WiiU (big endian):
+
+	python3 3DSkit.py -pbf BFLIM my_texture.png
 
 Compress a DARC file without any console output with a specific output name
 

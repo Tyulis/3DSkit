@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 import os
 import compress
+from io import BytesIO
 from util import error
 from util.utils import ClsFunc, byterepr
 from util.filesystem import make_outdir, bread, bwrite
 import util.rawutil as rawutil
 
-CBMD_HEADER_STRUCT = '4s2I(13I)44sI'
+CBMD_HEADER_STRUCT = '4s2I(13I) 44sI'
 OUT_NAMES = (
 	'EUR-EN.cgfx',
 	'EUR-FR.cgfx',
@@ -42,19 +43,26 @@ class extractCBMD (ClsFunc, rawutil.TypeReader):
 	
 	def extract(self, data):
 		offsets = {i: off for i, off in enumerate(self.regionoffsets) if off != 0}
+		data.seek(self.commonoffset)
 		if len(offsets) == 0:
-			filedata = data[self.commonoffset:]
+			indata = BytesIO(data.read())
 		else:
-			filedata = data[self.commonoffset:self.commonoffset + sorted(list(offsets.values()))[0]]
-		filedata = compress.decompress(filedata, compress.recognize(filedata), self.byteorder)
-		bwrite(filedata, self.outdir + 'common.cgfx')
+			indata = BytesIO(data.read(sorted(list(offsets.values()))[0]))
+		filedata = BytesIO()
+		compress.decompress(indata, filedata, compress.recognize(indata), self.verbose)
+		filedata.seek(0)
+		bwrite(filedata.read(), self.outdir + 'common.cgfx')
 		sortkeys = sorted(list(offsets.keys()))
 		for i in offsets.keys():
 			if i != max(sortkeys):
 				start = offsets[i]
 				end = sortkeys[sortkeys.index(i) + 1]
-				filedata = data[start:end]
+				data.seek(start)
+				indata = BytesIO(data.read(end - start))
 			else:
-				filedata = data[offsets[i]:]
-			filedata = compress.decompress(filedata, compress.recognize(filedata), self.byteorder)
-			bwrite(filedata, OUT_NAMES[i])
+				data.seek(offsets[i])
+				indata = BytesIO(data.read())
+			filedata = BytesIO()
+			compress.decompress(indata, filedata, compress.recognize(indata), self.verbose)
+			filedata.seek(0)
+			bwrite(filedata.read(), OUT_NAMES[i])
