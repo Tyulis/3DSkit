@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import os
 import sys
+import time
 import argparse
 import pack
 import unpack
@@ -221,7 +222,12 @@ if __name__ == '__main__':
 		parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')
 		args = parser.parse_args()
 		opts = parse_opts(args.options)
+		if args.debug:
+			starttime = time.time()
 		result = main(args, opts)
+		if args.debug:
+			endtime = time.time()
+			print('Actions took %.3f s' % (endtime - starttime))
 		if result == 1:
 			parser.print_help()
 	except KeyboardInterrupt:

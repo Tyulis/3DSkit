@@ -336,3 +336,6 @@
 *	v1.24.60
 	*	Fixed NCCH's ExeFS extraction
 	*	Updated unpack.ExtHeader
+	*	Rewritten the LZ10 decompressor like the LZ11 one
+	*	Updated the LZH8 decompressor for use of file objects (and optimized it, now runs ~1.5x faster)
+	*	All compressors and decompressors now use file objects, removed the byte array compatibility code from compress/__init__.py

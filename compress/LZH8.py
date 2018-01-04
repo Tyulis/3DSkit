@@ -1,63 +1,84 @@
 # -*- coding:utf-8 -*-
 from util import error
 from util.utils import ClsFunc
-import util.rawutil as rawutil
-
+from util import rawutil
 
 class decompressLZH8 (ClsFunc, rawutil.TypeReader):
-	def main(self, content, verbose):
+	def main(self, input, out, verbose):
 		self.byteorder = '<'
 		self.verbose = verbose
-		data = self.readhdr(content)
-		return self.decompress(data)
+		self.input = input
+		self.read_header(input)
+		self.decompress(input, out)
 	
-	def readhdr(self, data):
-		if data[0] != 0x40:
-			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x40' % data[0])
-		self.unco_len = self.unpack_from('U', data, 1)[0]
-		hdrend = 4
-		if self.unco_len == 0:
-			self.unco_len = self.unpack_from('I', data, 4)[0]
-			hdrend = 8
-		if self.unco_len == 0:
+	def read_header(self, input):
+		self.input.seek(0)
+		magic = ord(input.read(1))
+		if magic != 0x40:
+			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x40' % magic)
+		self.decsize = self.unpack_from('U', input, 1)[0]
+		if self.decsize == 0:
+			self.decsize = self.unpack_from('I', input, 4)[0]
+		if self.decsize == 0:  #still
 			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
-		return data[hdrend:]
+		#File pointer is now at the right place to start decompressing
 	
-	def getbits(self, bitnum):
-		bits = self.bits[self.bitptr: self.bitptr + bitnum]
-		self.bitptr += bitnum
-		return int(bits, 2)
+	def getbits(self, count):
+		final = 0
+		for i in range(count):
+			self.bitptr -= 1
+			self.masterptr += 1
+			if self.bitptr < 0:
+				self.bitptr = 7
+				val = self.input.read(1)
+				if val == b'':
+					return None
+				self.current = ord(val)
+			bit = (self.current >> self.bitptr) & 1
+			final |= bit << ((count - 1) - i)
+		return final
 	
-	def decompress(self, data):
-		self.bits = rawutil.bin(data)
-		self.bitptr = 16
-		lentbl_datalen = (self.uint16(data, 0)[0] + 1) * 4
+	def decompress(self, input, out):
+		self.bitptr = 8
+		self.masterptr = 16
+		length = ord(self.input.read(1)) + (ord(self.input.read(1)) << 8)
+		self.current = ord(self.input.read(1))
+		lentbl_datalen = (length + 1) * 4
 		lentbl_tablelen = (1 << 9) * 2
 		lentbl = [0] * lentbl_tablelen
 		i = 1
-		while self.bitptr < (lentbl_datalen * 8) - 8:
+		while self.masterptr < (lentbl_datalen * 8) - 8:
 			if i >= lentbl_tablelen:
 				break
 			lentbl[i] = self.getbits(9)
 			i += 1
-		self.bitptr = lentbl_datalen * 8
+		while self.masterptr < lentbl_datalen * 8:
+			self.getbits(1)
 		
-		startptr = self.bitptr
+		startptr = self.masterptr
 		disptbl_datalen = (self.getbits(8) + 1) * 4
 		disptbl_tablelen = (1 << 5) * 2
 		disptbl = [0] * disptbl_tablelen
 		i = 1
-		while self.bitptr < startptr + (disptbl_datalen * 8):
+		while self.masterptr < startptr + (disptbl_datalen * 8):
 			if i >= disptbl_tablelen:
 				break
 			disptbl[i] = self.getbits(5)
 			i += 1
-		self.bitptr = startptr + (disptbl_datalen * 8)
+		while self.masterptr < startptr + (disptbl_datalen * 8):
+			self.getbits(1)
+		if self.masterptr > startptr + (disptbl_datalen * 8):  #ugly
+			diff = self.masterptr - (startptr + (disptbl_datalen * 8))
+			self.masterptr -= diff
+			self.bitptr += diff
+			while self.bitptr > 7:
+				self.bitptr -= 8
+				self.input.seek(-1, 1)
 		
-		final = []
-		j = 0
-		while len(final) < self.unco_len:
-			j += 1
+		outsize = 0
+		out.write(b'\x00' * self.decsize)
+		out.seek(0)
+		while outsize < self.decsize:
 			lentbl_offset = 1
 			while True:
 				next_lenchild = self.getbits(1)
@@ -67,7 +88,8 @@ class decompressLZH8 (ClsFunc, rawutil.TypeReader):
 				if next_lenchild_isleaf:
 					length = lentbl[next_lentbl_offset]
 					if length < 0x100:
-						final.append(length)
+						out.write(bytes((length, )))
+						outsize += 1
 					else:
 						length = (length & 0xff) + 3
 						disptbl_offset = 1
@@ -84,10 +106,23 @@ class decompressLZH8 (ClsFunc, rawutil.TypeReader):
 									for i in range(0, dispbs - 1):
 										disp <<= 1
 										disp |= self.getbits(1)
-								for j in range(0, length):
-									final.append(final[len(final) - disp - 1])
-									if len(final) >= self.unco_len:
-										break
+								disp += 1
+								if length > disp:
+									out.seek(-disp, 1)
+									buf = bytearray(out.read(disp + length))
+									#buf[disp: disp + count] = buf[0: count]
+									for j in range(length):
+										buf[disp + j] = buf[j]
+									out.seek(-(disp + length), 1)
+									out.write(buf)
+								else:
+									out.seek(-disp, 1)
+									ref = out.read(length)
+									out.seek((disp - length), 1)
+									out.write(ref)
+								outsize = out.tell()
+								if outsize >= self.decsize:
+									break
 								break
 							else:
 								assert next_disptbl_offset != disptbl_offset
@@ -96,4 +131,3 @@ class decompressLZH8 (ClsFunc, rawutil.TypeReader):
 				else:
 					assert next_lentbl_offset != lentbl_offset
 					lentbl_offset = next_lentbl_offset
-		return bytes(final)

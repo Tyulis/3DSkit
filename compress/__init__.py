@@ -1,17 +1,6 @@
 # -*- coding:utf-8 -*-
 from util import error
 
-DEC_USE_FILE_OBJS = (
-	'Yaz0',
-	'LZ11',
-)
-
-CMP_USE_FILE_OBJS = (
-	'LZ11',
-	'LZ10',
-)
-
-
 def recognize(file, recursive_mode=False):
 	magic = file.read(4)
 	if len(magic) == 0:
@@ -32,13 +21,9 @@ def decompress(file, out, format, verbose, errorcb=lambda e: error.InternalCorre
 	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.decompress%s' % (format, format))
-	try:
-		if format in DEC_USE_FILE_OBJS:
-			func(file, out, verbose)
-		else:
-			final = func(file.read(), verbose)
-			out.write(final)
-	except Exception as e:  #Bad detection
+	if 1:
+		func(file, out, verbose)
+	else:  #except Exception as e:  #Bad detection
 		return errorcb(e)
 
 
@@ -47,8 +32,4 @@ def compress(file, out, format, verbose):
 	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.compress%s' % (format, format))
-	if format in CMP_USE_FILE_OBJS:
-		func(file, out, verbose)
-	else:
-		final = func(file.read(), verbose)
-		out.write(final)
+	func(file, out, verbose)

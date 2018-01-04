@@ -3,8 +3,8 @@
 import console
 from ppy import *
 
-a=bread('080/dec_0/blyt/FieldStatus_SUB_UPP_000.bflyt')
-b=bread('test.bflyt')
+a=bread('../../test/0.alyt')
+b=bread('../../test.alyt')
 
 i=0
 if a == b:

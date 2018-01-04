@@ -83,23 +83,26 @@ class compressLZ10 (ClsFunc, rawutil.TypeWriter):
 
 
 class decompressLZ10 (ClsFunc, rawutil.TypeReader):
-	def main(self, content, verbose):
+	def main(self, input, out, verbose):
 		self.byteorder = '>'
+		self.input = input
+		self.out = out
 		self.verbose = verbose
-		self.readhdr(content)
+		self.readhdr(input)
 		return self.decompress()
 	
 	def readhdr(self, content):
-		if content[0] != 0x10:
-			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x10' % content[0])
-		self.data = content[4:]
+		magic = ord(content.read(1))
+		if magic != 0x10:
+			error.InvalidMagicError('Invalid magic 0x%02x, expected 0x10' % magic)
 		self.decsize = self.unpack_from('<U', content, 1)[0]
 		if self.decsize == 0:
 			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 	
 	def decompress(self):
-		ptr = 0
-		final = []
+		self.input.seek(4)
+		self.out.seek(0)
+		'''
 		while len(final) < self.decsize:
 			flags = self.tobits(self.data[ptr])
 			ptr += 1
@@ -118,3 +121,38 @@ class decompressLZ10 (ClsFunc, rawutil.TypeReader):
 					break
 		ret = bytes(final)
 		return ret
+		'''
+		outlen = 0
+		self.out.write(b'\x00' * self.decsize)
+		self.out.seek(0)
+		block = -1
+		while outlen < self.decsize:
+			if block == -1:
+				flags = ord(self.input.read(1))
+				block = 7
+			mask = 1 << block
+			if flags & mask == 0:
+				byte = self.input.read(1)
+				self.out.write(byte)
+			else:
+				byte1 = ord(self.input.read(1))
+				byte2 = ord(self.input.read(1))
+				count = (byte1 >> 4) + 3
+				disp = ((byte1 & 0xf) << 8) + byte2 + 1
+				if count > disp:
+					self.out.seek(-disp, 1)
+					buf = bytearray(self.out.read(disp + count))
+					#buf[disp: disp + count] = buf[0: count]
+					for j in range(count):
+						buf[disp + j] = buf[j]
+					self.out.seek(-(disp + count), 1)
+					self.out.write(buf)
+				else:
+					self.out.seek(-disp, 1)
+					ref = self.out.read(count)
+					self.out.seek((disp - count), 1)
+					self.out.write(ref)
+			outlen = self.out.tell()
+			if outlen >= self.decsize:
+				break
+			block -= 1
