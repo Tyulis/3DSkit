@@ -150,10 +150,10 @@ def main(args, opts):
 	elif args.pack:
 		files = []
 		basedir = os.getcwd() + os.path.sep
-		if args.out is None:
-			args.out = '%s.%s' % (os.path.splitext(args.files[0])[0], args.format.lower())
 		if args.format is None:
 			error.ForgottenArgumentError('You have to specify the output format')
+		if args.out is None:
+			args.out = '%s.%s' % (os.path.splitext(args.files[0])[0], args.format.lower())
 		if args.dir:
 			try:
 				os.chdir(args.files[0])

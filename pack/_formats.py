@@ -7,5 +7,6 @@ formats = (
 	'ALYT',
 	'BFLIM',
 	'mini',
+	'MINI', #avoids error with format.upper()
 	'GARC',
 )
