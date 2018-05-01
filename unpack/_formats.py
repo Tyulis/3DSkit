@@ -13,7 +13,7 @@ USE_FILE_OBJ = (
 	'GARC', 'mini', 'SARC', 'ALYT', 'BCSAR',
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
-	'CBMD', 
+	'CBMD', 'BCSTM',
 )
 
 MAGICS = {

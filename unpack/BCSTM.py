@@ -1,321 +1,256 @@
 # -*- coding:utf-8 -*-
+import os
 import wave
+import time
 import numpy as np
-from util import error
-import util.rawutil as rawutil
+from io import BytesIO
+from collections import namedtuple
+from util import error, ENDIANS
+from util.utils import byterepr, ClsFunc
 from util.filesystem import *
-from util.utils import ClsFunc, byterepr
+import util.rawutil as rawutil
 
-rawutil.register_sub('S', '(2H2I)')  #sized refs
-rawutil.register_sub('R', '(2HI)')  #references
-rawutil.register_sub('T', 'I/p1[2HI]')  #ref table
+rawutil.register_sub("R", "(2HI)")
+rawutil.register_sub("S", "(2H2I)")
+rawutil.register_sub("T", "I/p1(R)")
 
-BCSTM_HEADER_STRUCT = '4s2H 2I2H SSS'
-BCSTM_INFO_STRUCT = '4sI RRR (4B11IR) $'
-BCSTM_SEEK_STRUCT = '4sI {H}'
-BCSTM_DATA_STRUCT = '4sI 24s $'
-BCSTM_TRACK_INFO_STRUCT = '2BHR I/p1[B]'
-BCSTM_DSPADPCM_INFO_STRUCT = '8[2h] (2B2h) (2B2h) H'
-BCSTM_IMAADPCM_INFO_STRUCT = '(H2B) (H2B)'
+class Reference (object):
+	def __init__(self, data):
+		self.type, _, self.offset = data
+	
+	def __add__(self, diff):
+		return Reference((self.type, None, self.offset + diff))
+
+
+class SizedRef (object):
+	def __init__(self, data):
+		self.type, _, self.offset, self.size = data
+	
+	def __add__(self, diff):
+		return Reference((self.type, None, self.offset + diff, self.size))
+
+class TrackInfo (object):
+	def __init__(self, data):
+		self.volume, self.pan, _, tableref = data
+		self.tableref = Reference(tableref)
+		self.channels = None
+
+class DSPADPCMContext (object):
+	def __init__(self, data):
+		self.predictor = data[0] >> 4
+		self.scale = data[0] & 0x0f
+		self.previous = data[2]
+		self.secondprevious = data[3]
+
+class DSPADPCMInfo (object):
+	def __init__(self, data):
+		self.param = tuple(data[0])
+		self.context = DSPADPCMContext(data[1])
+		self.loopcontext = DSPADPCMContext(data[2])
+
+NULL = 0xFFFFffff
 
 PCM8 = 0
 PCM16 = 1
 DSPADPCM = 2
 IMAADPCM = 3
 
-CODECS = {
-	0: 'PCM8',
-	1: 'PCM16',
-	2: 'DSP-ADPCM',
-	3: 'IMA-ADPCM',
+CODECNAMES = {
+	PCM8: "PCM8",
+	PCM16: "PCM16",
+	DSPADPCM: "DSP-ADPCM",
+	IMAADPCM: "IMA-ADPCM",
 }
 
+timestats = []
 
-class SizedRef (object):
-	def __init__(self, data):
-		self.id = data[0]
-		self.offset = data[2] if data[2] != 0xffffffff else None
-		self.size = data[3]
-	
-	def getdata(self, data):
-		return data[self.offset: self.offset + self.size]
-
-
-class Reference (object):
-	def __init__(self, data):
-		self.id = data[0]
-		self.offset = data[2] if data[2] != 0xffffffff else None
-	
-	def __add__(self, obj):
-		if self.offset is not None:
-			self.offset += obj
-		return self
-
-
-class TrackInfo (object):
-	def __init__(self, data):
-		self.volume = data[0]
-		self.pan = data[1]
-		self.channelindex = [el[0] for el in data[5]]
-
-
-class DSPADPCMContext (object):
-	def __init__(self, data):
-		self.predictor = data[0] >> 4
-		self.scale = data[0] & 0x0f
-		self.previous_sample = data[2]
-		self.second_previous_sample = data[3]
-
-
-class DSPADPCMInfo (object):
-	def __init__(self, data):
-		self.param = data[0]
-		self.context = DSPADPCMContext(data[1])
-		self.loopcontext = DSPADPCMContext(data[2])
-
-
-class IMAADPCMContext (object):
-	def __init__(self, data):
-		self.data = data[0]
-		self.table_index = data[1]
-
-
-class IMAADPCMInfo (object):
-	def __init__(self, data):
-		self.context = IMAADPCMContext(data[0])
-		self.loopcontext = IMAADPCMContext(data[1])
-
-
-class DSPADPCMDecoder (object):
-	def __init__(self, info: 'DSPADPCMInfo'):
-		self.info = info
-	
-	def updatelast(self, last1, last2):
-		self.last1 = last1
-		self.last2 = last2
-	
-	def getdata(self, offset, length, samplecount):
-		out = np.zeros(samplecount, dtype=np.int16)
-		sampleidx = 0
-		for i in range(offset + 1, offset + length, 8):
-			info = self.data[i - 1]
-			scale = 1 << (info & 0x0f)
-			coef = info >> 4
-			coef1, coef2 = self.info.param[coef]
-			for j in range(7):
-				if sampleidx >= samplecount:
-					break
-				nibbles = self.data[i + j]
-				high = nibbles >> 4
-				low = nibbles & 0x0f
-				if high >= 8:
-					high -= 16
-				if low >= 8:
-					low -= 16
-				val = (((high * scale) << 11) + 1024.0 + (coef1 * self.last1 + coef2 * self.last2)) / 2048.0
-				sample = self.clamp(val)
-				out[sampleidx] = sample
-				sampleidx += 1
-				if sampleidx >= samplecount:
-					break
-				self.last2 = self.last1
-				self.last1 = val
-				val = (((low * scale) << 11) + 1024.0 + (coef1 * self.last1 + coef2 * self.last2)) / 2048.0
-				sample = self.clamp(val)
-				out[sampleidx] = sample
-				sampleidx += 1
-				self.last2 = self.last1
-				self.last1 = val
-		return out
-	
-	def clamp(self, val):
-		if val < -32768:
-			return -32768
-		elif val > 32767:
-			return 32767
-		else:
-			return int(val)
-
-
-class extractBCSTM (ClsFunc, rawutil.TypeReader):
+class extractBCSTM (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
+		self.outbase = os.path.splitext(filename)[0]
 		self.verbose = verbose
-		self.filename = filename
 		self.read_header(data)
-		self.readINFO()
-		self.readSEEK()
-		self.readDATA()
+		self.readINFO(data)
+		self.readSEEK(data)
+		self.readDATA(data)
+		print(sum(timestats) / len(timestats))
 	
 	def read_header(self, data):
-		bom = rawutil.unpack_from('>H', data, 4)[0]
-		self.byteorder = '<' if bom == 0xfffe else '>'
-		hdata = self.unpack_from(BCSTM_HEADER_STRUCT, data)
-		magic = hdata[0]
-		if magic != b'CSTM':
-			error.InvalidMagicError('Invalid magic %s, expected CSTM' % byterepr(magic))
-		bom = hdata[1]
-		#headerlen = hdata[2]
-		self.version = hdata[3]
-		#filesize = hdata[4]
-		#sectioncount = hdata[5]  #Should be 3
-		#padding = hdata[6]
-		inforef = SizedRef(hdata[7])
-		seekref = SizedRef(hdata[8])
-		dataref = SizedRef(hdata[9])
-		self.info = inforef.getdata(data)
-		self.seek = seekref.getdata(data)
-		self.data = dataref.getdata(data)
-		if self.verbose:
-			print('Version: %08x' % self.version)
+		self.byteorder = ENDIANS[rawutil.unpack_from(">H", data, 4)[0]]
+		header = self.unpack_from("4s2H 2I2H SSS", data, 0, "magic, bom, headerlen, version, filesize, seccount, reserved, inforef, seekref, dataref")
+		if header.magic != b"CSTM":
+			error.InvalidMagicError("Invalid magic %s, expected CSTM" % byterepr(header.magic))
+		self.filesize = header.filesize
+		self.inforef = SizedRef(header.inforef)
+		self.seekref = SizedRef(header.seekref)
+		self.dataref = SizedRef(header.dataref)
 	
-	def readINFO(self):
-		data = self.unpack(BCSTM_INFO_STRUCT, self.info)
-		info = self.info
-		#streaminforef = Reference(data[2])
-		trackinforef = Reference(data[3]) + 8
-		channelinforef = Reference(data[4]) + 8
-		streaminfo = data[5]
-		self.read_streaminfo(streaminfo)
-		trackinforeftable = []
-		channelinforeftable = []
-		if trackinforef.offset is not None:
-			count, ptr = self.uint32(info, trackinforef.offset)
-			for i in range(count):
-				ref, ptr = self.unpack_from('R', info, ptr, getptr=True)
-				ref = Reference(ref[0])
-				if ref.offset is None:
+	def readINFO(self, data):
+		magic, size = self.unpack_from("4sI", data, self.inforef.offset)
+		if magic != b"INFO":
+			error.InvalidMagicError("Invalid INFO magic (got %s)" % byterepr(magic))
+		streaminforef = Reference(self.unpack_from("R", data)[0])
+		trackinforeftable = Reference(self.unpack_from("R", data)[0])
+		channelinforeftable = Reference(self.unpack_from("R", data)[0])
+		self.read_streaminfo(data)
+		trackinforefs = []
+		if trackinforeftable.offset != NULL:
+			for item in self.unpack_from("T", data, self.inforef.offset + trackinforeftable.offset + 8)[1]:
+				ref = Reference(item)
+				if ref.offset == NULL:
 					break
 				else:
-					trackinforeftable.append(ref + trackinforef.offset)
-		if channelinforef.offset is not None:
-			count, ptr = self.uint32(info, channelinforef.offset)
-			for i in range(count):
-				ref, ptr = self.unpack_from('R', info, ptr, getptr=True)
-				ref = Reference(ref[0])
-				if ref.offset is None:
+					trackinforefs.append(ref)
+		channelinforefs = []
+		if channelinforeftable.offset != NULL:
+			for item in self.unpack_from("T", data, self.inforef.offset + channelinforeftable.offset + 8)[1]:
+				ref = Reference(item)
+				if ref.offset == NULL:
 					break
 				else:
-					channelinforeftable.append(ref + channelinforef.offset)
-		self.trackinfo = []
-		for ref in trackinforeftable:
-			offset = ref.offset
-			if offset is not None:
-				self.trackinfo.append(TrackInfo(self.unpack_from(BCSTM_TRACK_INFO_STRUCT, self.info, offset)))
-		self.channelinfo = []
-		for ref in channelinforeftable:
-			offset = ref.offset
-			if offset is not None:
-				adpcminforef = Reference(self.unpack_from('R', self.info, offset)[0])
-				if self.codec == DSPADPCM:
-					rawentry = self.unpack_from(BCSTM_DSPADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset)
-					adpcminfo = DSPADPCMInfo(rawentry)
-					self.channelinfo.append(adpcminfo)
-				elif self.codec == IMAADPCM:
-					rawentry = self.unpack_from(BCSTM_IMAADPCM_INFO_STRUCT, self.info, adpcminforef.offset + offset)
-					adpcminfo = IMAADPCMInfo(rawentry)
-					self.channelinfo.append(adpcminfo)
-				else:
-					self.channelinfo.append(None)
+					channelinforefs.append(ref)
+		self.tracks = []
+		for ref in trackinforefs:
+			start = self.inforef.offset + trackinforeftable.offset + 8 + ref.offset
+			track = TrackInfo(self.unpack_from("2BHR", data, start))
+			track.channels = self.unpack_from("I/p1(B)", data, start + track.tableref.offset)[1]
+			self.tracks.append(track)
+		self.channelinfos = []
+		for ref in channelinforefs:
+			start = self.inforef.offset + channelinforeftable.offset + 8 + ref.offset
+			#TODO: Other codecs support
+			inforef = Reference(self.unpack_from("R", data, start)[0])
+			if self.codec == DSPADPCM:
+				self.channelinfos.append(DSPADPCMInfo(self.unpack_from("8[2h](2B2H)(2B2H)H", data, start + inforef.offset)))
 	
 	def read_streaminfo(self, data):
-		self.codec = data[0]
-		self.islooping = bool(data[1])
-		self.channel_count = data[2]
-		self.sample_rate = data[4]
-		self.loop_start = data[5]
-		self.loop_end = data[6]
-		self.sampleblock_count = data[7]
-		self.sampleblock_size = data[8]
-		self.sampleblock_samplecount = data[9]
-		self.last_sampleblock_size = data[10]
-		self.last_sampleblock_samplecount = data[11]
-		self.last_sampleblock_paddedsize = data[12]
-		self.seek_datasize = data[13]
-		self.seek_interval_samplecount = data[14]
-		self.sampledata_ref = Reference(data[15])
+		self.codec, self.islooping, self.channelcount, _, self.samplerate, self.loopstart, self.loopend, self.blockcount, self.blocksize, self.blocksamplecount, self.lastblocksize, self.lastblocksamplecount, self.lastblockpaddedsize, self.seeksize, self.seekinterval, sampledataref = self.unpack_from("4B11I R", data)
+		self.sampledataref = Reference(sampledataref)
+		if self.codec != DSPADPCM:
+			error.NotImplementedError("Codec %s is not yet implemented" % CODECNAMES[self.codec])
 		if self.verbose:
-			print('Codec: %s' % CODECS[self.codec])
-			print('Channel count: %d' % self.channel_count)
-			print('Sample rate: %d' % self.sample_rate)
+			print('Codec: %s' % CODECNAMES[self.codec])
+			print('Channel count: %d' % self.channelcount)
+			print('Sample rate: %d' % self.samplerate)
 			print('Looping: %s' % self.islooping)
-			print('Loop: %d - %d' % (self.loop_start, self.loop_end))
+			print('Loop: %d - %d' % (self.loopstart, self.loopend))
+			print('Block count: %d' % self.blockcount)
+			print('Samples per block: %d' % self.blocksamplecount)
 	
-	def readSEEK(self):
-		magic, length, samples = self.unpack(BCSTM_SEEK_STRUCT, self.seek)
-		if magic != b'SEEK':
-			error.InvalidMagicError('Bad SEEK magic %s' % byterepr(magic))
-		self.seek_samples = [el[0] for el in samples]
+	def readSEEK(self, data):
+		if self.verbose:
+			print('Reading SEEK')
+		magic, length = self.unpack_from("4sI", data, self.seekref.offset)
+		if magic != b"SEEK":
+			error.InvalidMagicError("Invalid SEEK magic (got %s)" % byterepr(magic))
+		self.seek = np.fromstring(data.read(length - 8), dtype=np.int16)
+		if self.verbose:
+			print('Seek samples count: %d' % len(self.seek))
 	
-	def readDATA(self):
-		magic, length, padding, self.audiodata = self.unpack(BCSTM_DATA_STRUCT, self.data)
-		self.samplecount = (len(self.audiodata) // (self.sampleblock_size * self.channel_count)) * self.sampleblock_samplecount + self.last_sampleblock_samplecount
-		if magic != b'DATA':
-			error.InvalidMagicError('Bad DATA magic %s' % byterepr(magic))
-		self.channels = []
+	def readDATA(self, data):
+		magic, length = self.unpack_from("4sI", data, self.dataref.offset)
+		if magic != b"DATA":
+			error.InvalidMagicError("Invalid DATA magic (got %s)" % byterepr(magic))
+		if self.verbose:
+			print('Extracting DATA')
+		self.blockcount -= 1
+		data.seek(self.sampledataref.offset, 1)
+		self.samplecount = self.blockcount * self.blocksamplecount + self.lastblocksamplecount
+		self.channels = [np.zeros(self.samplecount, dtype=np.int16) for i in range(self.channelcount)]
+		#TODO: Other codecs
 		if self.codec == DSPADPCM:
-			DSPADPCMDecoder.data = self.audiodata  #Avoid multiple transmissions of this
-		for channum in range(self.channel_count):
-			if self.verbose:
-				print('Reading channel %d' % (channum + 1))
-			if self.codec == PCM16:
-				self.channels.append(self.extractPCM16channel(channum))
-			elif self.codec == DSPADPCM:
-				self.channels.append(self.extractDSPADPCMchannel(channum))
-			else:
-				error.UnknownDataFormatError('Unsupported audio encoding', 108)
-		if len(self.trackinfo) > 0:
-			for i, info in enumerate(self.trackinfo):
+			self.decodeDSPADPCM(data)
+		if len(self.tracks) > 0:
+			for i, track in enumerate(self.tracks):
+				self.extract_track([self.channels[idx] for idx in track.channels], i)
+		else:
+			self.extract_track(self.channels)
+	
+	def decodeDSPADPCM(self, data):
+		curchannel = -1
+		curblock = -1
+		for blockidx in range(self.blockcount * self.channelcount):
+			timestart = time.time()
+			curchannel = (curchannel + 1) % self.channelcount
+			if curchannel == 0:
+				curblock += 1
+				blockstart = curblock * self.blocksamplecount
 				if self.verbose:
-					print('Extracting track %d' % (i + 1))
-				self.extract_track(info.channelindex, i)
+					print('Reading block %d' % curblock)
+			sampleidx = 0
+			last2 = self.seek[blockidx * 2 + 1]
+			last1 = self.seek[blockidx * 2]
+			buf = data.read(self.blocksize)
+			# A bit of caching
+			channel = self.channels[curchannel]
+			param = self.channelinfos[curchannel].param
+			infos = buf[::8]
+			sampledatablocks = tuple(buf[i + 1: i + 8] for i in range(0, self.blocksize, 8))
+			for info, sampledata in zip(infos, sampledatablocks):
+				shift = (info & 0x0f) + 11
+				coef1, coef2 = param[info >> 4]
+				for nibbles in sampledata:
+					high = nibbles >> 4
+					low = nibbles & 0x0f
+					if high >= 8:
+						high -= 16
+					if low >= 8:
+						low -= 16
+					sample = ((high << shift) + coef1 * last1 + coef2 * last2) / 2048
+					channel[blockstart + sampleidx] = sample
+					sample2 = ((low << shift) + coef1 * sample + coef2 * last1) / 2048
+					channel[blockstart + sampleidx + 1] = sample2
+					sampleidx += 2
+					last2 = sample
+					last1 = sample2
+			timestats.append(time.time() - timestart)
+		curblock += 1
+		for curchannel in range(self.channelcount):
+			blockidx += 1
+			sampleidx = 0
+			last2 = self.seek[blockidx * 2 + 1]
+			last1 = self.seek[blockidx * 2]
+			buf = data.read(self.lastblockpaddedsize)
+			for i in range(0, self.lastblocksize, 8):
+				info = buf[i]
+				scale = 1 << (info & 0x0f)
+				coef = info >> 4
+				coef1, coef2 = self.channelinfos[curchannel].param[coef]
+				for j in range(7):
+					if sampleidx >= self.lastblocksamplecount:
+						break
+					nibbles = buf[i + j + 1]
+					high = nibbles >> 4
+					low = nibbles & 0x0f
+					if high >= 8:
+						high -= 16
+					if low >= 8:
+						low -= 16
+					val = (((high * scale) << 11) + 1024.0 + (coef1 * last1 + coef2 * last2)) / 2048.0
+					sample = int(val)
+					self.channels[curchannel][curblock * self.blocksamplecount + sampleidx] = sample
+					sampleidx += 1
+					last2 = last1
+					last1 = sample
+					if sampleidx >= self.lastblocksamplecount:
+						break
+					val = (((low * scale) << 11) + 1024.0 + (coef1 * last1 + coef2 * last2)) / 2048.0
+					sample = int(val)
+					self.channels[curchannel][curblock * self.blocksamplecount + sampleidx] = sample
+					sampleidx += 1
+					last2 = last1
+					last1 = sample
+	
+	def extract_track(self, channels, index=None):
+		if self.verbose:
+			print('Extracting track %d' % (index + 1 if index is not None else 1))
+		if index is None:
+			filename = self.outbase + '.wav'
 		else:
-			if self.verbose:
-				print('Extracting the unique track')
-			self.extract_track(tuple(range(len(self.channels))))
-		
-	def extract_track(self, channelindex, tracknum=None):
-		samples = np.array(tuple(zip(*[self.channels[i] for i in channelindex])), dtype=np.int16)
-		if len(self.trackinfo) > 1:
-			trackname = os.path.splitext(self.filename)[0] + '_track%d.wav' % (tracknum + 1)
-		else:
-			trackname = os.path.splitext(self.filename)[0] + '.wav'
-		wav = wave.open(trackname, 'w')
-		wav.setframerate(self.sample_rate)
-		wav.setnchannels(len(channelindex))
+			filename = self.outbase + '-%d.wav' % index
+		wav = wave.open(filename, 'wb')
+		wav.setframerate(self.samplerate)
+		wav.setnchannels(len(channels))
 		wav.setsampwidth(2)
+		samples = np.array(tuple(zip(*channels)))
 		wav.writeframesraw(samples.tostring())
 		wav.close()
-	
-	def extractPCM16channel(self, channum):
-		#Inspirated from EveryFileExplorer
-		samples = []
-		for i in range(0, len(self.audiodata), self.sampleblock_size * self.channel_count):
-			if i + self.sampleblock_size * self.channel_count < self.audiodata:
-				for j in range(0, self.sampleblock_size, 2):
-					pos = i + channum * self.sampleblock_size + j
-					samples.append(self.uint16(self.audiodata, pos)[0])
-			elif self.sampleblock_size != self.last_sampleblock_size:
-				for j in range(0, self.last_sampleblock_size, 2):
-					pos = i + channum * self.last_sampleblock_paddedsize + j
-					samples.append(self.uint16(self.audiodata, pos)[0])
-		return samples
-	
-	def extractDSPADPCMchannel(self, channum):
-		decoder = DSPADPCMDecoder(self.channelinfo[channum])
-		samples = np.zeros(self.samplecount, dtype=np.int16)
-		sampleidx = 0
-		for i in range(0, len(self.audiodata), self.sampleblock_size * self.channel_count):
-			prev2 = self.seek_samples[int((i / self.sampleblock_size) * 2 + channum * 2 + 1)]
-			prev1 = self.seek_samples[int((i / self.sampleblock_size) * 2 + channum * 2)]
-			if i != 0:
-				samples[sampleidx - 2] = prev2
-				samples[sampleidx - 1] = prev1
-			decoder.updatelast(prev1, prev2)
-			if i + self.sampleblock_size * self.channel_count < len(self.audiodata):
-				samples[sampleidx: sampleidx + self.sampleblock_samplecount] = decoder.getdata(i + channum * self.sampleblock_size, self.sampleblock_size, self.sampleblock_samplecount)
-				sampleidx += self.sampleblock_samplecount
-			elif self.sampleblock_size != self.last_sampleblock_paddedsize:
-				samples[sampleidx:] = decoder.getdata(i + channum * self.last_sampleblock_paddedsize, self.last_sampleblock_paddedsize, self.last_sampleblock_samplecount)
-			else:
-				break
-		return samples
