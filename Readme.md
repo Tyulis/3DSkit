@@ -13,6 +13,16 @@ What does 3DSkit?
 *	Pack or repack them
 *	Decompress and compress these files from and to their original compression
 
+Preparing
+=========
+
+3DSkit can be directly used as is. However, 3DSkit now includes a C extension,
+called c3DSkit, which is used by some 3DSkit modules to make them faster. You CAN run these modules
+without c3DSkit, but they will be VERY slow. For example, extracting a pretty long BCSTM can take
+several minutes in pure Python, against a split second with c3DSkit (so it's a quite interesting gain)
+
+To install c3DSkit, just come into the 3DSkit installation directory and run `python3 setup.py install`
+
 How to use
 ==========
 
@@ -185,10 +195,10 @@ To access all 3DSkit functionnalities, you need:
 
 *	Python 3.5+
 *	struct (it should be installed by default with python3)
-*	Pillow (Fork of PIL, use sudo apt-get install python3-pil or pip3 install pillow)
+*	Pillow (use sudo apt-get install python3-pil or pip3 install pillow)
 *	Numpy
 
-Note that all the non-built-in dependencies are only needed by some modules -- if you don't have them, you can still use the others
+Pillow is only needed for image formats (BFLIM). If you don't have it, other modules will work as well.
 
 Contributing
 ============

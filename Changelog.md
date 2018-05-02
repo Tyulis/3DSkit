@@ -321,7 +321,7 @@
 **v1.24**
 
 *	v1.24.57
-	*	Finally added the RomFS support, in a quite well optimized way (no annoying temporary 3GB file...)
+	*	Finally added the RomFS support, in quite a well optimized way (no annoying temporary 3GB file...)
 *	v1.24.58
 	*	Added handling of KeyboardInterrupts (error 204)
 	*	Fixed the NCCH and ExeFS hash check
@@ -338,7 +338,15 @@
 	*	Updated unpack.ExtHeader
 	*	Rewritten the LZ10 decompressor like the LZ11 one
 	*	Updated the LZH8 decompressor for use of file objects (and optimized it, now decompresses ~1.5x faster)
-	*	All compressors and decompressors now use file objects, removed the byte array compatibility code from compress/__init__.py
+	*	All compressors and decompressors now use file objects, removed the byte array compatibility code from compress/\_\_init\_\_.py
 	*	Added taken time display in debugging mode (-V option)
 	*	Little improvements to the README
 	*	Updated unpack.CBMD
+*	v1.24.61
+	*	Upgraded rawutil
+	*	Rewritten unpack.BCSTM with enhanced algorithm and file objects
+
+** v1.25 **
+
+*	v1.25.61
+	*	Added a C module called c3DSkit to speedup 3DSkit
