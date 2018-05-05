@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 PyObject* compressLZ11(PyObject* self, PyObject* args);
+PyObject* decompressLZ11(PyObject* self, PyObject* args);
 
 #include "compression.c"
 

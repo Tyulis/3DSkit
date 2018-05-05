@@ -9,6 +9,7 @@
 static PyMethodDef functions[] = {
 	{"decodeDSPADPCMblock", decodeDSPADPCMblock, METH_VARARGS, "Decodes a DSPADPCM sample block into 16-bits PCM data"},
 	{"compressLZ11", compressLZ11, METH_VARARGS, "Compress a byte stream in LZ11"},
+	{"decompressLZ11", decompressLZ11, METH_VARARGS, "Decompress a LZ11 compressed stream"},
 	{NULL, NULL, 0, NULL}
 };
 

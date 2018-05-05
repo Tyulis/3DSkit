@@ -79,6 +79,54 @@ static int _compressLZ11(uint8_t* input, uint8_t* output, int insize){
 	return outsize + 1;
 }
 
+void _decompressLZ11(uint8_t* input, uint8_t* output, int insize, int outsize){
+	uint8_t* inptr = input;
+	uint8_t* outptr = output;
+	uint8_t* refptr = NULL;
+	uint8_t byte1, byte2, byte3, byte4;
+	uint8_t flags = 0;
+	int mask = 0;
+	int disp = 0;
+	int count = 0;
+	int indic = 0;
+	int outpos = 0;
+	int blockpos = -1;
+	while (outpos < outsize){
+		if (blockpos == -1){
+			flags = *inptr++;
+			blockpos = 7;
+		}
+		mask = 1 << blockpos;
+		if (!(flags & mask)){
+			*outptr++ = *inptr++;
+			outpos++;
+		} else {
+			byte1 = *inptr++;
+			byte2 = *inptr++;
+			indic = byte1 >> 4;
+			if (indic == 0){
+				byte3 = *inptr++;
+				count = ((byte1 << 4) | (byte2 >> 4)) + 0x11;
+				disp = (((byte2 & 0x0f) << 8) | byte3) + 1;
+			} else if (indic == 1){
+				byte3 = *inptr++;
+				byte4 = *inptr++;
+				count = (((byte1 & 0x0f) << 12) | (byte2 << 4) | (byte3 >> 4)) + 0x111;
+				disp = (((byte3 & 0x0f) << 8) | byte4) + 1;
+			} else {
+				count = indic + 1;
+				disp = (((byte1 & 0x0f) << 8) | byte2) + 1;
+			}
+			refptr = outptr - disp;
+			for (int i = 0; i < count; i++){
+				*outptr++ = *refptr++;
+			}
+			outpos += count;
+		}
+		blockpos -= 1;
+	}
+}
+
 PyObject* compressLZ11(PyObject* self, PyObject* args){
 	PyArrayObject* input_obj;
 	PyArrayObject* output_obj;
@@ -90,4 +138,18 @@ PyObject* compressLZ11(PyObject* self, PyObject* args){
 	uint8_t* output = (uint8_t*)PyArray_DATA(output_obj);
 	int outsize = _compressLZ11(input, output, insize);
 	return Py_BuildValue("i", outsize);
+}
+
+PyObject* decompressLZ11(PyObject* self, PyObject* args){
+	PyArrayObject* input_obj;
+	PyArrayObject* output_obj;
+	int insize;
+	int outsize;
+	if (!PyArg_ParseTuple(args, "O!O!ii", &PyArray_Type, &input_obj, &PyArray_Type, &output_obj, &insize, &outsize)){
+		return NULL;
+	}
+	uint8_t* input = (uint8_t*)PyArray_DATA(input_obj);
+	uint8_t* output = (uint8_t*)PyArray_DATA(output_obj);
+	_decompressLZ11(input, output, insize, outsize);
+	return Py_BuildValue("i", 0);
 }
