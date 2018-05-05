@@ -22,6 +22,7 @@ without c3DSkit, but they will be VERY slow. For example, extracting a pretty lo
 several minutes in pure Python, against a split second with c3DSkit (so it's a quite interesting gain)
 
 To install c3DSkit, just come into the c3DSkit directory and run `python3 setup.py install`.
+You need a working C compiler and the Python includes (should be included in your python installation)
 When you update it, it may be required to remove the `build/` directory
 
 How to use
@@ -186,7 +187,7 @@ C: Compressible
 	Compression | D | C | Extensions                   | Uses c3DSkit
 	-----------------------------------------------------------------
 	LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ  |
-	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ  |
+	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ  | Yes
 	LZH8        | x |   | .cx                          |
 	Yaz0        | x |   | .szs                         |
 	ETC1        | x |   | Texture compression in BFLIM |

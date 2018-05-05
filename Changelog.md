@@ -354,3 +354,5 @@
 *	v1.25.62
 	*	Fixed a bug which caused noise in BCSTMs extracted using c3DSkit
 	*	LZ11 compression can now be performed through c3DSkit (~x1.5-2 speed)
+*	v1.25.63
+	*	LZ11 decompression can now be performed through c3DSkit (~x10 speed)
