@@ -1,6 +1,12 @@
 # -*- coding:utf-8 -*-
+import numpy as np
 from util.utils import ClsFunc
 import util.rawutil as rawutil
+
+try:
+	import c3DSkit
+except:
+	c3DSkit = None
 
 
 class compressLZ11 (ClsFunc, rawutil.TypeWriter):
@@ -21,6 +27,21 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 		self.pack('<U', self.datalen, self.out)
 	
 	def compress(self):
+		if c3DSkit is not None:
+			self.compress_c3DSkit()
+		else:
+			self.compress_py3DSkit()
+	
+	def compress_c3DSkit(self):
+		data = np.fromstring(self.file.read(), dtype=np.uint8)
+		out = np.zeros(len(data) * 2, dtype=np.uint8)
+		outsize = c3DSkit.compressLZ11(data, out, self.datalen)
+		self.out.write(out[:outsize].tostring())
+		ptr = self.out.tell()
+		padding = 4 - (ptr % 4 or 4)
+		self.out.write(b'\x00' * padding)
+	
+	def compress_py3DSkit(self):
 		data = self.file.read()
 		ptr = 0
 		buf = bytearray(33)
@@ -97,7 +118,7 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 		ptr = self.out.tell()
 		padding = 4 - (ptr % 4 or 4)
 		self.out.write(b'\x00' * padding)
-		
+		print(ptr - 4)
 
 #inspirated from nlzss
 
@@ -120,6 +141,18 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 			raise RuntimeError('INTERNAL. SHOULD BE CAUGHT (Recognition error)')
 	
 	def decompress(self):
+		if c3DSkit is not None:
+			self.decompress_c3DSkit()
+		else:
+			self.decompress_py3DSkit()
+	
+	def decompress_c3DSkit(self):
+		data = np.fromstring(self.file.read(), dtype=np.uint8)
+		out = np.zeros(self.decsize, np.uint8)
+		c3DSkit.decompressLZ11(data, out, len(data), self.decsize)
+		self.out.write(out)
+	
+	def decompress_py3DSkit(self):
 		outlen = 0
 		self.out.write(b'\x00' * self.decsize)
 		self.out.seek(0)
@@ -129,7 +162,7 @@ class decompressLZ11 (ClsFunc, rawutil.TypeReader):
 				flags = ord(self.file.read(1))
 				block = 7
 			mask = 1 << block
-			if flags & mask == 0:
+			if not flags & mask:
 				byte = self.file.read(1)
 				self.out.write(byte)
 			else:
