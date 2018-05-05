@@ -21,7 +21,8 @@ called c3DSkit, which is used by some 3DSkit modules to make them faster. You CA
 without c3DSkit, but they will be VERY slow. For example, extracting a pretty long BCSTM can take
 several minutes in pure Python, against a split second with c3DSkit (so it's a quite interesting gain)
 
-To install c3DSkit, just come into the 3DSkit installation directory and run `python3 setup.py install`
+To install c3DSkit, just come into the c3DSkit directory and run `python3 setup.py install`.
+When you update it, it may be required to remove the `build/` directory
 
 How to use
 ==========
@@ -147,24 +148,25 @@ Crosses:
 *	  : no support
 	
 Output: Output format at extracting. See the output formats help for informations
+As expained previously, modules which use c3DSkit can be very slow in pure Python and much faster if you have c3DSkit installed
 
-	Format | X | P | R | Extensions          | Output
-	--------------------------------------------------
-	ALYT   | x |   | x | .alyt               | files
-	BCSAR  | b |   |   | .bcsar              | files
-	BCSTM  | x |   |   | .bcstm              | WAV
-	BFLAN  | p |   |   | .bflan              | TX
-	BFLIM  | x | x |   | .bflim              | PNG
-	BFLYT  | x |   | x | .bflyt              | TX
-	CBMD   | e |   |   | .bnr banner[.bin]   | files
-	DARC   | x | e |   | .arc .bcma (...)    | files
-	GARC   | x |   | x | .garc (none)        | files
-	GFA    | x |   |   | .gfa                | files
-	mini   | x |   | x | .mini .bl .wd (none)| files
-	NARC   | p |   |   | .narc               | files
-	NCCH   | x |   |   | .app .cxi .cfa      | sections
-	NDS    | x |   |   | .nds                | files
-	SARC   | x | x |   | .sarc .arc .szs     | files
+	Format | X | P | R | Extensions          | Output  | Uses c3DSkit
+	-----------------------------------------------------------------
+	ALYT   | x |   | x | .alyt               | files   | 
+	BCSAR  | b |   |   | .bcsar              | files   |
+	BCSTM  | x |   |   | .bcstm              | WAV     | Yes
+	BFLAN  | p |   |   | .bflan              | TX      | 
+	BFLIM  | x | x |   | .bflim              | PNG     |
+	BFLYT  | x |   | x | .bflyt              | TX      |
+	CBMD   | e |   |   | .bnr banner[.bin]   | files   |
+	DARC   | x | e |   | .arc .bcma (...)    | files   |
+	GARC   | x |   | x | .garc (none)        | files   |
+	GFA    | x |   |   | .gfa                | files   |
+	mini   | x |   | x | .mini .bl .wd (none)| files   |
+	NARC   | p |   |   | .narc               | files   |
+	NCCH   | x |   |   | .app .cxi .cfa      | sections|
+	NDS    | x |   |   | .nds                | files   |
+	SARC   | x | x |   | .sarc .arc .szs     | files   |
 
 There is also:
 
@@ -181,13 +183,13 @@ D: Decompressible
 
 C: Compressible
 
-	Compression | D | C | Extensions
-	-------------------------------------------------
-	LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ
-	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ
-	LZH8        | x |   | .cx
-	Yaz0        | x |   | .szs
-	ETC1        | x |   | Texture compression in BFLIM
+	Compression | D | C | Extensions                   | Uses c3DSkit
+	-----------------------------------------------------------------
+	LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ  |
+	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ  |
+	LZH8        | x |   | .cx                          |
+	Yaz0        | x |   | .szs                         |
+	ETC1        | x |   | Texture compression in BFLIM |
 
 Dependencies
 ============

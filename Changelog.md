@@ -350,3 +350,7 @@
 
 *	v1.25.61
 	*	Added a C module called c3DSkit to speedup 3DSkit
+	*	unpack.BCSTM now uses c3DSkit (x100 speed for DSPADPCM)
+*	v1.25.62
+	*	Fixed a bug which caused noise in BCSTMs extracted using c3DSkit
+	*	LZ11 compression can now be performed through c3DSkit (~x1.5-2 speed)
