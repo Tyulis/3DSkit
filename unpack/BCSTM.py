@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import os
 import wave
-import time
 import numpy as np
 from io import BytesIO
 from util import error, ENDIANS
@@ -31,7 +30,7 @@ class SizedRef (object):
 		self.type, _, self.offset, self.size = data
 	
 	def __add__(self, diff):
-		return Reference((self.type, None, self.offset + diff, self.size))
+		return SizedRef((self.type, None, self.offset + diff, self.size))
 
 class TrackInfo (object):
 	def __init__(self, data):
@@ -66,7 +65,6 @@ CODECNAMES = {
 	IMAADPCM: "IMA-ADPCM",
 }
 
-timestats = []
 
 class extractBCSTM (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
@@ -76,7 +74,6 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		self.readINFO(data)
 		self.readSEEK(data)
 		self.readDATA(data)
-		print(sum(timestats) / len(timestats))
 	
 	def read_header(self, data):
 		self.byteorder = ENDIANS[rawutil.unpack_from(">H", data, 4)[0]]
@@ -89,16 +86,16 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		self.dataref = SizedRef(header.dataref)
 	
 	def readINFO(self, data):
-		magic, size = self.unpack_from("4sI", data, self.inforef.offset)
-		if magic != b"INFO":
-			error.InvalidMagicError("Invalid INFO magic (got %s)" % byterepr(magic))
-		streaminforef = Reference(self.unpack_from("R", data)[0])
-		trackinforeftable = Reference(self.unpack_from("R", data)[0])
-		channelinforeftable = Reference(self.unpack_from("R", data)[0])
+		magic, size = self.unpack_from('4sI', data, self.inforef.offset)
+		if magic != b'INFO':
+			error.InvalidMagicError('Invalid INFO magic (got %s)' % byterepr(magic))
+		streaminforef = Reference(self.unpack_from('R', data)[0])
+		trackinforeftable = Reference(self.unpack_from('R', data)[0])
+		channelinforeftable = Reference(self.unpack_from('R', data)[0])
 		self.read_streaminfo(data)
 		trackinforefs = []
 		if trackinforeftable.offset != NULL:
-			for item in self.unpack_from("T", data, self.inforef.offset + trackinforeftable.offset + 8)[1]:
+			for item in self.unpack_from('T', data, self.inforef.offset + trackinforeftable.offset + 8)[1]:
 				ref = Reference(item)
 				if ref.offset == NULL:
 					break
@@ -106,7 +103,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 					trackinforefs.append(ref)
 		channelinforefs = []
 		if channelinforeftable.offset != NULL:
-			for item in self.unpack_from("T", data, self.inforef.offset + channelinforeftable.offset + 8)[1]:
+			for item in self.unpack_from('T', data, self.inforef.offset + channelinforeftable.offset + 8)[1]:
 				ref = Reference(item)
 				if ref.offset == NULL:
 					break
@@ -115,42 +112,42 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		self.tracks = []
 		for ref in trackinforefs:
 			start = self.inforef.offset + trackinforeftable.offset + 8 + ref.offset
-			track = TrackInfo(self.unpack_from("2BHR", data, start))
-			track.channels = self.unpack_from("I/p1(B)", data, start + track.tableref.offset)[1]
+			track = TrackInfo(self.unpack_from('2BHR', data, start))
+			track.channels = self.unpack_from('I/p1(B)', data, start + track.tableref.offset)[1]
 			self.tracks.append(track)
 		self.channelinfos = []
 		for ref in channelinforefs:
 			start = self.inforef.offset + channelinforeftable.offset + 8 + ref.offset
 			#TODO: Other codecs support
-			inforef = Reference(self.unpack_from("R", data, start)[0])
+			inforef = Reference(self.unpack_from('R', data, start)[0])
 			if self.codec == DSPADPCM:
-				self.channelinfos.append(DSPADPCMInfo(self.unpack_from("(16h)(2B2H)(2B2H)H", data, start + inforef.offset)))
-				print(self.channelinfos[-1].param)
+				self.channelinfos.append(DSPADPCMInfo(self.unpack_from('(16h)(2B2H)(2B2H)H', data, start + inforef.offset)))
 	
 	def read_streaminfo(self, data):
 		self.codec, self.islooping, self.channelcount, _, self.samplerate, self.loopstart, self.loopend, self.blockcount, self.blocksize, self.blocksamplecount, self.lastblocksize, self.lastblocksamplecount, self.lastblockpaddedsize, self.seeksize, self.seekinterval, sampledataref = self.unpack_from("4B11I R", data)
 		self.sampledataref = Reference(sampledataref)
 		if self.codec != DSPADPCM:
-			error.NotImplementedError("Codec %s is not yet implemented" % CODECNAMES[self.codec])
+			error.NotImplementedError('Codec %s is not yet implemented' % CODECNAMES[self.codec])
 		if self.verbose:
 			print('Codec: %s' % CODECNAMES[self.codec])
 			print('Channel count: %d' % self.channelcount)
 			print('Sample rate: %d' % self.samplerate)
 			print('Looping: %s' % self.islooping)
+		if self.islooping:
 			print('Loop: %d - %d' % (self.loopstart, self.loopend))
 	
 	def readSEEK(self, data):
 		if self.verbose:
 			print('Reading SEEK')
-		magic, length = self.unpack_from("4sI", data, self.seekref.offset)
-		if magic != b"SEEK":
-			error.InvalidMagicError("Invalid SEEK magic (got %s)" % byterepr(magic))
+		magic, length = self.unpack_from('4sI', data, self.seekref.offset)
+		if magic != b'SEEK':
+			error.InvalidMagicError('Invalid SEEK magic (got %s)' % byterepr(magic))
 		self.seek = np.fromstring(data.read(length - 8), dtype=np.int16)
 	
 	def readDATA(self, data):
-		magic, length = self.unpack_from("4sI", data, self.dataref.offset)
-		if magic != b"DATA":
-			error.InvalidMagicError("Invalid DATA magic (got %s)" % byterepr(magic))
+		magic, length = self.unpack_from('4sI', data, self.dataref.offset)
+		if magic != b'DATA':
+			error.InvalidMagicError('Invalid DATA magic (got %s)' % byterepr(magic))
 		if self.verbose:
 			print('Extracting DATA')
 		self.blockcount -= 1
@@ -176,7 +173,6 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		curchannel = -1
 		curblock = -1
 		for blockidx in range(self.blockcount * self.channelcount):
-			timestart = time.time()
 			curchannel = (curchannel + 1) % self.channelcount
 			if curchannel == 0:
 				curblock += 1
@@ -209,7 +205,6 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 					sampleidx += 2
 					last2 = sample
 					last1 = sample2
-			timestats.append(time.time() - timestart)
 		curblock += 1
 		blockstart = curblock * self.blocksamplecount
 		for curchannel in range(self.channelcount):
@@ -245,20 +240,16 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		curchannel = -1
 		curblock = -1
 		for blockidx in range(self.blockcount * self.channelcount):
-			timestart = time.time()
 			curchannel = (curchannel + 1) % self.channelcount
 			if curchannel == 0:
 				curblock += 1
 				blockstart = curblock * self.blocksamplecount
-				if self.verbose:
-					print('Reading block %d' % curblock)
 			last2 = self.seek[blockidx * 2 + 1]
 			last1 = self.seek[blockidx * 2]
 			adpcm = np.fromstring(data.read(self.blocksize), dtype=np.uint8)
 			pcmout = self.channels[curchannel]
 			param = self.channelinfos[curchannel].param
 			last1, last2 = c3DSkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.blocksamplecount, blockstart, last1, last2)
-			timestats.append(time.time() - timestart)
 		curblock += 1
 		blockstart = curblock * self.blocksamplecount
 		for curchannel in range(self.channelcount):
@@ -275,7 +266,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		if index is None:
 			filename = self.outbase + '.wav'
 		else:
-			filename = self.outbase + '-%d.wav' % index
+			filename = self.outbase + '_track%d.wav' % index
 		wav = wave.open(filename, 'wb')
 		wav.setframerate(self.samplerate)
 		wav.setnchannels(len(channels))
