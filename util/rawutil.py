@@ -47,6 +47,8 @@ def hextobytes(hx):
 
 
 def register_sub(sub, rep):
+	for char in SUBS:
+		rep = rep.replace(char, SUBS[char])
 	SUBS[sub] = rep
 
 

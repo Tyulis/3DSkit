@@ -12,12 +12,24 @@ from io import BytesIO, StringIO
 from util.help import main_help
 from util import error
 
-__version__ = '1.26.63'
+__version__ = '1.26.64'
 
 
 def parse_opts(s):
 	if s is None:
 		return {}
+	if len(s) == 0:
+		return {}
+	if s[0].startswith('{'):
+		return parse_old_opts(s)
+	opts = {}
+	for opt in s:
+		name, value = opt.split('=')
+		opts[name] = value
+	return opts
+	
+
+def parse_old_opts(s):
 	opts = {}
 	s = s.strip('()[]{}')
 	ls = [el.strip() for el in s.split(',')]
@@ -218,7 +230,7 @@ if __name__ == '__main__':
 		group.add_argument('-b', '--big', help='Big endian (for WiiU files)', action='store_true')
 		parser.add_argument('-o', '--out', help='Output file name (only for repacking). If not given, the output file name will be automatically determined')
 		parser.add_argument('-c', '--compression', help='Output compression type')
-		parser.add_argument('-O', '--options', help='Format-specific options, see help for details')
+		parser.add_argument('-O', '--options', help='Format-specific options, see help for details', action='append')
 		parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')
 		args = parser.parse_args()
 		opts = parse_opts(args.options)
