@@ -50,7 +50,6 @@ class DSPADPCMInfo (object):
 		self.param = np.array(data[0], dtype=np.int16)
 		self.context = DSPADPCMContext(data[1])
 		self.loopcontext = DSPADPCMContext(data[2])
-		print(self.param)
 
 NULL = 0xFFFFffff
 
@@ -264,7 +263,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 	def extract_track(self, channels, index=None):
 		if self.verbose:
 			print('Extracting track %d' % (index + 1 if index is not None else 1))
-		if index is None:
+		if index is None or len(self.tracks) <= 1:
 			filename = self.outbase + '.wav'
 		else:
 			filename = self.outbase + '_track%d.wav' % index

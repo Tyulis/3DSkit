@@ -7,7 +7,7 @@ import builtins
 import binascii
 from collections import namedtuple
 
-__version__ = '2.4.8'
+__version__ = '2.4.9'
 
 ENDIANNAMES = {
 	'=': sys.byteorder,
@@ -333,7 +333,10 @@ class _unpack (_ClsFunc, _StructParser):
 					count = final[-count.index]
 			if isinstance(el, _Sub):
 				if el.type == '()':
-					final.append(self.unpack(el.stct)[0])
+					result = []
+					for i in range(count):
+						result.extend(self.unpack(el.stct)[0])
+					final.append(result)
 				elif el.type == '[]':
 					final.append([self.unpack(el.stct)[0] for i in range(count)])
 				elif el.type == '{}':
@@ -380,6 +383,8 @@ class _unpack (_ClsFunc, _StructParser):
 				elif el == '$':
 					final.append(self.data[self.ptr:])
 					break
+				elif el == '|':
+					groupbase = self.ptr
 				else:
 					#Avoids copy of the entire data
 					substruct = '%s%d%s' % (self.byteorder, count, el)
@@ -401,7 +406,10 @@ class _unpack (_ClsFunc, _StructParser):
 					count = final[-count.index]
 			if isinstance(el, _Sub):
 				if el.type == '()':
-					final.append(self.unpack_file(el.stct)[0])
+					result = []
+					for i in range(count):
+						result.extend(self.unpack_file(el.stct)[0])
+					final.append(result)
 				elif el.type == '[]':
 					final.append([self.unpack_file(el.stct)[0] for i in range(count)])
 				elif el.type == '{}':
@@ -448,6 +456,8 @@ class _unpack (_ClsFunc, _StructParser):
 				elif el == '$':
 					final.append(self.data.read())
 					break
+				elif el == '|':
+					groupbase = self.data.tell()
 				else:
 					#Avoids copy of the entire data
 					substruct = '%s%d%s' % (self.byteorder, count, el)
@@ -482,7 +492,10 @@ class _pack (_StructParser, _ClsFunc):
 					count = data[ptr - count.index]
 			if isinstance(el, _Sub):
 				if el.type == '()':
-					self.pack(el.stct, data[ptr])
+					group = data[ptr]
+					groupptr = 0
+					for i in range(count):
+						groupptr += self.pack(el.stct, group[groupptr:])
 					ptr += 1
 				elif el.type == '[]':
 					[self.pack(el.stct, data[ptr][i]) for i in range(count)]
@@ -533,11 +546,14 @@ class _pack (_StructParser, _ClsFunc):
 				elif el == '$':
 					self.final += data[ptr]
 					break
+				elif el == '|':
+					groupbase = len(self.final)
 				else:
 					substruct = '%s%d%s' % (self.byteorder, count, el)
 					subdata = data[ptr: ptr + count]
 					ptr += count
 					self.final += struct.pack(substruct, *subdata)
+		return ptr
 	
 	def pack_file(self, stct, data):
 		ptr = 0
@@ -551,7 +567,10 @@ class _pack (_StructParser, _ClsFunc):
 					count = data[ptr - count.index]
 			if isinstance(el, _Sub):
 				if el.type == '()':
-					self.pack_file(el.stct, data[ptr])
+					group = data[ptr]
+					groupptr = 0
+					for i in range(count):
+						groupptr += self.pack_file(el.stct, group[groupptr:])
 					ptr += 1
 				elif el.type == '[]':
 					[self.pack_file(el.stct, data[ptr][i]) for i in range(count)]
@@ -602,11 +621,14 @@ class _pack (_StructParser, _ClsFunc):
 				elif el == '$':
 					self.final.write(data[ptr])
 					break
+				elif el == '|':
+					groupbase = self.final.tell()
 				else:
 					substruct = '%s%d%s' % (self.byteorder, count, el)
 					subdata = data[ptr: ptr + count]
 					ptr += count
 					self.final.write(struct.pack(substruct, *subdata))
+		return ptr
 
 
 def unpack(stct, data, names=None, refdata=()):
