@@ -356,3 +356,9 @@
 	*	LZ11 compression can now be performed through c3DSkit (~x1.5-2 speed)
 *	v1.25.63
 	*	LZ11 decompression can now be performed through c3DSkit (~x10 speed)
+
+** v1.26 **
+
+*	v1.26.63
+	*	Added BCSTM encoding (pack.BCSTM), only with c3DSkit (else ~2h)
+	*	Fixed noise at end of extracted BCSTMs
