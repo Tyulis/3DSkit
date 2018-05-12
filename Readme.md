@@ -98,6 +98,11 @@ Pack a BFLIM texture for the WiiU (big endian):
 
 	python3 3DSkit.py -pbf BFLIM my_texture.png
 
+Pack two BCSTM respectively with one and two tracks, the second with a loop.
+
+	python3 3DSkit.py -pf BCSTM -o oneTrackTest.bcstm track1.wav
+	python3 3DSkit.py -pf BCSTM -o twoTracksExample.bcstm -O{loop=100000-2100000} track1.wav track2.wav
+
 Compress a DARC file without any console output with a specific output name
 
 	python3 3DSkit.py -Cqc LZ11 -o archive_LZ.darc archive.darc
@@ -128,6 +133,10 @@ You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
 	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
 *	mini:
 	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevent the game to load the packed file. Defaults to BL.
+*	BCSTM:
+	*	**format**: Specify the audio format. Can be DSP-ADPCM, IMA-ADPCM, PCM16 or PCM8 (currently only DSP-ADPCM is supported). Defaults to "DSP-ADPCM"
+	*	**loop**: Makes a looping BCSTM. Must be of the form <start>-<end> (eg. 688123-2976543). If not given, the packed BCSTM won't loop at all.
+	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to "false" to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
 
 Supported formats
 =================
