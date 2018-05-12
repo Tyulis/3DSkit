@@ -6,8 +6,12 @@
 #include <numpy/arrayobject.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
+#include <float.h>
 
 PyObject* decodeDSPADPCMblock(PyObject* self, PyObject* args);
+PyObject* encodeDSPADPCMchannel(PyObject* self, PyObject* args);
+PyObject* generateDSPADPCMcoefs(PyObject* self, PyObject* args);
 
 #include "audio.c"
 
