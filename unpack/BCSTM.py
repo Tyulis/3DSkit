@@ -222,6 +222,8 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 				shift = (info & 0x0f) + 11
 				coef1, coef2 = param[(info >> 4) * 2], param[(info >> 4) * 2 + 1]
 				for nibbles in sampledata:
+					if sampleidx >= self.lastblocksamplecount:
+						break
 					high = nibbles >> 4
 					low = nibbles & 0x0f
 					if high >= 8:
@@ -230,6 +232,8 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 						low -= 16
 					sample = ((high << shift) + coef1 * last1 + coef2 * last2) / 2048
 					channel[blockstart + sampleidx] = sample
+					if sampleidx + 1 >= self.lastblocksamplecount:
+						break
 					sample2 = ((low << shift) + coef1 * sample + coef2 * last1) / 2048
 					channel[blockstart + sampleidx + 1] = sample2
 					sampleidx += 2

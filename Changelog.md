@@ -362,3 +362,6 @@
 *	v1.26.63
 	*	Added BCSTM encoding (pack.BCSTM), only with c3DSkit (else ~2h)
 	*	Fixed noise at end of extracted BCSTMs
+*	v1.26.64
+	*	Upgraded rawutil
+	*	Changed the specific options system

@@ -76,7 +76,7 @@ Extract a DARC archive:
 
 Extract a 3DS ROM (NCCH) without doing hash checks
 
-	python3 3DSkit.py -x -O{dochecks=false} my_ncch_partition.cxi
+	python3 3DSkit.py -x -O dochecks=false my_ncch_partition.cxi
 
 Convert a BFLIM image in verbose mode:
 
@@ -88,7 +88,7 @@ Convert into a BFLYT file with a custom output name:
 
 Pack a folder into a version 6 GARC archive in verbose mode
 
-	python3 3DSkit.py -pdvf GARC -O{version=6} any-directory
+	python3 3DSkit.py -pdvf GARC -O version=6 any-directory
 
 Pack three files into an SARC file and compress it in LZ11
 
@@ -101,9 +101,9 @@ Pack a BFLIM texture for the WiiU (big endian):
 Pack two BCSTM respectively with one and two tracks, the second with a loop.
 
 	python3 3DSkit.py -pf BCSTM -o oneTrackTest.bcstm track1.wav
-	python3 3DSkit.py -pf BCSTM -o twoTracksExample.bcstm -O{loop=100000-2100000} track1.wav track2.wav
+	python3 3DSkit.py -pf BCSTM -o twoTracksExample.bcstm -O loop=100000-2100000 track1.wav track2.wav
 
-Compress a DARC file without any console output with a specific output name
+Compress a DARC file without any console output and with a specific output file name
 
 	python3 3DSkit.py -Cqc LZ11 -o archive_LZ.darc archive.darc
 
@@ -114,8 +114,8 @@ Decompress the previous DARC file
 Format-Specific options
 =======================
 
-Specify these options with the -O option (see options help)
-You can specify them with -O(option=value) or -O{option1=value1,option2=value2}
+Specify these options with the -O option
+You can specify them with `-O option1=value1 -O option2=value2 ...`
 
 **At extraction**:
 
@@ -151,10 +151,8 @@ Info on the table:
 Crosses:
 
 *	x : full support
-*	e : experimental / untested
+*	e : experimental
 *	p : partial support
-*	n : not functional
-*	b : bugged
 *	  : no support
 	
 Output: Output format at extracting. See the output formats help for informations
@@ -163,7 +161,7 @@ As expained previously, modules which use c3DSkit can be very slow in pure Pytho
 	Format | X | P | R | Extensions          | Output  | Uses c3DSkit
 	-----------------------------------------------------------------
 	ALYT   | x |   | x | .alyt               | files   | 
-	BCSAR  | b |   |   | .bcsar              | files   |
+	BCSAR  | e |   |   | .bcsar              | files   |
 	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
 	BFLAN  | p |   |   | .bflan              | TX      | 
 	BFLIM  | x | x |   | .bflim              | PNG     |
@@ -183,9 +181,9 @@ There is also:
 *	unpack.ExtHeader:
 	*	Unpacks NCCH extended headers (automatic when unpacking an NCCH partition). Needs a specific file name (exheader.bin, extheader.bin or DecryptedExtHeader.bin) to be recognized. Outputs as a TXTree
 *	unpack.ExeFS:
-	*	Unpack ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
+	*	Unpacks ExeFS images (automatic when unpacking an NCCH partition). The file must have the .exefs extension or be "exefs.bin" or "DecryptedExeFS.bin" to be recognized
 *	unpack.RomFS:
-	*	Unpack RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized
+	*	Unpacks RomFS images (automatic when unpacking an NCCH partition). The file must have the .romfs extension or be "romfs.bin" or "DecryptedRomFS.bin" to be recognized
 
 Compressions:
 
@@ -207,8 +205,8 @@ To access all 3DSkit functionnalities, you need:
 
 *	Python 3.5+
 *	struct (it should be installed by default with python3)
-*	Pillow (use sudo apt-get install python3-pil or pip3 install pillow)
 *	Numpy
+*	Pillow (use sudo apt-get install python3-pil or pip3 install pillow)
 
 Pillow is only needed for image formats (BFLIM). If you don't have it, other modules will work as well.
 

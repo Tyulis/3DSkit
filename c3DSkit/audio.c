@@ -6,7 +6,8 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define CLAMP(val, low, high) ((val < low) ? low : ((val > high) ? high : val))
  
-// The DSP-ADPCM coefficients calculation stuff is taken from github.com/jackoalan/gc-dspadpcm-encode
+// Most of the DSP-ADPCM encoding stuff is taken from github.com/jackoalan/gc-dspadpcm-encode
+// With some adaptations to 3DSkit and new formats
 
 typedef double tvec[3];
  
@@ -362,16 +363,16 @@ static void _generateDSPADPCMcoefs(int16_t* coefsOut, int16_t* source, int sampl
 		double d;
 		d = -vecBest[z][1] * 2048.0;
 		if (d > 0.0){
-			coefsOut[z*2] = (d > 32767.0) ? (int16_t)32767 : (int16_t)lround(d);
+			coefsOut[z * 2] = (d > 32767.0) ? (int16_t)32767 : (int16_t)lround(d);
 		} else {
-			coefsOut[z*2] = (d < -32768.0) ? (int16_t)-32768 : (int16_t)lround(d);
+			coefsOut[z * 2] = (d < -32768.0) ? (int16_t)-32768 : (int16_t)lround(d);
 		}
  
 		d = -vecBest[z][2] * 2048.0;
 		if (d > 0.0){
-			coefsOut[z*2+1] = (d > 32767.0) ? (int16_t)32767 : (int16_t)lround(d);
+			coefsOut[z * 2 + 1] = (d > 32767.0) ? (int16_t)32767 : (int16_t)lround(d);
 		} else {
-			coefsOut[z*2+1] = (d < -32768.0) ? (int16_t)-32768 : (int16_t)lround(d);
+			coefsOut[z * 2 + 1] = (d < -32768.0) ? (int16_t)-32768 : (int16_t)lround(d);
 		}
 	}
  
@@ -401,13 +402,13 @@ static int* _decodeDSPADPCMblock(uint8_t* adpcm, int16_t* pcmout, int16_t* coefs
 			if (low > 7){
 				low -= 16;
 			}
-			sample = ((high << shift) + coef1 * last1 + coef2 * last2) / 2048;
-			pcmout[blockstart + sampleidx] = sample;
+			sample = ((high << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11;
+			pcmout[blockstart + sampleidx] = CLAMP(sample, -32768, 32767);
 			last2 = last1;
 			last1 = sample;
 			sampleidx += 1;
-			sample = ((low << shift) + coef1 * last1 + coef2 * last2) / 2048;
-			pcmout[blockstart + sampleidx] = sample;
+			sample = ((low << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11;
+			pcmout[blockstart + sampleidx] = CLAMP(sample, -32768, 32767);
 			last2 = last1;
 			last1 = sample;
 			sampleidx += 1;
