@@ -365,3 +365,4 @@
 *	v1.26.64
 	*	Upgraded rawutil
 	*	Changed the specific options system
+	*	Fixed noise in DSP-ADPCM decoding with c3DSkit

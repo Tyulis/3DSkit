@@ -402,13 +402,13 @@ static int* _decodeDSPADPCMblock(uint8_t* adpcm, int16_t* pcmout, int16_t* coefs
 			if (low > 7){
 				low -= 16;
 			}
-			sample = ((high << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11;
-			pcmout[blockstart + sampleidx] = CLAMP(sample, -32768, 32767);
+			sample = CLAMP(((high << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11, -32768, 32767);
+			pcmout[blockstart + sampleidx] = sample;
 			last2 = last1;
 			last1 = sample;
 			sampleidx += 1;
-			sample = ((low << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11;
-			pcmout[blockstart + sampleidx] = CLAMP(sample, -32768, 32767);
+			sample = CLAMP(((low << shift) + coef1 * last1 + coef2 * last2 + 1024) >> 11, -32768, 32767);
+			pcmout[blockstart + sampleidx] = sample;
 			last2 = last1;
 			last1 = sample;
 			sampleidx += 1;
