@@ -275,6 +275,6 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		wav.setframerate(self.samplerate)
 		wav.setnchannels(len(channels))
 		wav.setsampwidth(2)
-		samples = np.array(tuple(zip(*channels)))
+		samples = np.array(tuple(zip(*channels)), dtype=np.uint8)
 		wav.writeframesraw(samples.tostring())
 		wav.close()

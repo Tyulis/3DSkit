@@ -1,10 +1,4 @@
 #include "audio.h"
-
-#define ABS(val) ((val < 0) ? -val : val)
-#define LOG2(val) (log(val) / log(2))
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define CLAMP(val, low, high) ((val < low) ? low : ((val > high) ? high : val))
  
 // Most of the DSP-ADPCM encoding stuff is taken from github.com/jackoalan/gc-dspadpcm-encode
 // With some adaptations to 3DSkit and new formats

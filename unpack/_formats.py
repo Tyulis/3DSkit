@@ -13,7 +13,7 @@ USE_FILE_OBJ = (
 	'GARC', 'mini', 'SARC', 'ALYT', 'BCSAR',
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
-	'CBMD', 'BCSTM',
+	'CBMD', 'BCSTM', 'BFFNT',
 )
 
 MAGICS = {
@@ -33,6 +33,7 @@ MAGICS = {
 	b'CSTM': 'BCSTM',
 	b'NARC': 'NARC',
 	b'NCCH': 'NCCH',
+	b'FFNT': 'BFFNT',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',
 	b'---b': 'ExeFS',
@@ -51,57 +52,6 @@ EXTS = {
 
 SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH')
 
-'''
-def recognize(filename, format=None):
-	print(filename)
-	if format is not None:
-		if format in MAGICS.values():
-			return format
-		else:
-			error.UnsupportedFormatError('Unsupported format to extract: %s. Read the formats section of the help for more infos.')
-	if hasattr(filename, 'read'):  #by get_ext
-		file = filename
-	else:
-		if filename.lower() in ('extheader.bin', 'exheader.bin', 'decryptedexheader.bin'):
-			return 'ExtHeader'
-		if filename.lower() in ('exefs.bin', 'decryptedexefs.bin'):
-			return 'ExeFS'
-		if filename.lower() in ('romfs.bin', 'decryptedromfs.bin'):
-			return 'RomFS'
-		try:
-			file = open(filename, 'rb')
-		except OSError:
-			error.FileNotFoundError('File %s not found' % filename)
-	file.seek(0, 2)
-	filelen = file.tell()
-	file.seek(0)
-	if filelen >= 4:
-		magic = file.read(4)
-		if magic in MAGICS.keys():
-			return MAGICS[magic]
-		if magic[0:2] in MAGICS.keys():
-			return MAGICS[magic[0:2]]
-	if filelen >= 0x28:
-		file.seek(-0x28, 2)
-		magic = file.read(4)
-		if magic in (b'FLIM', b'CLIM'):
-			return MAGICS[magic]
-	if filelen >= 0x100:
-		file.seek(0x100)
-		magic = file.read(4)
-		if magic == b'NCCH':
-			return 'NCCH'
-	if type(filename) == str:
-		try:
-			ext = os.path.split(filename)[-1].lower().split('.')[-1]
-		except IndexError:
-			return None
-		for e in EXTS:
-			if e in ext:
-				return EXTS[e]
-				sys.stdout.write('From extension: ')
-	return None
-'''
 
 def recognize_filename(filename, format=None):
 	filename = os.path.split(filename)[-1]

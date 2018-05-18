@@ -366,3 +366,8 @@
 	*	Upgraded rawutil
 	*	Changed the specific options system
 	*	Fixed noise in DSP-ADPCM decoding with c3DSkit
+
+** v1.27 **
+
+*	v1.27.64
+	*	Added unpack.BFFNT

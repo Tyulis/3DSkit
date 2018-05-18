@@ -236,8 +236,8 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			l = ((val >> shift) & 0x0f) * 0x11
 			px = (l, l, l, 255)
 		elif self.format == A4:
-			val = self.unpack_from('B', data, ptr // 2)[0]
-			shift = (ptr & 1) * 4
+			val = self.unpack_from('B', data, ptr)[0]
+			shift = subpx * 4
 			a = ((val >> shift) & 0x0f) * 0x11
 			px = (0, 0, 0, a)
 		else:
