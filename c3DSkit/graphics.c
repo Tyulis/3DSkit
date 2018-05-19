@@ -296,14 +296,14 @@ PyObject* getTextureFormatId(PyObject* self, PyObject* args){
 	TESTNAME(name, "A4", A4);
 	TESTNAME(name, "ETC1", ETC1);
 	TESTNAME(name, "ETC1A4", ETC1A4);
-	TESTNAME(name, "BC1", BC1);
-	TESTNAME(name, "BC2", BC2);
-	TESTNAME(name, "BC3", BC3);
+	//TESTNAME(name, "BC1", BC1);
+	//TESTNAME(name, "BC2", BC2);
+	//TESTNAME(name, "BC3", BC3);
 	TESTNAME(name, "BC4", BC4);
-	TESTNAME(name, "BC5", BC5);
-	TESTNAME(name, "RGBA8_SRGB", RGBA8_SRGB);
-	TESTNAME(name, "BC1_SRGB", BC1_SRGB);
-	TESTNAME(name, "BC2_SRGB", BC2_SRGB);
-	TESTNAME(name, "BC3_SRGB", BC3_SRGB);
+	//TESTNAME(name, "BC5", BC5);
+	//TESTNAME(name, "RGBA8_SRGB", RGBA8_SRGB);
+	//TESTNAME(name, "BC1_SRGB", BC1_SRGB);
+	//TESTNAME(name, "BC2_SRGB", BC2_SRGB);
+	//TESTNAME(name, "BC3_SRGB", BC3_SRGB);
 	return Py_BuildValue("I", 0xFF);
 }

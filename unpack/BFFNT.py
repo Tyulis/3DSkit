@@ -108,12 +108,13 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		out = np.ascontiguousarray(np.zeros(self.sheetwidth * self.sheetheight * 4, dtype=np.uint8))
 		indata = np.ascontiguousarray(np.fromstring(data.read(self.sheetsize), dtype=np.uint8))
 		format = c3DSkit.getTextureFormatId(self.format)
+		if format == 0xFF:
+			error.UnsupportedDataFormatError('%s texture format is not supported yet' % self.format)
 		c3DSkit.extractTiledTexture(indata, out, self.sheetwidth, self.sheetheight, format)
 		Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), out.tostring()).save(outname, 'PNG')
 	
 	def extract_sheet_py3DSkit(self, data, outname):
-		img = Image.new('RGBA', (self.sheetwidth, self.sheetheight))
-		return img
+		error.NotImplementedError('You need c3DSkit to extract BFFNT sheets')
 	
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)
