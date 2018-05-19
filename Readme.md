@@ -165,7 +165,7 @@ As expained previously, modules which use c3DSkit can be very slow in pure Pytho
 	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
 	BFFNT  | p |   |   | .bffnt              | PNG     | Yes
 	BFLAN  | p |   |   | .bflan              | TX      | 
-	BFLIM  | x | x |   | .bflim              | PNG     |
+	BFLIM  | x | x |   | .bflim              | PNG     | Yes
 	BFLYT  | x |   | x | .bflyt              | TX      |
 	CBMD   | e |   |   | .bnr banner[.bin]   | files   |
 	DARC   | x | e |   | .arc .bcma (...)    | files   |

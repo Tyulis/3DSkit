@@ -206,6 +206,56 @@ static void _extractETC1Texture(uint8_t* input, uint8_t* output, int width, int 
 	}
 }
 
+static void _extractBC4Texture(uint8_t* input, uint8_t* output, int width, int height, int format){
+	int tilew = 1 << (int)ceil(LOG2(width / 8));
+	int tileh = 1 << (int)ceil(LOG2(height / 8));
+	uint8_t indices[16];
+	uint8_t values[8];
+	int inpos = 0;
+	for (int ytile = 0; ytile < tileh; ytile++){
+		for (int xtile = 0; xtile < tilew; xtile++){
+			for (int yblock = 0; yblock < 2; yblock++){
+				for (int xblock = 0; xblock < 2; xblock++){
+					values[0] = input[inpos++];
+					values[1] = input[inpos++];
+					for (int i = 0; i < 16; i += 8){
+						indices[i] = input[inpos + 2] & 0x07;
+						indices[i + 1] = (input[inpos + 2] >> 3) & 0x07;
+						indices[i + 2] = ((input[inpos + 1] & 1) << 2) | (input[inpos + 2] >> 6);
+						indices[i + 3] = (input[inpos + 1] >> 1) & 0x07;
+						indices[i + 4] = (input[inpos + 1] >> 4) & 0x07;
+						indices[i + 5] = (input[inpos + 1] >> 7) | ((input[inpos] & 0x03) << 1);
+						indices[i + 6] = (input[inpos] >> 2) & 0x07;
+						indices[i + 7] = (input[inpos] >> 5) & 0x07;
+						inpos += 3;
+					}
+					if (values[0] > values[1]){
+						for (int i = 2; i < 8; i++){
+							values[i] = ((8 - i) * values[0] + (i - 1) * values[1]) / 7;
+						}
+					} else {
+						for (int i = 2; i < 6; i++){
+							values[i] = ((6 - i) * values[0] + (i - 1) * values[1]) / 7;
+						}
+						values[6] = 0;
+						values[7] = 0xFF;
+					}
+					for (int ypix = 0; ypix < 4; ypix++){
+						for (int xpix = 0; xpix < 4; xpix++){
+							int xpos = xtile * 8 + xblock * 4 + xpix;
+							int ypos = ytile * 8 + yblock * 4 + ypix;
+							int outpos = (ypos * width + xpos) * 4;
+							int index = ypix * 4 + xpix;
+							output[outpos] = output[outpos + 1] = output[outpos + 2] = values[indices[index]];
+							output[outpos + 3] = 0xFF;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 PyObject* extractTiledTexture(PyObject* self, PyObject* args){
 	PyArrayObject* input_obj;
 	PyArrayObject* output_obj;
@@ -219,6 +269,8 @@ PyObject* extractTiledTexture(PyObject* self, PyObject* args){
 	uint8_t* output = (uint8_t*)PyArray_DATA(output_obj);
 	if (format == ETC1 || format == ETC1A4){
 		_extractETC1Texture(input, output, width, height, format);
+	} else if (format == BC4){
+		_extractBC4Texture(input, output, width, height, format);
 	} else {
 		_extractTiledTexture(input, output, width, height, format);
 	}

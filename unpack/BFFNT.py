@@ -60,15 +60,16 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			error.InvalidMagicError('Invalid magic %s, expected %s' % (byterepr(magic), 'FFNT'))
 		self.byteorder = ENDIANS[bom]
 		headerlen, version, filesize, blockcount = self.unpack_from('H3I', data)
-		if version != 0x04000000:
-			error.UnsupportedVersionError('Only version 4 is supported')
+		if version not in (0x04000000, 0x03000000):
+			error.UnsupportedVersionError('Only versions 4.0.0 and 3.0.0 are supported, found %d.%d.%d' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF))
+		self.version = version >> 24
 	
 	def readFINF(self, data):
 		magic, size = self.unpack_from('4sI', data)
 		if magic != b'FINF':
 			error.InvalidMagicError('Invalid FINF magic (got %s)' % byterepr(magic))
 		self.fonttype, self.height, self.width, self.ascent, self.linefeed, self.alterindex = self.unpack_from('4B2H', data)
-		self.leftwidth, self.glyphwidth, self.charwidth, self.encoding = self.unpack_from('4B', data)
+		self.defaultleftwidth, self.defaultglyphwidth, self.defaultcharwidth, self.encoding = self.unpack_from('4B', data)
 		self.tglpoffset, self.cwdhoffset, self.cmapoffset = self.unpack_from('3I', data)
 	
 	def readTGLP(self, data, offset):
@@ -78,10 +79,20 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.cellwidth, self.cellheight, self.sheetcount, self.maxwidth = self.unpack_from('4B', data)
 		self.sheetsize, self.baselinepos, format = self.unpack_from('I2H', data)
 		self.colcount, self.rowcount, self.sheetwidth, self.sheetheight, dataoffset = self.unpack_from('4HI', data)
-		if self.byteorder == '<':
+		'''elif self.version == 3:
+			self.cellwidth, self.cellheight, self.baselinepos, self.maxwidth = self.unpack_from('4B', data)
+			self.sheetsize, self.sheetcount, format, self.colcount, self.rowcount = self.unpack_from('I4H', data)
+			self.sheetwidth, self.sheetheight, dataoffset = self.unpack_from('2HI', data)'''
+		if self.byteorder == '<': # or self.version == 3:
 			self.format = FORMAT_NAMES_CTR[format]
 		else:
 			self.format = FORMAT_NAMES_CAFE[format]
+		if self.verbose:
+			print('Texture format: %s' % self.format)
+			print('Sheet width: %d' % self.sheetwidth)
+			print('Sheet height: %d' % self.sheetheight)
+		data.seek(dataoffset)
+		bwrite(data.read(self.sheetsize), 'sheet1.rawtex')
 		data.seek(dataoffset)
 		for i in range(self.sheetcount):
 			if self.sheetcount > 1:

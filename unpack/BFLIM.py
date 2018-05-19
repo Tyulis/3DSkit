@@ -5,6 +5,7 @@ import util.rawutil as rawutil
 from util.utils import ClsFunc, byterepr
 from util.filesystem import *
 from PIL import Image
+import numpy as np
 
 BFLIM_FLIM_HDR_STRUCT = '4s2H2I2H'
 BFLIM_IMAG_HDR_STRUCT = '4sI3H2BI'
@@ -124,8 +125,23 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			self.width, self.height = self.height, self.width
 		print('Texture swizzling: %d' % self.swizzle)
 		#datalen = hdata[7]
-		
+	
 	def extract(self, data):
+		if c3DSkit is not None:
+			self.extract_c3DSkit(data)
+		else:
+			self.extract_py3DSkit(data)
+	
+	def extract_c3DSkit(self, data):
+		format = c3DSkit.getTextureFormatId(FORMATS_NAMES[self.format])
+		indata = np.ascontiguousarray(np.fromstring(data.read(), dtype=np.uint8))
+		out = np.zeros(self.width * self.height * 4, dtype=np.uint8)
+		c3DSkit.extractTiledTexture(indata, out, self.width, self.height, format)
+		img = Image.frombytes('RGBA', (self.width, self.height), out.tostring())
+		img = self.deswizzle(img)
+		img.save(self.outfile, 'PNG')
+		
+	def extract_py3DSkit(self, data):
 		if self.verbose:
 			print('Extracting pixel data')
 		img = Image.new('RGBA', (self.width, self.height))

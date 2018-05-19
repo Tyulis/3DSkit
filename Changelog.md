@@ -371,3 +371,8 @@
 
 *	v1.27.64
 	*	Added unpack.BFFNT
+*	v1.27.65
+	*	Added ETC1 support in c3DSkit
+	*	unpack.BFLIM now uses c3DSkit
+*	v1.27.66
+	*	Added BC4 support in c3DSkit

@@ -9,7 +9,7 @@
 #include <math.h>
 
 PyObject* extractTiledTexture(PyObject* self, PyObject* args);
-PyObject* getTexturePixelFormat(PyObject* self, PyObject* args);
+PyObject* getTextureFormatId(PyObject* self, PyObject* args);
 
 #include "graphics.c"
 
