@@ -33,8 +33,8 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 			self.compress_py3DSkit()
 	
 	def compress_c3DSkit(self):
-		data = np.fromstring(self.file.read(), dtype=np.uint8)
-		out = np.zeros(len(data) * 2, dtype=np.uint8)
+		data = np.ascontiguousarray(np.fromstring(self.file.read(), dtype=np.uint8))
+		out = np.ascontinuousarray(np.zeros(len(data) * 2, dtype=np.uint8))
 		outsize = c3DSkit.compressLZ11(data, out, self.datalen)
 		self.out.write(out[:outsize].tostring())
 		ptr = self.out.tell()
