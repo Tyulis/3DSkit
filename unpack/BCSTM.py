@@ -47,7 +47,7 @@ class DSPADPCMContext (object):
 
 class DSPADPCMInfo (object):
 	def __init__(self, data):
-		self.param = np.array(data[0], dtype=np.int16)
+		self.param = np.ascontiguousarray(np.array(data[0], dtype=np.int16))
 		self.context = DSPADPCMContext(data[1])
 		self.loopcontext = DSPADPCMContext(data[2])
 
@@ -153,7 +153,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		self.blockcount -= 1
 		data.seek(self.sampledataref.offset, 1)
 		self.samplecount = self.blockcount * self.blocksamplecount + self.lastblocksamplecount
-		self.channels = [np.zeros(self.samplecount, dtype=np.int16) for i in range(self.channelcount)]
+		self.channels = [np.ascontiguousarray(np.zeros(self.samplecount, dtype=np.int16)) for i in range(self.channelcount)]
 		#TODO: Other codecs
 		if self.codec == DSPADPCM:
 			self.decodeDSPADPCM(data)
@@ -250,7 +250,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 				blockstart = curblock * self.blocksamplecount
 			last2 = self.seek[blockidx * 2 + 1]
 			last1 = self.seek[blockidx * 2]
-			adpcm = np.fromstring(data.read(self.blocksize), dtype=np.uint8)
+			adpcm = np.ascontiguousarray(np.fromstring(data.read(self.blocksize), dtype=np.uint8))
 			pcmout = self.channels[curchannel]
 			param = self.channelinfos[curchannel].param
 			last1, last2 = c3DSkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.blocksamplecount, blockstart, last1, last2)
@@ -259,7 +259,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		for curchannel in range(self.channelcount):
 			last2 = self.seek[blockidx * 2 + 1]
 			last1 = self.seek[blockidx * 2]
-			adpcm = np.fromstring(data.read(self.lastblockpaddedsize), dtype=np.uint8)
+			adpcm = np.ascontiguousarray(np.fromstring(data.read(self.lastblockpaddedsize), dtype=np.uint8))
 			pcmout = self.channels[curchannel]
 			param = self.channelinfos[curchannel].param
 			last1, last2 = c3DSkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.lastblocksamplecount, blockstart, last1, last2)
@@ -275,6 +275,6 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 		wav.setframerate(self.samplerate)
 		wav.setnchannels(len(channels))
 		wav.setsampwidth(2)
-		samples = np.array(tuple(zip(*channels)), dtype=np.uint8)
+		samples = np.array(tuple(zip(*channels)), dtype=np.int16)
 		wav.writeframesraw(samples.tostring())
 		wav.close()

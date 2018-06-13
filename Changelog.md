@@ -378,3 +378,4 @@
 	*	Added BC4 support in c3DSkit
 *	v1.27.67
 	*	Forced contiguous byte arrays in c3DSkit LZ11 compression to fix segfaults
+	*	Fixed a stupid regression in unpack.BCSTM
