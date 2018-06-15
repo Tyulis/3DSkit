@@ -110,7 +110,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		format = c3DSkit.getTextureFormatId(self.format)
 		if format == 0xFF:
 			error.UnsupportedDataFormatError('%s texture format is not supported yet' % self.format)
-		c3DSkit.extractTiledTexture(indata, out, self.sheetwidth, self.sheetheight, format)
+		c3DSkit.extractTiledTexture(indata, out, self.sheetwidth, self.sheetheight, format, self.byteorder == '<')
 		Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), out.tostring()).save(outname, 'PNG')
 	
 	def extract_sheet_py3DSkit(self, data, outname):

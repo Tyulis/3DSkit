@@ -7,6 +7,11 @@ from util.filesystem import *
 from PIL import Image
 import numpy as np
 
+try:
+	import c3DSkit
+except:
+	c3DSkit = None
+
 BFLIM_FLIM_HDR_STRUCT = '4s2H2I2H'
 BFLIM_IMAG_HDR_STRUCT = '4sI3H2BI'
 
@@ -133,10 +138,10 @@ class extractBFLIM(ClsFunc, rawutil.TypeReader):
 			self.extract_py3DSkit(data)
 	
 	def extract_c3DSkit(self, data):
-		format = c3DSkit.getTextureFormatId(FORMATS_NAMES[self.format])
+		format = c3DSkit.getTextureFormatId(FORMAT_NAMES[self.format])
 		indata = np.ascontiguousarray(np.fromstring(data.read(), dtype=np.uint8))
-		out = np.zeros(self.width * self.height * 4, dtype=np.uint8)
-		c3DSkit.extractTiledTexture(indata, out, self.width, self.height, format)
+		out = np.ascontiguousarray(np.zeros(self.width * self.height * 4, dtype=np.uint8))
+		c3DSkit.extractTiledTexture(indata, out, self.width, self.height, format, self.byteorder == '<')
 		img = Image.frombytes('RGBA', (self.width, self.height), out.tostring())
 		img = self.deswizzle(img)
 		img.save(self.outfile, 'PNG')

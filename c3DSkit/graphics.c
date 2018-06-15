@@ -29,7 +29,7 @@ static int getPixelSize(int format){
 	return -1;
 }
 
-static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int height, int format){
+static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int height, int format, bool littleendian){
 	int tilesx = (int)ceil((double)width / 8);
 	int tilesy = (int)ceil((double)height / 8);
 	int pxsize = getPixelSize(format);
@@ -58,45 +58,88 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 										}
 									} else {
 										int inpos = (ytile * tilesx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize;
-										if (format == RGBA8){
-											r = input[inpos];
-											g = input[inpos + 1];
-											b = input[inpos + 2];
-											a = input[inpos + 3];
-										} else if (format == RGB8){
-											r = input[inpos];
-											g = input[inpos + 1];
-											b = input[inpos + 2];
-											a = 0xFF;
-										} else if (format == RGBA5551){
-											r = (input[inpos] >> 3) * 8.225806451612904;
-											g = (((input[inpos] & 0x07) << 2) | (input[inpos + 1] >> 6)) * 8.225806451612904;
-											b = ((input[inpos + 1] >> 1) & 0x1F) * 8.225806451612904;
-											a = (input[inpos + 1] & 1) * 0xFF;
-										} else if (format == RGB565){
-											r = (input[inpos] >> 3) * 8.225806451612904;
-											g = (((input[inpos] & 0x07) << 3) | (input[inpos + 1] >> 5)) * 4.0476190476190474;
-											b = (input[inpos + 1] & 0x1F) * 8.225806451612904;
-											a = 0xFF;
-										} else if (format == RGBA4){
-											r = (input[inpos] >> 4) * 0x11;
-											g = (input[inpos] & 0x0F) * 0x11;
-											b = (input[inpos + 1] >> 4) * 0x11;
-											a = (input[inpos + 1] & 0x0F) * 0x11;
-										} else if (format == LA8){
-											r = g = b = input[inpos];
-											a = input[inpos + 1];
-										} else if (format == HILO8){
-											// ?
-										} else if (format == L8){
-											r = g = b = input[inpos];
-											a = 0xFF;
-										} else if (format == A8){
-											r = g = b = 0xFF;
-											a = input[inpos];
-										} else if (format == LA4){
-											r = g = b = (input[inpos] >> 4) * 0x11;
-											a = (input[inpos] & 0x0F) * 0x11;
+										if (littleendian){
+											if (format == RGBA8){
+												r = input[inpos + 3];
+												g = input[inpos + 2];
+												b = input[inpos + 1];
+												a = input[inpos];
+											} else if (format == RGB8){
+												r = input[inpos + 2];
+												g = input[inpos + 1];
+												b = input[inpos];
+												a = 0xFF;
+											} else if (format == RGBA5551){
+												r = (input[inpos + 1] >> 3) * 8.225806451612;
+												g = (((input[inpos + 1] & 0x07) << 2) | (input[inpos] >> 6)) * 8.225806451612;
+												b = ((input[inpos] >> 1) & 0x1F) * 8.225806451612;
+												a = (input[inpos] & 1) * 0xFF;
+											} else if (format == RGB565){
+												r = (input[inpos + 1] >> 3) * 8.225806451612;
+												g = (((input[inpos + 1] & 0x07) << 3) | (input[inpos] >> 5)) * 4.0476190476190;
+												b = (input[inpos] & 0x1F) * 8.225806451612;
+												a = 0xFF;
+											} else if (format == RGBA4){
+												r = (input[inpos + 1] >> 4) * 0x11;
+												g = (input[inpos + 1] & 0x0F) * 0x11;
+												b = (input[inpos] >> 4) * 0x11;
+												a = (input[inpos] & 0x0F) * 0x11;
+											} else if (format == LA8){
+												r = g = b = input[inpos + 1];
+												a = input[inpos];
+											} else if (format == HILO8){
+												// ?
+											} else if (format == L8){
+												r = g = b = input[inpos];
+												a = 0xFF;
+											} else if (format == A8){
+												r = g = b = 0xFF;
+												a = input[inpos];
+											} else if (format == LA4){
+												r = g = b = (input[inpos] >> 4) * 0x11;
+												a = (input[inpos] & 0x0F) * 0x11;
+											}
+										} else {
+											if (format == RGBA8){
+												r = input[inpos];
+												g = input[inpos + 1];
+												b = input[inpos + 2];
+												a = input[inpos + 3];
+											} else if (format == RGB8){
+												r = input[inpos];
+												g = input[inpos + 1];
+												b = input[inpos + 2];
+												a = 0xFF;
+											} else if (format == RGBA5551){
+												r = (input[inpos] >> 3) * 8.225806451612;
+												g = (((input[inpos] & 0x07) << 2) | (input[inpos + 1] >> 6)) * 8.225806451612;
+												b = ((input[inpos + 1] >> 1) & 0x1F) * 8.225806451612;
+												a = (input[inpos + 1] & 1) * 0xFF;
+											} else if (format == RGB565){
+												r = (input[inpos] >> 3) * 8.225806451612;
+												g = (((input[inpos] & 0x07) << 3) | (input[inpos + 1] >> 5)) * 4.0476190476190;
+												b = (input[inpos + 1] & 0x1F) * 8.225806451612;
+												a = 0xFF;
+											} else if (format == RGBA4){
+												r = (input[inpos] >> 4) * 0x11;
+												g = (input[inpos] & 0x0F) * 0x11;
+												b = (input[inpos + 1] >> 4) * 0x11;
+												a = (input[inpos + 1] & 0x0F) * 0x11;
+											} else if (format == LA8){
+												r = g = b = input[inpos];
+												a = input[inpos + 1];
+											} else if (format == HILO8){
+												// ?
+											} else if (format == L8){
+												r = g = b = input[inpos];
+												a = 0xFF;
+											} else if (format == A8){
+												r = g = b = 0xFF;
+												a = input[inpos];
+											} else if (format == LA4){
+												r = g = b = (input[inpos] >> 4) * 0x11;
+												a = (input[inpos] & 0x0F) * 0x11;
+											}
 										}
 									}
 									output[outpos] = r;
@@ -262,7 +305,8 @@ PyObject* extractTiledTexture(PyObject* self, PyObject* args){
 	int width;
 	int height;
 	int format;
-	if (!PyArg_ParseTuple(args, "O!O!iii", &PyArray_Type, &input_obj, &PyArray_Type, &output_obj, &width, &height, &format)){
+	int littleendian;
+	if (!PyArg_ParseTuple(args, "O!O!iiii", &PyArray_Type, &input_obj, &PyArray_Type, &output_obj, &width, &height, &format, &littleendian)){
 		return NULL;
 	}
 	uint8_t* input = (uint8_t*)PyArray_DATA(input_obj);
@@ -272,7 +316,7 @@ PyObject* extractTiledTexture(PyObject* self, PyObject* args){
 	} else if (format == BC4){
 		_extractBC4Texture(input, output, width, height, format);
 	} else {
-		_extractTiledTexture(input, output, width, height, format);
+		_extractTiledTexture(input, output, width, height, format, (bool)littleendian);
 	}
 	return Py_BuildValue("i", 0);
 }
