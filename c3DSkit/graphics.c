@@ -32,6 +32,10 @@ static int getPixelSize(int format){
 static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int height, int format, bool littleendian){
 	int tilesx = (int)ceil((double)width / 8);
 	int tilesy = (int)ceil((double)height / 8);
+	int datawidth = 1 << (int)ceil(LOG2((double)width));
+	int dataheight = 1 << (int)ceil(LOG2((double)height));
+	int totalx = (int)ceil((double)datawidth / 8.0);
+	int totaly = (int)ceil((double)dataheight / 8.0);
 	int pxsize = getPixelSize(format);
 	for (int ytile = 0; ytile < tilesy; ytile++){
 		for (int xtile = 0; xtile < tilesx; xtile++){
@@ -43,11 +47,14 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 								for (int xpix = 0; xpix < 2; xpix++){
 									int ypos = ytile * 8 + ysub * 4 + yblock * 2 + ypix;
 									int xpos = xtile * 8 + xsub * 4 + xblock * 2 + xpix;
+									if (xpos >= width || ypos >= height){
+										continue;
+									}
 									int outpos = (ypos * width + xpos) * 4;
 									uint8_t r = 0, g = 0, b = 0, a = 0;
 									if (format == L4 || format == A4){
 										int shift = xpix * 4;
-										int inpos = ytile * tilesx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix;
+										int inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix;
 										uint8_t byte = input[inpos];
 										if (format == L4){
 											r = g = b = ((byte >> shift) & 0x0F) * 0x11;
@@ -57,7 +64,7 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 											a = ((byte >> shift) & 0x0F) * 0x11;
 										}
 									} else {
-										int inpos = (ytile * tilesx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize;
+										int inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize;
 										if (littleendian){
 											if (format == RGBA8){
 												r = input[inpos + 3];

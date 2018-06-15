@@ -34,7 +34,7 @@ class compressLZ11 (ClsFunc, rawutil.TypeWriter):
 	
 	def compress_c3DSkit(self):
 		data = np.ascontiguousarray(np.fromstring(self.file.read(), dtype=np.uint8))
-		out = np.ascontinuousarray(np.zeros(len(data) * 2, dtype=np.uint8))
+		out = np.ascontiguousarray(np.zeros(len(data) * 2, dtype=np.uint8))
 		outsize = c3DSkit.compressLZ11(data, out, self.datalen)
 		self.out.write(out[:outsize].tostring())
 		ptr = self.out.tell()
