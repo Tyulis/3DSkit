@@ -36,6 +36,10 @@ class extractGARC (rawutil.TypeReader):
 	def __init__(self, filename, data, verbose, opts={}):
 		self.outdir = make_outdir(filename)
 		self.verbose = verbose
+		if 'skipdec' in opts:
+			self.skipdec = opts['skipdec'].lower() == 'true'
+		else:
+			self.skipdec = False
 		ptr = self.readheader(data)
 		ptr = self.readFATO(data, ptr)
 		ptr = self.readFATB(data, ptr)
@@ -123,40 +127,54 @@ class extractGARC (rawutil.TypeReader):
 					start = subentry.start + self.dataoffset
 					data.seek(start)
 					filedata = BytesIO(data.read(subentry.length))
-					comp = compress.recognize(filedata)
-					filedata.seek(0)
-					ext = get_ext(filedata)
-					outname = outpath + str(j) + ext
-					if comp == 'LZ11':
-						outname = outpath + 'dec_' + str(j) + ext
-						out = open(outname, 'wb+')
-						result = compress.decompress(filedata, out, comp, self.verbose)
-						if result == 901:  #Ugly
+					if not self.skipdec:
+						comp = compress.recognize(filedata)
+						filedata.seek(0)
+						ext = get_ext(filedata)
+						outname = outpath + str(j) + ext
+						if comp == 'LZ11':
+							outname = outpath + 'dec_' + str(j) + ext
+							out = open(outname, 'wb+')
+							result = compress.decompress(filedata, out, comp, self.verbose)
+							if result == 901:  #Ugly
+								outname = outpath + str(j) + ext
+								print('For %s' % outname)
+								filedata.seek(0)
+								bwrite(filedata.read(), outname)
+						else:
+							ext = get_ext(filedata)
 							outname = outpath + str(j) + ext
-							print('For %s' % outname)
-							filedata.seek(0)
 							bwrite(filedata.read(), outname)
 					else:
+						ext = get_ext(filedata)
+						outname = outpath + str(j) + ext
 						bwrite(filedata.read(), outname)
 			else:
 				subentry = entry.subentries[0]
 				start = subentry.start + self.dataoffset
 				data.seek(start)
 				filedata = BytesIO(data.read(subentry.length))
-				comp = compress.recognize(filedata)
-				filedata.seek(0)
-				ext = get_ext(filedata)
-				outname = self.outdir + str(i) + ext
-				if comp == 'LZ11':
-					outname = self.outdir + 'dec_%d%s' % (i, ext)
-					out = open(outname, 'wb+')
-					result = compress.decompress(filedata, out, comp, self.verbose)
-					out.close()
-					if result == 901:  #Ugly
-						os.remove(outname)
+				if not self.skipdec:
+					comp = compress.recognize(filedata)
+					filedata.seek(0)
+					ext = get_ext(filedata)
+					outname = self.outdir + str(i) + ext
+					if comp == 'LZ11':
+						outname = self.outdir + 'dec_%d%s' % (i, ext)
+						out = open(outname, 'wb+')
+						result = compress.decompress(filedata, out, comp, self.verbose)
+						out.close()
+						if result == 901:  #Ugly
+							os.remove(outname)
+							outname = self.outdir + str(i) + ext
+							print('For %s' % outname)
+							filedata.seek(0)
+							bwrite(filedata.read(), outname)
+					else:
+						ext = get_ext(filedata)
 						outname = self.outdir + str(i) + ext
-						print('For %s' % outname)
-						filedata.seek(0)
 						bwrite(filedata.read(), outname)
 				else:
+					ext = get_ext(filedata)
+					outname = self.outdir + str(i) + ext
 					bwrite(filedata.read(), outname)

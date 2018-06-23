@@ -12,7 +12,7 @@ def run_plugin(name, options, verbose):
 	try:
 		mod = __import__('plugins.%s.main' % name)
 	except ImportError:
-		error('Plugin %s not found' % name, error.pluginnotfound)
+		error.PluginNotFoundError('Plugin %s is not found' % name)
 	exec('mod.%s.main.main(options, verbose)' % name)
 
 def getpath():

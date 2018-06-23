@@ -21,9 +21,9 @@ def decompress(file, out, format, verbose, errorcb=lambda e: error.InternalCorre
 	out.seek(0)
 	mod = __import__('compress.%s' % format)
 	func = eval('mod.%s.decompress%s' % (format, format))
-	if 1:
+	try:
 		func(file, out, verbose)
-	else:  #except Exception as e:  #Bad detection
+	except Exception as e:  #Bad detection
 		return errorcb(e)
 
 

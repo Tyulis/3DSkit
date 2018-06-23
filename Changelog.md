@@ -381,3 +381,7 @@
 	*	Fixed a stupid regression in unpack.BCSTM
 *	v1.27.68
 	*	Fixed c3DSkit/graphics.c for little endian textures
+	*	Improved format detection in unpack.GARC and added the skipdec option to it
+	*	Improved the error system, it now displays the error tyoe
+	*	Fixed handling of compression detection error
+	*	Fixed the handling of plugin not found errors

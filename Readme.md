@@ -122,6 +122,8 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 *	NCCH/ExeFS:
 	*	**dochecks**: If "false", don't checks if the contents hashes match. Defaults to true.
 	*	**dumpfs**: If "true", dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them. Defaults to false
+*	GARC:
+	*	**skipdec**: If "true", force the module to not decompress the contained files. This may be useful if it detects a compression while there is not, but only in that case. Defauts to "false"
 
 **At packing**:
 
@@ -209,7 +211,7 @@ To access all 3DSkit functionnalities, you need:
 *	Numpy
 *	Pillow (use sudo apt-get install python3-pil or pip3 install pillow)
 
-Pillow is only needed for image formats (BFLIM). If you don't have it, other modules will work as well.
+Pillow is only needed for image formats (BFLIM), if you don't have c3DSkit. If you don't have it, other modules will work as well.
 
 Contributing
 ============
