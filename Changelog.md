@@ -346,7 +346,7 @@
 	*	Upgraded rawutil
 	*	Rewritten unpack.BCSTM with enhanced algorithm and file objects
 
-** v1.25 **
+**v1.25**
 
 *	v1.25.61
 	*	Added a C module called c3DSkit to speedup 3DSkit
@@ -357,7 +357,7 @@
 *	v1.25.63
 	*	LZ11 decompression can now be performed through c3DSkit (~x10 speed)
 
-** v1.26 **
+**v1.26**
 
 *	v1.26.63
 	*	Added BCSTM encoding (pack.BCSTM), only with c3DSkit (else ~2h)
@@ -367,7 +367,7 @@
 	*	Changed the specific options system
 	*	Fixed noise in DSP-ADPCM decoding with c3DSkit
 
-** v1.27 **
+**v1.27**
 
 *	v1.27.64
 	*	Added unpack.BFFNT
