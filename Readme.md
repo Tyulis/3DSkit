@@ -73,6 +73,10 @@ Examples
 Extract a DARC archive:
 
 	python3 3DSkit.py -x archive.darc
+	
+Recursively extract all the contents of a directory:
+
+	python3 3DSkit.py -x my-directory/
 
 Extract a 3DS ROM (NCCH) without doing hash checks
 
@@ -129,7 +133,6 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 
 *	BFLIM:
 	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format from original without any problem, for example for ETC1, not supported for packing. Defaults to RGBA8
-		
 	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
 *	GARC:
 	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
@@ -158,7 +161,7 @@ Crosses:
 *	  : no support
 	
 Output: Output format at extracting. See the output formats help for informations
-As expained previously, modules which use c3DSkit can be very slow in pure Python and much faster if you have c3DSkit installed
+As explained previously, modules which use c3DSkit can be very slow in pure Python and much faster if you have c3DSkit installed
 
 	Format | X | P | R | Extensions          | Output  | Uses c3DSkit
 	-----------------------------------------------------------------

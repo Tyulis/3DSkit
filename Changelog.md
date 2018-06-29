@@ -385,3 +385,10 @@
 	*	Improved the error system, it now displays the error tyoe
 	*	Fixed handling of compression detection error
 	*	Fixed the handling of plugin not found errors
+
+**v1.28**
+
+*	v1.28.68
+	*	Added BC4 textures extraction
+	*	Added support for 4.1.0 (NX) BFFNT
+	*	Added support for wrapped BNTX in BFFNT
