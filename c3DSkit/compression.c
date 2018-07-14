@@ -1,7 +1,7 @@
 #include "compression.h"
 #include <stdio.h>
 
-// Near full transcription of the python algorithm, with pointers. Many pointers
+// Almost full transcription of the python algorithm, with pointers. Many pointers
 static int _compressLZ11(uint8_t* input, uint8_t* output, int insize){
 	uint8_t* outptr = output + 1;
 	uint8_t* header = output;

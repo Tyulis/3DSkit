@@ -3,15 +3,10 @@ import os
 import json
 import numpy as np
 from PIL import Image
-from util import error, ENDIANS
+from util import error, ENDIANS, libkit
 from util.utils import byterepr, ClsFunc
 from util.filesystem import *
 import util.rawutil as rawutil
-
-try:
-	import c3DSkit
-except:
-	c3DSkit = None
 
 CMAP_DIRECT = 0x00
 CMAP_TABLE = 0x01
@@ -74,6 +69,10 @@ BNTI_FORMAT_NAMES = {
 class extractBFFNT (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
 		self.verbose = verbose
+		if 'origin' in opts:
+			self.version = opts['origin'].upper().strip()
+		else:
+			self.version = None
 		self.filebase = os.path.splitext(filename)[0]
 		self.read_header(data)
 		self.readFINF(data)
@@ -93,7 +92,8 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		headerlen, version, filesize, blockcount = self.unpack_from('H3I', data)
 		if version not in (0x04010000, 0x04000000, 0x03000000):
 			error.UnsupportedVersionError('Only versions 4.0.0, 4.1.0 and 3.0.0 are supported, found %d.%d.%d' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF))
-		self.version = VERSIONS[version]
+		if self.version is None:
+			self.version = VERSIONS[version]
 		if self.verbose:
 			print('Version %d.%d.%d (%s)' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF, self.version))
 	
@@ -137,22 +137,16 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				outname = self.filebase + '_sheet%d.png' % i
 			else:
 				outname = self.filebase + '.png'
-			if c3DSkit is not None:
-				self.extract_sheet_c3DSkit(data, outname, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
-			else:
-				self.extract_sheet_py3DSkit(data, outname, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
+			self.extract_sheet(data, outname, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
 	
-	def extract_sheet_c3DSkit(self, data, outname, width, height, size, format, swizzlesize):
+	def extract_sheet(self, data, outname, width, height, size, format, swizzlesize):
 		out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
 		indata = np.ascontiguousarray(np.fromstring(data.read(size), dtype=np.uint8))
-		format = c3DSkit.getTextureFormatId(format)
+		format = libkit.getTextureFormatId(format)
 		if format == 0xFF:
 			error.UnsupportedDataFormatError('%s texture format is not supported yet' % format)
-		c3DSkit.extractTiledTexture(indata, out, width, height, format, swizzlesize, self.byteorder == '<')
+		libkit.extractTiledTexture(indata, out, width, height, format, swizzlesize, self.byteorder == '<')
 		Image.frombytes('RGBA', (width, height), out.tostring()).save(outname, 'PNG')
-	
-	def extract_sheet_py3DSkit(self, data, outname, width, height, size, format, swizzlesize):
-		error.NotImplementedError('You need c3DSkit to extract BFFNT sheets')
 	
 	def extract_underlying_BNTX(self, data):
 		if self.verbose:
@@ -183,12 +177,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				print('BNTI info for sheet %d:' % texindex)
 				print(' - Format: %s' % BNTI_FORMAT_NAMES[format])
 				print(' - Width: %d\n - Height: %d' % (width, height))
+				print(' - Swizzle size: %d' % swizzlesize)
 			dataoffset = self.unpack_from('Q', data, bntxpos + pointersoffset)[0]
 			data.seek(bntxpos + dataoffset)
-			if c3DSkit is not None:
-				self.extract_sheet_c3DSkit(data, outname, width, height, sheetsize, BNTI_FORMAT_NAMES[format], swizzlesize)
-			else:
-				self.extract_sheet_py3DSkit(data, outname, width, height, sheetsize, BNTI_FORMAT_NAMES[format], swizzlesize)
+			self.extract_sheet(data, outname, width, height, sheetsize, BNTI_FORMAT_NAMES[format], swizzlesize)
 	
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)

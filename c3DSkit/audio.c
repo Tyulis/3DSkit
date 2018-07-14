@@ -9,7 +9,7 @@ static inline void innerProductMerge(tvec vecOut, int16_t pcmBuf[14]){
 	for (int i=0 ; i<=2 ; i++){
 		vecOut[i] = 0.0f;
 		for (int x=0 ; x<14 ; x++){
-			vecOut[i] -= pcmBuf[x-i] * pcmBuf[x];
+			vecOut[i] -= pcmBuf[x - i] * pcmBuf[x];
 		}
 	}
 }
@@ -19,7 +19,7 @@ static inline void outerProductMerge(tvec mtxOut[3], int16_t pcmBuf[14]){
 		for (int y=1 ; y<=2 ; y++){
 			mtxOut[x][y] = 0.0;
 			for (int z=0 ; z<14 ; z++){
-				mtxOut[x][y] += pcmBuf[z-x] * pcmBuf[z-y];
+				mtxOut[x][y] += pcmBuf[z - x] * pcmBuf[z - y];
 			}
 		}
 	}
@@ -235,7 +235,7 @@ static void filterRecords(tvec vecBest[8], int exp, tvec records[], int recordCo
 		}
 		for (int z=0 ; z<recordCount ; z++){
 			index = 0;
-			value= 1.0e30;
+			value = 1.0e30;
 			for (int i=0 ; i<exp ; i++){
 				tempVal = contrastVectors(vecBest[i], records[z]);
 				if (tempVal < value){

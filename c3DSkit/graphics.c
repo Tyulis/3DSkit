@@ -37,6 +37,7 @@ static int _getShift(int value){
 }
 
 static void _makeSwizzle(Swizzle* swizzle, int width, int bpp, int blockheight){
+	if (blockheight <= 0)blockheight = 16;
 	swizzle->bhmask = blockheight * 8 - 1;
 	swizzle->bhshift = _getShift(blockheight * 8);
 	swizzle->bppshift = _getShift(bpp);
@@ -227,6 +228,8 @@ static void _extractETC1Texture(uint8_t* input, uint8_t* output, int width, int 
 	int tileh = 1 << (int)ceil(LOG2(height / 8));
 	int inpos = 0;
 	uint64_t alphas = 0xFFFFffffFFFFffff;
+	uint8_t color1[3], color2[3];
+	uint8_t r, g, b;
 	for (int ytile = 0; ytile < tileh; ytile++){
 		for (int xtile = 0; xtile < tilew; xtile++){
 			for (int yblock = 0; yblock < 2; yblock++){
@@ -234,19 +237,17 @@ static void _extractETC1Texture(uint8_t* input, uint8_t* output, int width, int 
 					if (hasalpha){
 						alphas = 0;
 						for (int i = 0; i < 8; i++){
-							alphas |= input[inpos++] << i;
+							alphas |= (uint64_t)input[inpos++] << (8 * i);
 						}
 					}
 					uint64_t pixels = 0;
 					for (int i = 0; i < 8; i++){
-						pixels |= input[inpos++] << i;
+						pixels |= (uint64_t)input[inpos++] << (8 * i);
 					}
 					bool diff = (pixels >> 33) & 1;
 					bool horizontal = (pixels >> 32) & 1;
 					uint8_t* table1 = ETC1_MODIFIERS[(pixels >> 37) & 7];
 					uint8_t* table2 = ETC1_MODIFIERS[(pixels >> 34) & 7];
-					uint8_t color1[3], color2[3];
-					uint8_t r, g, b;
 					if (diff){
 						r = (pixels >> 59) & 0x1F;
 						g = (pixels >> 51) & 0x1F;
@@ -279,7 +280,7 @@ static void _extractETC1Texture(uint8_t* input, uint8_t* output, int width, int 
 							} else if (y >= height){
 								continue;
 							}
-							int offset = xpix + 4 * ypix;
+							int offset = xpix * 4 + ypix;
 							uint8_t* table;
 							uint8_t* color;
 							if (horizontal){
@@ -411,5 +412,5 @@ PyObject* getTextureFormatId(PyObject* self, PyObject* args){
 	//TESTNAME(name, "BC5_SNORM", BC5_SNORM);
 	//TESTNAME(name, "BC6H_SF16", BC6H_SF16);
 	//TESTNAME(name, "BC7_SRGB", BC7_SRGB);
-	return Py_BuildValue("I", 0xFF);
+	return Py_BuildValue("I", -1);
 }

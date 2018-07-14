@@ -9,10 +9,10 @@ import unpack
 import compress
 import plugins
 from io import BytesIO, StringIO
-from util.help import main_help
 from util import error
+import util
 
-__version__ = '1.28.68'
+__version__ = '1.29.68'
 
 
 def parse_opts(s):
@@ -148,14 +148,21 @@ def compress_file(inname, outname, compression, verbose):
 
 def main(args, opts):
 	global basedir
+	if args.ckit:
+		error.SettingWarning('Forcing usage of c3DSkit. Remember that if it is not used by default, there is probably a reason.')
+		import c3DSkit
+		util.libkit = c3DSkit
+	elif args.pykit:
+		error.SettingWarning('Forcing usage of py3DSkit. Remember that if it is not used by default, there is probably a reason.')
+		import py3DSkit
+		util.libkit = py3DSkit
 	if args.quiet:
 		initial_stdout = sys.stdout
 		sys.stdout = StringIO()
 	if args.debug:
+		error.SettingWarning('Entering debugging mode. This will turn every error into Python exception. It is only useful with a debugger, you should not use it as an end user.')
 		args.verbose = True
 		error.debug = True
-	if args.detailed_help:
-		main_help()
 	elif args.extract:
 		for filename in args.files:
 			extract_files(filename, args.big, args.format, args.verbose, opts)
@@ -213,7 +220,6 @@ def main(args, opts):
 if __name__ == '__main__':
 	try:
 		parser = argparse.ArgumentParser()
-		parser.add_argument('-H', '--detailed_help', help='Detailed help (you should read it the first time you use 3DSkit)', action='store_true')
 		parser.add_argument('-v', '--verbose', help='Increases the verbosity of 3DSkit', action='store_true')
 		parser.add_argument('-V', '--debug', help='Verbose mode, turns every 3DSkit error into Python exception (only useful for debugging)', action='store_true')
 		parser.add_argument('-q', '--quiet', help='Run without any terminal output', action='store_true')
@@ -230,6 +236,9 @@ if __name__ == '__main__':
 		group.add_argument('-b', '--big', help='Big endian (for WiiU files)', action='store_true')
 		parser.add_argument('-o', '--out', help='Output file name (only for repacking). If not given, the output file name will be automatically determined')
 		parser.add_argument('-c', '--compression', help='Output compression type')
+		group = parser.add_mutually_exclusive_group()
+		group.add_argument('--ckit', help='Force use of c3DSkit as libkit', action='store_true')
+		group.add_argument('--pykit', help='Force use of py3DSkit as libkit', action='store_true')
 		parser.add_argument('-O', '--options', help='Format-specific options, see help for details', action='append')
 		parser.add_argument('files', help='Name of the file to convert or to pack into an archive', nargs='*')
 		args = parser.parse_args()

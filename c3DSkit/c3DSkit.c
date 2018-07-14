@@ -19,7 +19,12 @@
 #include "compression.h"
 #include "graphics.h"
 
+static PyObject* _confirm(PyObject* self, PyObject* args){
+	return Py_BuildValue("i", 1);
+}
+
 static PyMethodDef functions[] = {
+	{"_confirm", _confirm, METH_VARARGS, "Confirms the existence of c3DSkit"},
 	{"decodeDSPADPCMblock", decodeDSPADPCMblock, METH_VARARGS, "Decodes a DSPADPCM sample block into 16-bits PCM data"},
 	{"encodeDSPADPCMchannel", encodeDSPADPCMchannel, METH_VARARGS, "Encode a 16-bits PCM channel into DSP ADPCM"},
 	{"generateDSPADPCMcoefs", generateDSPADPCMcoefs, METH_VARARGS, "Generate coefficients for DSPADPCM encoding"},

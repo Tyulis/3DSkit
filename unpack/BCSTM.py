@@ -3,15 +3,10 @@ import os
 import wave
 import numpy as np
 from io import BytesIO
-from util import error, ENDIANS
+from util import error, ENDIANS, libkit
 from util.utils import byterepr, ClsFunc
 from util.filesystem import *
 import util.rawutil as rawutil
-
-try:
-	import c3DSkit
-except:
-	c3DSkit = None
 
 rawutil.register_sub("R", "(2HI)")
 rawutil.register_sub("S", "(2H2I)")
@@ -164,96 +159,21 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 			self.extract_track(self.channels)
 	
 	def decodeDSPADPCM(self, data):
-		if c3DSkit is None:
-			self.decodeDSPADPCM_py3DSkit(data)
-		else:
-			self.decodeDSPADPCM_c3DSkit(data)
-	
-	def decodeDSPADPCM_py3DSkit(self, data):
 		curchannel = -1
 		curblock = -1
 		for blockidx in range(self.blockcount * self.channelcount):
 			curchannel = (curchannel + 1) % self.channelcount
 			if curchannel == 0:
 				curblock += 1
-				blockstart = curblock * self.blocksamplecount
 				if self.verbose:
-					print('Reading block %d' % curblock)
-			sampleidx = 0
-			last2 = self.seek[blockidx * 2 + 1]
-			last1 = self.seek[blockidx * 2]
-			buf = data.read(self.blocksize)
-			# A bit of caching
-			channel = self.channels[curchannel]
-			param = self.channelinfos[curchannel].param
-			infos = buf[::8]
-			sampledatablocks = tuple(buf[i + 1: i + 8] for i in range(0, self.blocksize, 8))
-			for info, sampledata in zip(infos, sampledatablocks):
-				shift = (info & 0x0f) + 11
-				coef1, coef2 = param[(info >> 4) * 2], param[(info >> 4) * 2 + 1]
-				for nibbles in sampledata:
-					high = nibbles >> 4
-					low = nibbles & 0x0f
-					if high >= 8:
-						high -= 16
-					if low >= 8:
-						low -= 16
-					sample = ((high << shift) + coef1 * last1 + coef2 * last2) / 2048
-					channel[blockstart + sampleidx] = sample
-					sample2 = ((low << shift) + coef1 * sample + coef2 * last1) / 2048
-					channel[blockstart + sampleidx + 1] = sample2
-					sampleidx += 2
-					last2 = sample
-					last1 = sample2
-		curblock += 1
-		blockstart = curblock * self.blocksamplecount
-		for curchannel in range(self.channelcount):
-			blockidx += 1
-			sampleidx = 0
-			last2 = self.seek[blockidx * 2 + 1]
-			last1 = self.seek[blockidx * 2]
-			buf = data.read(self.lastblockpaddedsize)
-			# A bit of caching
-			channel = self.channels[curchannel]
-			param = self.channelinfos[curchannel].param
-			infos = buf[::8]
-			sampledatablocks = tuple(buf[i + 1: i + 8] for i in range(0, self.lastblocksize, 8))
-			for info, sampledata in zip(infos, sampledatablocks):
-				shift = (info & 0x0f) + 11
-				coef1, coef2 = param[(info >> 4) * 2], param[(info >> 4) * 2 + 1]
-				for nibbles in sampledata:
-					if sampleidx >= self.lastblocksamplecount:
-						break
-					high = nibbles >> 4
-					low = nibbles & 0x0f
-					if high >= 8:
-						high -= 16
-					if low >= 8:
-						low -= 16
-					sample = ((high << shift) + coef1 * last1 + coef2 * last2) / 2048
-					channel[blockstart + sampleidx] = sample
-					if sampleidx + 1 >= self.lastblocksamplecount:
-						break
-					sample2 = ((low << shift) + coef1 * sample + coef2 * last1) / 2048
-					channel[blockstart + sampleidx + 1] = sample2
-					sampleidx += 2
-					last2 = sample
-					last1 = sample2
-	
-	def decodeDSPADPCM_c3DSkit(self, data):
-		curchannel = -1
-		curblock = -1
-		for blockidx in range(self.blockcount * self.channelcount):
-			curchannel = (curchannel + 1) % self.channelcount
-			if curchannel == 0:
-				curblock += 1
+					print('Extracting block %d' % curblock)
 				blockstart = curblock * self.blocksamplecount
 			last2 = self.seek[blockidx * 2 + 1]
 			last1 = self.seek[blockidx * 2]
 			adpcm = np.ascontiguousarray(np.fromstring(data.read(self.blocksize), dtype=np.uint8))
 			pcmout = self.channels[curchannel]
 			param = self.channelinfos[curchannel].param
-			last1, last2 = c3DSkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.blocksamplecount, blockstart, last1, last2)
+			last1, last2 = libkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.blocksamplecount, blockstart, last1, last2)
 		curblock += 1
 		blockstart = curblock * self.blocksamplecount
 		for curchannel in range(self.channelcount):
@@ -262,7 +182,7 @@ class extractBCSTM (rawutil.TypeReader, ClsFunc):
 			adpcm = np.ascontiguousarray(np.fromstring(data.read(self.lastblockpaddedsize), dtype=np.uint8))
 			pcmout = self.channels[curchannel]
 			param = self.channelinfos[curchannel].param
-			last1, last2 = c3DSkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.lastblocksamplecount, blockstart, last1, last2)
+			last1, last2 = libkit.decodeDSPADPCMblock(adpcm, pcmout, param, self.lastblocksamplecount, blockstart, last1, last2)
 	
 	def extract_track(self, channels, index=None):
 		if self.verbose:

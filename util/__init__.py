@@ -2,6 +2,14 @@ import sys
 import math
 from .utils import ClsFunc
 
+try:
+	import c3DSkit
+	c3DSkit._confirm()
+	libkit = c3DSkit
+except:
+	import py3DSkit
+	libkit = py3DSkit
+
 BOMS = {
 	'>': 0xfeff,
 	'<': 0xfffe
@@ -34,6 +42,7 @@ class error (ClsFunc):
 	UnrecognizedFormatError = classmethod(_Error(102, 'UnrecognizedFormatError'))
 	UnsupportedCompressionError = classmethod(_Error(103, 'UnsupportedCompressionError'))
 	UnknownDataFormatError = classmethod(_Error(104, 'UnknownDataFormatError'))
+	UnsupportedDataFormatError = classmethod(_Error(104, 'UnsupportedDataFormatError'))
 	UnsupportedVersionError = classmethod(_Error(105, 'UnsupportedVersionError'))
 	UnsupportedSettingError = classmethod(_Error(106, 'UnsupportedSettingError'))
 	PluginNotFoundError = classmethod(_Error(107, 'PluginNotFoundError'))
@@ -59,6 +68,7 @@ class error (ClsFunc):
 	InvalidInputWarning = classmethod(_Warning(904, 'InvalidInputWarning'))
 	InvalidDataWarning = classmethod(_Warning(905, 'InvalidDataWarning'))
 	StrangeValueWarning = classmethod(_Warning(906, 'StrangeValueWarning'))
+	SettingWarning = classmethod(_Warning(907, 'SettingWarning'))
 	def main(self, msg, errno):
 		if math.floor(errno / 100) != 9:
 			print('Error: %s (%d)' % (msg, errno))

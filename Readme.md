@@ -16,14 +16,19 @@ What does 3DSkit?
 Preparing
 =========
 
-3DSkit can be directly used as is. However, 3DSkit now includes a C extension,
-called c3DSkit, which is used by some 3DSkit modules to make them faster. You CAN run these modules
-without c3DSkit, but they will be VERY slow. For example, extracting a pretty long BCSTM can take
-several minutes in pure Python, against a split second with c3DSkit (so it's a quite interesting gain)
+Now, some 3DSkit modules are based on libkit. This is a "virtual" module, which can be either
+c3DSkit, a C extension, or py3DSkit its equivalent in pure Python.
+This means that you can use 3DSkit directly as is, without any setup : 
+all 3DSkit modules can work without c3DSkit.
+
+However, some formats are VERY, very slow to process in pure Python : 
+for example, textures, fonts, audio... So if you can, build c3DSkit, which
+computes them much faster.
 
 To install c3DSkit, just come into the c3DSkit directory and run `python3 setup.py install`.
 You need a working C compiler and the Python includes (should be included in your python installation)
-When you update it, it may be required to remove the `build/` directory
+When you update it, it may be required to remove the `build/` directory.
+If you don't have the admin rights, try `python3 setup.py install --user`.
 
 How to use
 ==========
@@ -124,24 +129,26 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 **At extraction**:
 
 *	NCCH/ExeFS:
-	*	**dochecks**: If "false", don't checks if the contents hashes match. Defaults to true.
-	*	**dumpfs**: If "true", dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them. Defaults to false
+	*	**dochecks**: If `false`, don't checks if the contents hashes match. Defaults to `true`.
+	*	**dumpfs**: If `true`, dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them. Defaults to `false`
 *	GARC:
-	*	**skipdec**: If "true", force the module to not decompress the contained files. This may be useful if it detects a compression while there is not, but only in that case. Defauts to "false"
+	*	**skipdec**: If `true`, force the module to not decompress the contained files. This may be useful if it detects a compression while there is not, but only in that case. Defauts to `false`
+*	BFFNT:
+	*	**origin**: Sets the original console from which the file comes. Can be set to `CTR` for 3DS, `CAFE` for WiiU or `NX` for Switch. Try this if you get errors or glitched output. If not specified, tries to auto-detect from the file's version.
 
 **At packing**:
 
 *	BFLIM:
-	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format from original without any problem, for example for ETC1, not supported for packing. Defaults to RGBA8
-	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to 0
+	*	**format**: Specify the color format. Can be: RGBA8, RGBA4, RGB8, RGB565, RGBA5551, LA8, LA4, L8, L4, A8, A4. Note that this will have an effect on color quality and file size, but not on the functionment of the game, you can repack in a different format from original without any problem, for example for ETC1, not supported for packing. Defaults to `RGBA8`
+	*	**swizzle**: Specify the texture swizzling (see console output at extraction). Can be 0 (none), 4 (90º rotation) or 8 (transposition). Defaults to `0`.
 *	GARC:
-	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to 6.
+	*	**version**: Specify the version of the output file. Can be 4 or 6, look at the console output during the extraction. Defaults to `6`.
 *	mini:
-	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevent the game to load the packed file. Defaults to BL.
+	*	**type**: Specify the file type (2 chars magic number) to use for the output file. Look at the console output during the extraction. If you don't use the right magic, it can prevent the game to load the packed file. Defaults to `BL`.
 *	BCSTM:
-	*	**format**: Specify the audio format. Can be DSP-ADPCM, IMA-ADPCM, PCM16 or PCM8 (currently only DSP-ADPCM is supported). Defaults to "DSP-ADPCM"
+	*	**format**: Specify the audio format. Can be `DSP-ADPCM`, `IMA-ADPCM`, `PCM16` or `PCM8` (currently only DSP-ADPCM is supported). Defaults to `DSP-ADPCM`
 	*	**loop**: Makes a looping BCSTM. Must be of the form <start>-<end> (eg. 688123-2976543). If not given, the packed BCSTM won't loop at all.
-	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to "false" to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
+	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to `false` to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
 
 Supported formats
 =================
@@ -161,9 +168,9 @@ Crosses:
 *	  : no support
 	
 Output: Output format at extracting. See the output formats help for informations
-As explained previously, modules which use c3DSkit can be very slow in pure Python and much faster if you have c3DSkit installed
+As explained previously, modules which use c3DSkit may be very slow in pure Python and much faster if you have c3DSkit installed
 
-	Format | X | P | R | Extensions          | Output  | Uses c3DSkit
+	Format | X | P | R | Extensions          | Output  | Uses libkit
 	-----------------------------------------------------------------
 	ALYT   | x |   | x | .alyt               | files   | 
 	BCSAR  | e |   |   | .bcsar              | files   |
@@ -197,7 +204,7 @@ D: Decompressible
 
 C: Compressible
 
-	Compression | D | C | Extensions                   | Uses c3DSkit
+	Compression | D | C | Extensions                   | Uses libkit
 	-----------------------------------------------------------------
 	LZ10        | x | x | (none) .cmp .l *_LZ.bin .LZ  |
 	LZ11        | x | x | (none) .cmp .l *_LZ.bin .LZ  | Yes

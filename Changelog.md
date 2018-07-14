@@ -392,3 +392,14 @@
 	*	Added BC4 textures extraction
 	*	Added support for 4.1.0 (NX) BFFNT
 	*	Added support for wrapped BNTX in BFFNT
+
+**v1.29**
+
+*	v1.29.68
+	*	Added the libkit, with c3DSkit or py3DSkit depending on availability
+	*	Added the --pykit and --ckit options to force use of py3DSkit or c3DSkit
+	*	Added SettingWarning in debug mode (-V) and when forcing use of a libkit (--c/pykit)
+	*	Fixed ETC1 textures extraction
+	*	Added the origin specific option for BFFNT
+	*	Removed the -H menu, the Readme is very good for that
+	*	Fixed NX swizzling in BC4 textures
