@@ -123,6 +123,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		elif self.version == 'NX':
 			self.format = FORMAT_NAMES_NX[format]
 		if self.verbose:
+			print('Number of sheets: %d' % self.sheetcount)
 			print('Texture format: %s' % self.format)
 			print('Sheet width: %d' % self.sheetwidth)
 			print('Sheet height: %d' % self.sheetheight)
@@ -137,16 +138,17 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				outname = self.filebase + '_sheet%d.png' % i
 			else:
 				outname = self.filebase + '.png'
-			self.extract_sheet(data, outname, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
+			rgba = self.extract_sheet(data, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
+			Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), rgba.tostring()).save(outname, 'PNG')
 	
-	def extract_sheet(self, data, outname, width, height, size, format, swizzlesize):
+	def extract_sheet(self, data, width, height, size, format, swizzlesize):
 		out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
 		indata = np.ascontiguousarray(np.fromstring(data.read(size), dtype=np.uint8))
 		format = libkit.getTextureFormatId(format)
 		if format == 0xFF:
 			error.UnsupportedDataFormatError('%s texture format is not supported yet' % format)
 		libkit.extractTiledTexture(indata, out, width, height, format, swizzlesize, self.byteorder == '<')
-		Image.frombytes('RGBA', (width, height), out.tostring()).save(outname, 'PNG')
+		return out
 	
 	def extract_underlying_BNTX(self, data):
 		if self.verbose:
@@ -160,11 +162,12 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		if magic != b'NX  ':
 			error.InvalidMagicError('Invalid NX   magic, got %s' % byterepr(magic))
 		sheetcount, infoptroffset, dataoffset, dictoffset, strdictsize = self.unpack_from('I3QI', data)
+		#print('Number of sheets: %d' % sheetcount)
 		for texindex in range(sheetcount):
 			if sheetcount > 1:
-				outname = self.filebase + '_sheet%d.png' % texindex
+				outbase = '%s_tex%d' % (self.filebase, texindex)
 			else:
-				outname = self.filebase + '.png'
+				outbase = self.filebase
 			brtioffset = self.unpack_from('Q', data, bntxpos + infoptroffset + texindex * 8)[0]
 			# BRTI Header
 			magic, size, longsize = self.unpack_from('4sIQ', data, bntxpos + brtioffset)
@@ -180,7 +183,14 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				print(' - Swizzle size: %d' % swizzlesize)
 			dataoffset = self.unpack_from('Q', data, bntxpos + pointersoffset)[0]
 			data.seek(bntxpos + dataoffset)
-			self.extract_sheet(data, outname, width, height, sheetsize, BNTI_FORMAT_NAMES[format], swizzlesize)
+			rgba = self.extract_sheet(data, self.sheetwidth, self.sheetheight * self.sheetcount, sheetsize, BNTI_FORMAT_NAMES[format], swizzlesize)
+			for i in range(self.sheetcount):
+				if self.sheetcount > 1:
+					outname = outbase + '_sheet%d.png' % i
+				else:
+					outname = outbase + '.png'
+				sheet = rgba[4 * self.sheetwidth * i * self.sheetheight: 4 * self.sheetwidth * (i + 1) * self.sheetheight]
+				Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), sheet.tostring()).save(outname, 'PNG')
 	
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)

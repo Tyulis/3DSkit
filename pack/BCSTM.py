@@ -3,15 +3,10 @@ import wave
 import math
 import time
 import numpy as np
-from util import error, BOMS
+from util import error, BOMS, libkit
 from util.utils import ClsFunc
 from util.rawutil import TypeWriter
 from util.filesystem import *
-
-try:
-	import c3DSkit
-except:
-	c3DSkit = None
 
 NULL = 0xFFFFffff
 
@@ -168,14 +163,11 @@ class packBCSTM(ClsFunc, TypeWriter):
 	
 	def pack_sampledata(self):
 		if self.codec == DSPADPCM:
-			if c3DSkit is not None:
-				self.packDSPADPCM_c3DSkit()
-			else:
-				self.packDSPADPCM_py3DSkit()
+			self.packDSPADPCM()
 		else:
 			error.NotImplementedError('This codec is not yet implemented')
 	
-	def packDSPADPCM_c3DSkit(self):
+	def packDSPADPCM(self):
 		self.blocksamplecount = 14336
 		self.blocksize = (self.blocksamplecount // 14) * 8
 		self.blockcount = self.samplecount // self.blocksamplecount
@@ -190,16 +182,13 @@ class packBCSTM(ClsFunc, TypeWriter):
 		for i, (info, channel, out) in enumerate(zip(self.channelinfos, self.channels, self.channelouts)):
 			if self.verbose:
 				print('Calculating coefficients for channel %d' % (i + 1))
-			c3DSkit.generateDSPADPCMcoefs(info.param, channel, self.samplecount)
+			libkit.generateDSPADPCMcoefs(info.param, channel, self.samplecount)
 			if self.verbose:
 				print('Encoding channel %d' % (i + 1))
-			contexts = c3DSkit.encodeDSPADPCMchannel(info.param, channel, out, self.seek, self.samplecount, self.blocksamplecount, i, self.channelcount, self.loopstart)
+			contexts = libkit.encodeDSPADPCMchannel(info.param, channel, out, self.seek, self.samplecount, self.blocksamplecount, i, self.channelcount, self.loopstart)
 			info.loopcontext.last1 = channel[self.loopstart - 1]
 			info.loopcontext.last2 = channel[self.loopstart - 2]
 			info.context.predictor, info.context.scale, info.loopcontext.predictor, info.loopcontext.scale = contexts
-	
-	def packDSPADPCM_py3DSkit(self):
-		error.UnsupportedSettingError('You need c3DSkit installed to encode DSP-ADPCM streams')
 	
 	def packDATA(self):
 		self.out.seek(self.seekpos + self.seeksize)

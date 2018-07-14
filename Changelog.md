@@ -403,3 +403,6 @@
 	*	Added the origin specific option for BFFNT
 	*	Removed the -H menu, the Readme is very good for that
 	*	Fixed NX swizzling in BC4 textures
+*	v1.29.69
+	*	Added BCSTM packing with py3DSkit
+	*	Added support for multiple sheets in BNTX wrapped in BFFNT

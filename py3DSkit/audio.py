@@ -67,16 +67,16 @@ def analyzeRanges(mtx, vecIdxsOut):
 				mtx[x, i] *= tmp
 	
 	# Get range
-	min = 1.0e10
-	max = 0.0
+	mini = 1.0e10
+	maxi = 0.0
 	for i in range(1, 3):
 		tmp = np.abs(mtx[i, i])
-		if tmp < min:
-			min = tmp
-		if tmp > max:
-			max = tmp
+		if tmp < mini:
+			mini = tmp
+		if tmp > maxi:
+			maxi = tmp
  
-	if min / max < 1.0e-10:
+	if mini / maxi < 1.0e-10:
 		return True
 	return False
  
