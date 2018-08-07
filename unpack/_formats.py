@@ -13,7 +13,7 @@ USE_FILE_OBJ = (
 	'GARC', 'mini', 'SARC', 'ALYT', 'BCSAR',
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
-	'CBMD', 'BCSTM', 'BFFNT',
+	'CBMD', 'BCSTM', 'BFFNT', 'CRO', 'MSBT'
 )
 
 MAGICS = {
@@ -34,6 +34,8 @@ MAGICS = {
 	b'NARC': 'NARC',
 	b'NCCH': 'NCCH',
 	b'FFNT': 'BFFNT',
+	#b'CRO0': 'CRO',
+	b'MsgStdBn': 'MSBT',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',
 	b'---b': 'ExeFS',
@@ -50,7 +52,7 @@ EXTS = {
 	'romfs': 'RomFS',
 }
 
-SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH')
+SKIP_DECOMPRESSION = ('BFLIM', 'BCLIM', 'NCCH', 'CRO')
 
 
 def recognize_filename(filename, format=None):
@@ -77,10 +79,12 @@ def recognize_file(file, format=None):
 	file.seek(0, 2)
 	filelen = file.tell()
 	file.seek(0)
-	if filelen >= 4:
-		magic = file.read(4)
+	if filelen >= 8:
+		magic = file.read(8)
 		if magic in MAGICS:
 			return MAGICS[magic]
+		if magic[0: 4] in MAGICS:
+			return MAGICS[magic[0: 4]]
 		if magic[0: 2] in MAGICS:
 			return MAGICS[magic[0: 2]]
 	if filelen >= 0x28:
@@ -88,6 +92,11 @@ def recognize_file(file, format=None):
 		magic = file.read(4)
 		if magic in (b'FLIM', b'CLIM'):
 			return MAGICS[magic]
+	if filelen >= 0x84:
+		file.seek(0x80)
+		magic = file.read(4)
+		if magic == b'CRO0':
+			return 'CRO'
 	if filelen >= 0x104:
 		file.seek(0x100)
 		magic = file.read(4)

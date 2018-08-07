@@ -9,6 +9,8 @@ except ImportError:
 from collections import OrderedDict
 from util.rawutil import TypeReader
 
+SWITCH_DEFAULT = object()
+
 
 class ClsFunc (object):
 	def __new__(cls, *args, **kwargs):
@@ -21,7 +23,7 @@ class ClsFunc (object):
 
 class FreeObject (object):
 	pass
-
+	
 
 class attrdict (OrderedDict):
 	def __setattr__(self, attr, val):
@@ -185,3 +187,14 @@ def toascii(string):
 def byterepr(s):
 	final = repr(s)
 	return final[2: -1]  #strips b''
+
+def switch(value, args, callbacks):
+	'''switch(value, (arg1, arg2), {
+		value1: callback1,
+		value2: callback2,
+	})'''
+	if value in callbacks.keys():
+		return callbacks[value](*args)
+	else:
+		if SWITCH_DEFAULT in callbacks.keys():
+			return callbacks[SWITCH_DEFAULT](*args)

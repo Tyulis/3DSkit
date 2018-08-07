@@ -406,3 +406,8 @@
 *	v1.29.69
 	*	Added BCSTM packing with py3DSkit
 	*	Added support for multiple sheets in BNTX wrapped in BFFNT
+
+**v1.30**
+
+*	v1.30.69
+	*	Added support for MSBT files

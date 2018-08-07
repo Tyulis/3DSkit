@@ -185,6 +185,7 @@ As explained previously, modules which use c3DSkit may be very slow in pure Pyth
 	GARC   | x |   | x | .garc (none)        | files   |
 	GFA    | x |   |   | .gfa                | files   |
 	mini   | x |   | x | .mini .bl .wd (none)| files   |
+	MSBT   | x |   |   | .msbt               | TX      |
 	NARC   | p |   |   | .narc               | files   |
 	NCCH   | x |   |   | .app .cxi .cfa      | sections|
 	NDS    | x |   |   | .nds                | files   |
