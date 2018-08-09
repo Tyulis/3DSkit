@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding:utf-8 -*-
+
 import os
 import sys
 import time
@@ -12,7 +13,7 @@ from io import BytesIO, StringIO
 from util import error
 import util
 
-__version__ = '1.30.69'
+__version__ = '1.30.70'
 
 
 def parse_opts(s):

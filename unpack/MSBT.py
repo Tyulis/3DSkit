@@ -11,6 +11,10 @@ class extractMSBT (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
 		self.outfile = make_outfile(filename, 'txt')
 		self.verbose = verbose
+		if 'showescapes' in opts:
+			self.escapes = True if opts['showescapes'].strip().lower() == 'true' else False
+		else:
+			self.escapes = True
 		self.read_header(data)
 		self.strnum = None
 		for i in range(self.sectionnum):
@@ -25,12 +29,14 @@ class extractMSBT (rawutil.TypeReader, ClsFunc):
 				b'TSY1': self.readTSY1,
 				SWITCH_DEFAULT: self.unknown_section,
 			})
-		dic = []
+		dic = [None for i in range(self.strnum)]
 		for names in self.names:
-			group = {}
+			'''group = {}
 			for id, name in names:
-				group[name] = self.strings[id]
-			dic.append(group)
+				group[name] = self.strings[id + 1]
+			dic.append(group)'''
+			for id, name in names:
+				dic[id] = {name: self.strings[id]}
 		final = {'Strings': dic, 'Number of strings': self.strnum}
 		out = dump(final)
 		write(out, self.outfile)
@@ -86,10 +92,17 @@ class extractMSBT (rawutil.TypeReader, ClsFunc):
 				codepoint = strdata[pos: pos + 2]
 				if codepoint == b'\x00\x00':
 					self.strings.append(string)
+					break
 					string = ''
 					pos += 2
 				else:
-					string += codepoint.decode(encoding)
+					character = codepoint.decode(encoding)
+					if ord(character) < 0x20 and character not in '\n\t':
+						if self.escapes:
+							character = '\\u%04X' % ord(character)
+						else:
+							character = ''
+					string += character
 					pos += 2
 		endpos = baseoffset + size
 		endpos += 0x10 - (endpos % 0x10 or 0x10)

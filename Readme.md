@@ -22,7 +22,7 @@ all 3DSkit modules can work without c3DSkit.
 
 However, some formats are VERY, very slow to process in pure Python : 
 for example, textures, fonts, audio... So if you can, build c3DSkit, which
-computes them much faster.
+computes them much faster (sometimes 10000x or more).
 
 To install c3DSkit, just come into the c3DSkit directory and run `python3 setup.py install`.
 You need a working C compiler and the Python includes (should be included in your python installation)
@@ -130,12 +130,14 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 **At extraction**:
 
 *	NCCH/ExeFS:
-	*	**dochecks**: If `false`, don't checks if the contents hashes match. Defaults to `true`.
+	*	**dochecks**: If `false`, don't checks if the contents hashes match. If you get a `HashMismatchError`, it's theorically right, so change this only if you're sure of the integrity of your file. Defaults to `true`.
 	*	**dumpfs**: If `true`, dumps the ExeFS and the RomFS images as exefs.bin and romfs.bin before extracting them. Defaults to `false`
 *	GARC:
 	*	**skipdec**: If `true`, force the module to not decompress the contained files. This may be useful if it detects a compression while there is not, but only in that case. Defauts to `false`
 *	BFFNT:
 	*	**origin**: Sets the original console from which the file comes. Can be set to `CTR` for 3DS, `CAFE` for WiiU or `NX` for Switch. Try this if you get errors or glitched output. If not specified, tries to auto-detect from the file's version.
+*	MSBT:
+	*	**showescapes**: If `false`, just erases not displayed characters, else show them as `\\uXXXX`. Defaults to `true`
 
 **At packing**:
 
