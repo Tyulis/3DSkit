@@ -414,3 +414,8 @@
 *	v1.30.70:
 	*	Fixed strings order in MSBT extraction output
 	*	Added showing of escapes in MSBT
+
+**v1.31**
+
+*	v1.31.70
+	*	Added BCGRP files extraction

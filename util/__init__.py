@@ -69,6 +69,9 @@ class error (ClsFunc):
 	InvalidDataWarning = classmethod(_Warning(905, 'InvalidDataWarning'))
 	StrangeValueWarning = classmethod(_Warning(906, 'StrangeValueWarning'))
 	SettingWarning = classmethod(_Warning(907, 'SettingWarning'))
+	NotImplementedWarning = classmethod(_Warning(908, 'NotImplementedWarning'))
+	UnsupportedValueWarning = classmethod(_Warning(909, 'UnsupportedValueWarning'))
+	
 	def main(self, msg, errno):
 		if math.floor(errno / 100) != 9:
 			print('Error: %s (%d)' % (msg, errno))
