@@ -176,8 +176,10 @@ As explained previously, modules which use c3DSkit may be very slow in pure Pyth
 	Format | X | P | R | Extensions          | Output  | Uses libkit
 	-----------------------------------------------------------------
 	ALYT   | x |   | x | .alyt               | files   | 
+	BCGRP  | x |   |   | .bcgrp              | files   |
 	BCSAR  | e |   |   | .bcsar              | files   |
 	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
+	BCWAR  | x |   |   | .bcwav              | files   | 
 	BFFNT  | p |   |   | .bffnt              | PNG     | Yes
 	BFLAN  | p |   |   | .bflan              | TX      | 
 	BFLIM  | x | x |   | .bflim              | PNG     | Yes

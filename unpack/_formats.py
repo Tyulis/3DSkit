@@ -14,7 +14,7 @@ USE_FILE_OBJ = (
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
 	'CBMD', 'BCSTM', 'BFFNT', 'CRO', 'MSBT',
-	'BCGRP',
+	'BCGRP', 'BCWAR'
 )
 
 MAGICS = {
@@ -36,6 +36,10 @@ MAGICS = {
 	b'NCCH': 'NCCH',
 	b'FFNT': 'BFFNT',
 	b'CGRP': 'BCGRP',
+	b'CWAR': 'BCWAR',
+	b'CWAV': 'BCWAV',
+	b'CSEQ': 'BCSEQ',
+	b'CBNK': 'BCBNK',
 	#b'CRO0': 'CRO',
 	b'MsgStdBn': 'MSBT',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
