@@ -14,7 +14,7 @@ USE_FILE_OBJ = (
 	'BFLIM', 'BFLAN', 'CGFX', 'NARC', 'NCCH',
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
 	'CBMD', 'BCSTM', 'BFFNT', 'CRO', 'MSBT',
-	'BCGRP', 'BCWAR'
+	'BCGRP', 'BCWAR', 'BCWAV'
 )
 
 MAGICS = {
@@ -38,6 +38,7 @@ MAGICS = {
 	b'CGRP': 'BCGRP',
 	b'CWAR': 'BCWAR',
 	b'CWAV': 'BCWAV',
+	b'CWSD': 'BCWSD',
 	b'CSEQ': 'BCSEQ',
 	b'CBNK': 'BCBNK',
 	#b'CRO0': 'CRO',

@@ -179,7 +179,8 @@ As explained previously, modules which use c3DSkit may be very slow in pure Pyth
 	BCGRP  | x |   |   | .bcgrp              | files   |
 	BCSAR  | e |   |   | .bcsar              | files   |
 	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
-	BCWAR  | x |   |   | .bcwav              | files   | 
+	BCWAR  | x |   |   | .bcwar              | files   | 
+	BCWAV  | x |   |   | .bcwav              | WAV     | Yes
 	BFFNT  | p |   |   | .bffnt              | PNG     | Yes
 	BFLAN  | p |   |   | .bflan              | TX      | 
 	BFLIM  | x | x |   | .bflim              | PNG     | Yes

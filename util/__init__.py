@@ -46,6 +46,7 @@ class error (ClsFunc):
 	UnsupportedVersionError = classmethod(_Error(105, 'UnsupportedVersionError'))
 	UnsupportedSettingError = classmethod(_Error(106, 'UnsupportedSettingError'))
 	PluginNotFoundError = classmethod(_Error(107, 'PluginNotFoundError'))
+	NotImplementedError = classmethod(_Error(108, 'NotImplementedError'))
 
 	ForgottenArgumentError = classmethod(_Error(201, 'MissingArgumentError'))
 	MissingArgumentError = classmethod(_Error(201, 'MissingArgumentError'))

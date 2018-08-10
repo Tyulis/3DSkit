@@ -420,3 +420,4 @@
 *	v1.31.70
 	*	Added BCGRP files extraction
 	*	Added BCWAR files extraction
+	*	Added BCWAV files extraction
