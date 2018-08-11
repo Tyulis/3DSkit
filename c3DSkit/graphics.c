@@ -61,6 +61,7 @@ static int _getSwizzleOffset(Swizzle* swizzle, int x, int y){
 
 static int getPixelSize(int format){
 	TESTPXSIZE(format, RGBA8, 4);
+	TESTPXSIZE(format, RGBA8_SRGB, 4);
 	TESTPXSIZE(format, RGB8, 3);
 	TESTPXSIZE(format, RGBA5551, 2);
 	TESTPXSIZE(format, RGB565, 2);
@@ -73,7 +74,7 @@ static int getPixelSize(int format){
 	return -1;
 }
 
-static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int height, int format, bool littleendian){
+static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int height, int format, int swizzlesize, bool littleendian){
 	int tilesx = (int)ceil((double)width / 8);
 	int tilesy = (int)ceil((double)height / 8);
 	int datawidth = 1 << (int)ceil(LOG2((double)width));
@@ -81,6 +82,12 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 	int totalx = (int)ceil((double)datawidth / 8.0);
 	//int totaly = (int)ceil((double)dataheight / 8.0);
 	int pxsize = getPixelSize(format);
+	Swizzle swizzle;
+	if (format == L4 || format == A4){
+		_makeSwizzle(&swizzle, width, 1, swizzlesize);
+	} else {
+		_makeSwizzle(&swizzle, width, pxsize, swizzlesize);
+	}
 	for (int ytile = 0; ytile < tilesy; ytile++){
 		for (int xtile = 0; xtile < tilesx; xtile++){
 			for (int ysub = 0; ysub < 2; ysub++){
@@ -98,7 +105,12 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 									uint8_t r = 0, g = 0, b = 0, a = 0;
 									if (format == L4 || format == A4){
 										int shift = xpix * 4;
-										int inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix;
+										int inpos;
+										if (swizzlesize < 0){
+											inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix;
+										} else {
+											inpos = _getSwizzleOffset(&swizzle, xtile * 8 + xsub * 4 + xblock * 2, ytile * 8 + ysub * 4 + yblock * 2 + ypix);
+										}
 										uint8_t byte = input[inpos];
 										if (format == L4){
 											r = g = b = ((byte >> shift) & 0x0F) * 0x11;
@@ -108,13 +120,18 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 											a = ((byte >> shift) & 0x0F) * 0x11;
 										}
 									} else {
-										int inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize;
+										int inpos;
+										if (swizzlesize < 0){
+											inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize;
+										} else {
+											inpos = _getSwizzleOffset(&swizzle, xtile * 8 + xsub * 4 + xblock * 2 + xpix, ytile * 8 + ysub * 4 + yblock * 2 + ypix);
+										}
 										if (littleendian){
-											if (format == RGBA8){
-												r = input[inpos + 3];
-												g = input[inpos + 2];
-												b = input[inpos + 1];
-												a = input[inpos];
+											if (format == RGBA8 || format == RGBA8_SRGB){
+												r = input[inpos];
+												g = input[inpos + 1];
+												b = input[inpos + 2];
+												a = input[inpos + 3];
 											} else if (format == RGB8){
 												r = input[inpos + 2];
 												g = input[inpos + 1];
@@ -154,7 +171,7 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 												a = (input[inpos] & 0x0F) * 0x11;
 											}
 										} else {
-											if (format == RGBA8){
+											if (format == RGBA8 || format == RGBA8_SRGB){
 												r = input[inpos];
 												g = input[inpos + 1];
 												b = input[inpos + 2];
@@ -313,11 +330,15 @@ static void _extractBC4Texture(uint8_t* input, uint8_t* output, int width, int h
 	int theight = (height + 3) / 4;
 	uint8_t lums[8];
 	Swizzle swizzle;
-	//int offset = 0;
 	_makeSwizzle(&swizzle, twidth, BC4_BYTESPERTEXEL, swizzlesize);
 	for (int ytile = 0; ytile < theight; ytile++){
 		for (int xtile = 0; xtile < twidth; xtile++){
-			int offset = _getSwizzleOffset(&swizzle, xtile, ytile);
+			int offset;
+			if (swizzlesize < 0){
+				offset = (ytile * twidth + xtile) * BC4_BYTESPERTEXEL;
+			} else {
+				offset = _getSwizzleOffset(&swizzle, xtile, ytile);
+			}
 			lums[0] = input[offset];
 			lums[1] = input[offset + 1];
 			for (int i = 2; i < 8; i++){
@@ -373,7 +394,7 @@ PyObject* extractTiledTexture(PyObject* self, PyObject* args){
 	} else if (format == BC4){
 		_extractBC4Texture(input, output, width, height, format, swizzlesize, (bool)littleendian);
 	} else {
-		_extractTiledTexture(input, output, width, height, format, (bool)littleendian);
+		_extractTiledTexture(input, output, width, height, format, swizzlesize, (bool)littleendian);
 	}
 	return Py_BuildValue("i", 0);
 }
@@ -404,7 +425,7 @@ PyObject* getTextureFormatId(PyObject* self, PyObject* args){
 	//TESTNAME(name, "BC5", BC5);
 	//TESTNAME(name, "BC6H", BC6H);
 	//TESTNAME(name, "BC7", BC7);
-	//TESTNAME(name, "RGBA8_SRGB", RGBA8_SRGB);
+	TESTNAME(name, "RGBA8_SRGB", RGBA8_SRGB);
 	//TESTNAME(name, "BC1_SRGB", BC1_SRGB);
 	//TESTNAME(name, "BC2_SRGB", BC2_SRGB);
 	//TESTNAME(name, "BC3_SRGB", BC3_SRGB);
@@ -412,5 +433,5 @@ PyObject* getTextureFormatId(PyObject* self, PyObject* args){
 	//TESTNAME(name, "BC5_SNORM", BC5_SNORM);
 	//TESTNAME(name, "BC6H_SF16", BC6H_SF16);
 	//TESTNAME(name, "BC7_SRGB", BC7_SRGB);
-	return Py_BuildValue("I", -1);
+	return Py_BuildValue("i", -1);
 }

@@ -39,7 +39,8 @@ TEXTURE_FORMATS = {
 	'A8': A8, 'LA4': LA4, 'L4': L4, 'A4': A4,
 	'ETC1': ETC1, 'ETC1A4': ETC1A4, 'BC4': BC4, 'BC4_SNORM': BC4_SNORM,
 	#'BC1': BC1, 'BC2': BC2, 'BC3': BC3, 'BC5': BC5,
-	#'BC6H': BC6H, 'BC7': BC7, 'RGBA8_SRGB': RGBA8_SRGB,
+	#'BC6H': BC6H, 'BC7': BC7, 
+	'RGBA8_SRGB': RGBA8_SRGB,
 	#'BC1_SRGB': BC1_SRGB, 'BC2_SRGB': BC2_SRGB,
 	#'BC3_SRGB': BC3_SRGB, 
 	#'BC5_SNORM': BC5_SNORM, 'BC6H_SF16': BC6H_SF16,
@@ -52,7 +53,7 @@ ETC1_MODIFIERS = (
 )
 
 PIXEL_SIZES = {
-	RGBA8: 4, RGB8: 3, RGBA5551: 2,
+	RGBA8: 4, RGBA8_SRGB: 4, RGB8: 3, RGBA5551: 2,
 	RGBA4: 2, LA8: 2, RG8: 2,
 	L8: 1, A8: 1, LA4: 1
 }
@@ -104,7 +105,7 @@ def getPixelSize(format):
 	else:
 		return -1
 
-def _extractTiledTexture(input, output, width, height, format, littleendian):
+def _extractTiledTexture(input, output, width, height, format, swizzlesize, littleendian):
 	tilesx = int(np.ceil(width / 8))
 	tilesy = int(np.ceil(height / 8))
 	datawidth = 1 << int(np.ceil(LOG2(width)))
@@ -112,6 +113,10 @@ def _extractTiledTexture(input, output, width, height, format, littleendian):
 	totalx = int(np.ceil(datawidth / 8.0))
 	#int totaly = (int)ceil((double)dataheight / 8.0);
 	pxsize = getPixelSize(format)
+	if format == L4 or format == A4:
+		swizzle = Swizzle(width, 1, swizzlesize)
+	else:
+		swizzle = Swizzle(width, pxsize, swizzlesize)
 	for ytile in range(tilesy):
 		for xtile in range(tilesx):
 			for ysub in range(2):
@@ -127,7 +132,10 @@ def _extractTiledTexture(input, output, width, height, format, littleendian):
 									outpos = (ypos * width + xpos) * 4
 									if format == L4 or format == A4:
 										shift = xpix * 4
-										inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix
+										if swizzlesize < 0:
+											inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix
+										else:
+											inpos = swizzle.getSwizzleOffset(xtile * 8 + xsub * 4 + xblock * 2, ytile * 8 + ysub * 4 + yblock * 2 + ypix)
 										byte = input[inpos]
 										if format == L4:
 											r = g = b = ((byte >> shift) & 0x0F) * 0x11
@@ -136,13 +144,16 @@ def _extractTiledTexture(input, output, width, height, format, littleendian):
 											r = g = b = 0xFF
 											a = ((byte >> shift) & 0x0F) * 0x11
 									else:
-										inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize
+										if swizzlesize < 0:
+											inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize
+										else:
+											inpos = swizzle.getSwizzleOffset(xtile * 8 + xsub * 4 + xblock * 2 + xpix, ytile * 8 + ysub * 4 + yblock * 2 + ypix)
 										if littleendian:
-											if format == RGBA8:
-												r = input[inpos + 3]
-												g = input[inpos + 2]
-												b = input[inpos + 1]
-												a = input[inpos]
+											if format == RGBA8 or format == RGBA8_SRGB:
+												r = input[inpos]
+												g = input[inpos + 1]
+												b = input[inpos + 2]
+												a = input[inpos + 3]
 											elif format == RGB8:
 												r = input[inpos + 2]
 												g = input[inpos + 1]
@@ -181,7 +192,7 @@ def _extractTiledTexture(input, output, width, height, format, littleendian):
 												r = g = b = (input[inpos] >> 4) * 0x11
 												a = (input[inpos] & 0x0F) * 0x11
 										else:
-											if format == RGBA8:
+											if format == RGBA8 or format == RGBA8_SRGB:
 												r = input[inpos]
 												g = input[inpos + 1]
 												b = input[inpos + 2]
@@ -351,4 +362,4 @@ def extractTiledTexture(input, output, width, height, format, swizzlesize, littl
 	elif format in (BC4, BC4_SNORM):
 		_extractBC4Texture(input, output, width, height, format, swizzlesize, littleendian)
 	else:
-		_extractTiledTexture(input, output, width, height, format, littleendian)
+		_extractTiledTexture(input, output, width, height, format, swizzlesize, littleendian)

@@ -73,6 +73,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			self.version = opts['origin'].upper().strip()
 		else:
 			self.version = None
+		if 'reverse' in opts:
+			self.reverse = opts['reverse'].lower().strip() == 'true'
+		else:
+			self.reverse = False
 		self.filebase = os.path.splitext(filename)[0]
 		self.read_header(data)
 		self.readFINF(data)
@@ -139,15 +143,18 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			else:
 				outname = self.filebase + '.png'
 			rgba = self.extract_sheet(data, self.sheetwidth, self.sheetheight, self.sheetsize, self.format, 16)
-			Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), rgba.tostring()).save(outname, 'PNG')
+			sheet = Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), rgba.tostring())
+			if self.reverse:
+				sheet = sheet.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
+			sheet.save(outname, 'PNG')
 	
 	def extract_sheet(self, data, width, height, size, format, swizzlesize):
 		out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
 		indata = np.ascontiguousarray(np.fromstring(data.read(size), dtype=np.uint8))
-		format = libkit.getTextureFormatId(format)
-		if format == 0xFF:
+		formatid = libkit.getTextureFormatId(format)
+		if formatid == -1:
 			error.UnsupportedDataFormatError('%s texture format is not supported yet' % format)
-		libkit.extractTiledTexture(indata, out, width, height, format, swizzlesize, self.byteorder == '<')
+		libkit.extractTiledTexture(indata, out, width, height, formatid, swizzlesize, self.byteorder == '<')
 		return out
 	
 	def extract_underlying_BNTX(self, data):
@@ -190,7 +197,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				else:
 					outname = outbase + '.png'
 				sheet = rgba[4 * self.sheetwidth * i * self.sheetheight: 4 * self.sheetwidth * (i + 1) * self.sheetheight]
-				Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), sheet.tostring()).save(outname, 'PNG')
+				img = Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), sheet.tostring())
+				if self.reverse:
+					img = img.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
+				img.save(outname, 'PNG')
 	
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)

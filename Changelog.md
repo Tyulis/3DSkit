@@ -421,3 +421,7 @@
 	*	Added BCGRP files extraction
 	*	Added BCWAR files extraction
 	*	Added BCWAV files extraction
+*	v1.31.71
+	*	Added the `reverse` option for BFFNT files to automatically flip extracted sheets
+	*	Fixed swizzling for Switch uncompressed textures
+	*	Added support for RGBA8_SRGB format

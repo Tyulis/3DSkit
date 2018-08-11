@@ -136,6 +136,7 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 	*	**skipdec**: If `true`, force the module to not decompress the contained files. This may be useful if it detects a compression while there is not, but only in that case. Defauts to `false`
 *	BFFNT:
 	*	**origin**: Sets the original console from which the file comes. Can be set to `CTR` for 3DS, `CAFE` for WiiU or `NX` for Switch. Try this if you get errors or glitched output. If not specified, tries to auto-detect from the file's version.
+	*	**reverse**: If the sheets are upside down, set this to `true` to reverse them automatically. _Don't forget to use it also when you repack the file !_
 *	MSBT:
 	*	**showescapes**: If `false`, just erases not displayed characters, else show them as `\\uXXXX`. Defaults to `true`
 
@@ -152,6 +153,9 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 	*	**format**: Specify the audio format. Can be `DSP-ADPCM`, `IMA-ADPCM`, `PCM16` or `PCM8` (currently only DSP-ADPCM is supported). Defaults to `DSP-ADPCM`
 	*	**loop**: Makes a looping BCSTM. Must be of the form <start>-<end> (eg. 688123-2976543). If not given, the packed BCSTM won't loop at all.
 	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to `false` to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
+*	BFFNT:
+	*	**meta**: **REQUIRED !** Specify the path of the metadata JSON file (something like `<font name>_meta.json`)
+	*	**reverse**: If you used this option at extraction, set it also to `true` when you repack the font. Defaults to `false`.
 
 Supported formats
 =================

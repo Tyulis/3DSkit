@@ -10,7 +10,7 @@ c3DSkit = Extension('c3DSkit', sources=['c3DSkit.c'], include_dirs=[numpy.get_in
 
 setup(
 	name = 'c3DSkit',
-	version = '1.3',
+	version = '1.4',
 	ext_modules = [c3DSkit],
 	url = 'https://github.com/Tyulis/3DSkit',
 	author = 'Tyulis',
