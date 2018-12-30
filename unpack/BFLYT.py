@@ -505,7 +505,10 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 	
 	def readusd1(self, data):
 		ptr = 8
-		secname = 'usd1-%s' % self.actnode['__prevname']
+		if "__prevname" in self.actnode:  # Check, sometimes there is usd1 out of any pane
+			secname = 'usd1-%s' % self.actnode['__prevname']
+		else:
+			secname = "usd1"
 		self.actnode[secname] = OrderedDict()
 		localnode = self.actnode[secname]
 		entrynum, ptr = self.uint16(data, ptr)

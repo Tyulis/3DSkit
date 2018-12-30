@@ -425,3 +425,6 @@
 	*	Added the `reverse` option for BFFNT files to automatically flip extracted sheets
 	*	Fixed swizzling for Switch uncompressed textures
 	*	Added support for RGBA8_SRGB format
+	*	Fixed sign of error code in c3DSkit.graphics.getTextureFormatId
+*	v1.31.72
+	*	Fixed error when usd1 section is found without parent pane in unpack.BFLYT
