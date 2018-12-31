@@ -428,3 +428,6 @@
 	*	Fixed sign of error code in c3DSkit.graphics.getTextureFormatId
 *	v1.31.72
 	*	Fixed error when usd1 section is found without parent pane in unpack.BFLYT
+	*	Added usd1 type 3 entry in unpack.BFLYT and pack.BFLYT
+	*	Fixed bugs with numbers and bytes in txtree
+	*	Fixed support for strings in rawutil and pack.BFLYT

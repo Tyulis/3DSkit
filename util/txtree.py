@@ -42,7 +42,7 @@ class dump (ClsFunc):
 			elif node[key].__class__ == str:
 				if len(node[key]) >= 1:
 					if node[key][0].isdigit():
-						node[key] = '"' + node[key] + '"'
+						node[key] = '"' + node[key].replace('"', '\\"') + '"'
 				final += '%s: %s\n' % (key, node[key].replace('\n', '\\n'))
 			else:
 				final += '%s: %s\n' % (key, repr(node[key]).replace('\n', '\\n'))
@@ -93,8 +93,11 @@ class load (ClsFunc):
 			else:
 				if line[1].lower() in ('true', 'false', 'none'):
 					res = eval(line[1].capitalize())
-				elif not line[1].strip('-+')[0].isdigit() and not line[0].startswith(('b"', "b'")):
-					res = line[1].replace('\\n', '\n')
+				elif not line[1].strip('-+')[0].isdigit() and not line[1].startswith(('b"', "b'")):
+					if line[1].strip('"')[0].isdigit() and line[1].startswith('"') and line[1].endswith('"'):
+						res = line[1][1:-1].replace('\\n', '\n').replace('\\"', '"')
+					else:
+						res = line[1].replace('\\n', '\n')
 				else:
 					res = eval(line[1])
 				dic[key] = res

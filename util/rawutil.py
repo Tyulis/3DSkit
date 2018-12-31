@@ -200,10 +200,11 @@ class TypeWriter (TypeUser):
 	double = _writermethod('d')
 	
 	def string(self, data, align=0, out=None):
-		s = data.encode('utf-8')
-		if align < len(s) + 1:
-			align = len(s) + 1
-		res = struct.pack('%s%ds' % (self.byteorder, align), s)
+		if isinstance(data, str):
+			data = data.encode('utf-8')
+		if align < len(data) + 1:
+			align = len(data) + 1
+		res = struct.pack('%s%ds' % (self.byteorder, align), data)
 		if out is None:
 			return res
 		else:

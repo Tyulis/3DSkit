@@ -525,6 +525,7 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 			datanum, ptr = self.uint16(data, ptr)
 			datatype, ptr = self.uint8(data, ptr)
 			unknown, ptr = self.uint8(data, ptr)
+			entry["type"] = datatype
 			if datatype == 0:
 				entrydata = data[dataoffset:dataoffset + datanum].decode('ascii')
 			elif datatype == 1:
@@ -535,6 +536,17 @@ class extractBFLYT(ClsFunc, rawutil.TypeReader):
 				entrydata = []
 				for j in range(0, datanum):
 					entrydata.append(self.float32(data, dataoffset + (j * 4))[0])
+			elif datatype == 3:  # String table ?
+				subptr = ptr
+				entrydata = []
+				unk1, unk2, unk3, unk4 = self.unpack_from("2H2I", data, dataoffset)
+				entry["unk1"], entry["unk2"], entry["unk3"], entry["unk4"] = unk1, unk2, unk3, unk4
+				strnum, subptr = self.uint32(data, subptr + 12)
+				tableref = subptr - 8
+				offsets = self.unpack_from("%dI" % strnum, data, subptr)
+				for i, offset in enumerate(offsets):
+					string, subptr = self.string(data, tableref + offset)
+					entrydata.append(string)
 			entry['name'] = self.string(data, nameoffset)[0]
 			entry['data'] = entrydata
 			entry['unknown'] = unknown

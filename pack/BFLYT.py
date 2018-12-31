@@ -146,7 +146,8 @@ class TypeWriter (rawutil.TypeWriter):
 		return out
 	
 	def string4(self, s):
-		s = s.encode('utf-8')
+		if isinstance(s, str):
+			s = s.encode('utf-8')
 		pad = 4 - (len(s) % 4 or 4)
 		return s + bytes(pad)
 
@@ -219,7 +220,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 		offset_tbl_length = len(self.textures) * 4
 		for name in self.textures:
 			offsets.append(len(filetable) + offset_tbl_length)
-			filetable += self.string(name)
+			filetable += name + b"\x00"
 		offsettbl = b''
 		for offset in offsets:
 			offsettbl += self.uint32(offset)
@@ -480,22 +481,25 @@ class packBFLYT(ClsFunc, TypeWriter):
 		for i, entry in enumerate(data['entries']):
 			entry['nameoffset'] = len(nametbl)
 			entry['dataoffset'] = len(datatbl)
-			nametbl += self.string(entry['name'])
-			etype = type(entry['data'][0])
-			if etype in (str, bytes, bytearray):
-				datatype = 0
-			elif etype == int:
-				datatype = 1
-			elif etype == float:
-				datatype = 2
-			entry['datatype'] = datatype
-			for el in entry['data']:
-				if datatype == 0:
-					datatbl += self.string(el)
-				elif datatype == 1:
-					datatbl += self.int32(el)
-				elif datatype == 2:
-					datatbl += self.float32(el)
+			nametbl += entry['name'] + b"\x00"
+			datatype = entry["type"]
+			if datatype == 3:
+				datatbl += self.pack("2H2I", entry["unk1"], entry["unk2"], entry["unk3"], entry["unk4"])
+				datatbl += self.uint32(len(entry["data"]))
+				offset = 8 + len(entry["data"]) * 4
+				for item in entry["data"]:
+					datatbl += self.uint32(offset)
+					offset += len(item) + 1
+				for item in entry["data"]:
+					datatbl += item + b"\x00"
+			else:
+				for el in entry['data']:
+					if datatype == 0:
+						datatbl += self.string(el)
+					elif datatype == 1:
+						datatbl += self.int32(el)
+					elif datatype == 2:
+						datatbl += self.float32(el)
 		datatbl += self.pad(4 - (len(datatbl) % 4 or 4))
 		nametbl += self.pad(4 - (len(nametbl) % 4 or 4))
 		for i, entry in enumerate(data['entries']):
@@ -508,7 +512,7 @@ class packBFLYT(ClsFunc, TypeWriter):
 			final += self.uint32(nameoffset)
 			final += self.uint32(dataoffset)
 			final += self.uint16(len(entry['data']))
-			final += self.uint8(entry['datatype'])
+			final += self.uint8(entry['type'])
 			final += self.uint8(entry['unknown'])
 		final += datatbl
 		final += nametbl
