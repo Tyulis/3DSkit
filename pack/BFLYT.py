@@ -13,12 +13,12 @@ WRAPS = (
 	'gx2 mirror once border'
 )
 
-MAPPING_METHODS = ('uv mapping', '<unknown>', '<unknown>' 'orthogonal projection','pane based projection')
-ALPHA_BLENDS = ('max', 'min')
+MAPPING_METHODS = ('uv mapping', '<unknown-1>', '<unknown-2>' 'orthogonal projection','pane based projection')
+ALPHA_BLENDS = ('max', 'min', '<unknown-2>', '<unknown-3>', '<unknown-4>')
 
 COLOR_BLENDS = (
 	'overwrite', 'multiply', 'add', 'exclude',
-	'<unknown>', 'subtract', 'dodge', 'burn',
+	'<unknown-4>', 'subtract', 'dodge', 'burn',
 	'overlay', 'indirect', 'blend indirect', 'each indirect'
 )
 
@@ -29,13 +29,13 @@ ALPHA_COMPARE_CONDITIONS = (
 )
 
 BLEND_CALC = (
-	'<unknown>', '<unknown>', 'fb color', 'fb color 1',
+	'<unknown-0>', '<unknown-1>', 'fb color', 'fb color 1',
 	'pixel alpha', 'pixel alpha 1', 'fb alpha', 'fb alpha 1',
 	'pixel color', 'pixel color 1'
 )
 
 BLEND_OPS = (
-	'<unknown>', 'add', 'subtract',
+	'<unknown-0>', 'add', 'subtract',
 	'reverse subtract', 'min', 'max'
 )
 
@@ -48,11 +48,11 @@ LOGICAL_OPS = (
 )
 
 PROJECTION_MAPPING_TYPES = (
-	'standard', 'entire layout', '<unknown>',
-	'<unknown>', 'pane r and s projection', '<unknown>', '<unknown>'
+	'standard', 'entire layout', '<unknown-2>',
+	'<unknown-3', 'pane r and s projection', '<unknown-5>', '<unknown-6>'
 )
 
-TEXT_ALIGNS = ('undefined','left', 'center','right')
+TEXT_ALIGNS = ('undefined', 'left', 'center', 'right')
 ORIG_X = ('center', 'left', 'right')
 ORIG_Y = ('center', 'up', 'down')
 
@@ -189,7 +189,7 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 			indirect = {}
 			alphacompare = {}
 			projmappings = {}
-			shadowblendings = {}
+			shadowblending = {}
 			for setting in material:
 				if setting.startswith('texture reference'): texrefs[setting] = material[setting]
 				elif setting.startswith('texture transformation'): textransforms[setting] = material[setting]
@@ -200,10 +200,12 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 				elif setting.startswith('alpha blending mode'): blendalpha[setting] = material[setting]
 				elif setting.startswith('indirect adjustment'): indirect[setting] = material[setting]
 				elif setting.startswith('projection mapping'): projmappings[setting] = material[setting]
-				elif setting.startswith('shadow blending'): shadowblendings[setting] = material[setting]
+				elif setting.startswith('shadow blending'): shadowblending[setting] = material[setting]
 			flags = (len(texrefs) + (len(textransforms) << 2) + (len(mapsettings) << 4) + (len(texcombiners) << 6) +
-				(len(blendmodes) << 8) + (len(blendalpha) << 10) + (len(indirect) << 12) + (len(alphacompare) << 13) +
-				(len(projmappings) << 14) + (len(shadowblendings) << 16))
+				(len(alphacompare) << 9) + (len(blendmodes) << 10) + (len(blendalpha) << 12) + (len(indirect) << 14) +
+				(len(projmappings) << 15) + (len(shadowblending) << 17))
+			if material['bad 0x800']:
+				flags|= 0x800
 			if self.version >= 0x08000000:
 				self.pack('I(4B)(4B)(4B)', flags, material['unknown'], material['foreground color'], material['background color'], output)
 			else:
@@ -224,7 +226,10 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 				node = material[nodename]
 				try: method = MAPPING_METHODS.index(node['method'])
 				except: error.BadDataError('In mat1, %s, %s : Bad mapping method' % (material['name'], nodename, node['method']))
-				self.pack('2B(6B)', node['unk1'], method, node['unk2'], output)
+				if self.version < 0x08000000:
+					self.pack('2B(6B)', node['unk1'], method, node['unk2'], output)
+				else:
+					self.pack('2B(14B)', node['unk1'], method, node['unk2'], output)
 			for nodename in sorted(texcombiners.keys()):
 				node = material[nodename]
 				try: colorblend = COLOR_BLENDS.index(node['color blending'])
@@ -249,17 +254,16 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 				except: error.BadDataError('In mat1, %s, %s : Bad logical operation' % (material['name'], nodename, node['logical operation']))
 				self.pack('4B', operation, sourceblend, destblend, logical, output)
 			for nodename in sorted(blendalpha.keys()):
-				if self.version != 0x07020100:
-					node = material[nodename]
-					try: operation = BLEND_OPS.index(node['operation'])
-					except: error.BadDataError('In mat1, %s, %s : Bad blending operation' % (material['name'], nodename, node['operation']))
-					try: sourceblend = BLEND_CALC.index(node['source blending'])
-					except: error.BadDataError('In mat1, %s, %s : Bad source blending operation' % (material['name'], nodename, node['source blending']))
-					try: destblend = BLEND_CALC.index(node['destination blending'])
-					except: error.BadDataError('In mat1, %s, %s : Bad destination blending operation' % (material['name'], nodename, node['destination blending']))
-					try: logical = LOGICAL_OPS.index(node['logical operation'])
-					except: error.BadDataError('In mat1, %s, %s : Bad logical operation' % (material['name'], nodename, node['logical operation']))
-					self.pack('4B', operation, sourceblend, destblend, logical, output)
+				node = material[nodename]
+				try: operation = BLEND_OPS.index(node['operation'])
+				except: error.BadDataError('In mat1, %s, %s : Bad blending operation' % (material['name'], nodename, node['operation']))
+				try: sourceblend = BLEND_CALC.index(node['source blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad source blending operation' % (material['name'], nodename, node['source blending']))
+				try: destblend = BLEND_CALC.index(node['destination blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad destination blending operation' % (material['name'], nodename, node['destination blending']))
+				try: logical = LOGICAL_OPS.index(node['logical operation'])
+				except: error.BadDataError('In mat1, %s, %s : Bad logical operation' % (material['name'], nodename, node['logical operation']))
+				self.pack('4B', operation, sourceblend, destblend, logical, output)
 			for nodename in sorted(indirect.keys()):
 				node = material[nodename]
 				self.pack('3f', node['rotation'], node['x warp'], node['y warp'], output)
@@ -268,11 +272,9 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 				try: option = PROJECTION_MAPPING_TYPES.index(node['option'])
 				except: error.BadDataError('In mat1, %s, %s : Bad projection mapping option' % (material['name'], nodename, node['option']))
 				self.pack('4f4B', node['x translation'], node['y translation'], node['x scale'], node['y scale'], option, node['unk1'], node['unk2'], node['unk3'], output)
-			for nodename in sorted(shadowblendings.keys()):
+			for nodename in sorted(shadowblending.keys()):
 				node = material[nodename]
 				self.pack('(4B)(3B)x', node['black blending'], node['white blending'], output)
-			if self.version >= 0x08000000:
-				output.write(8 * b'\x00')  # FIXME : Why ?
 
 		endpos = output.tell()
 		output.seek(offsetspos)
@@ -392,11 +394,9 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 		self.pack('4x 4f (4B)(4B)f', data['shadow x'], data['shadow y'], data['shadow width'], data['shadow height'], data['shadow top color'], data['shadow bottom color'], data['shadow italic tilt'], output)
 		chartransformoffsetpos = output.tell()
 		self.pack('4x', output)
-		if 'text' in data:
-			textoffset = output.tell() - startpos
-			self.pack('n4a', data['text'].encode('utf-16-' + ('le' if self.byteorder == '<' else 'be')), output)
-		else:
-			textoffset = 0
+		textoffset = output.tell() - startpos
+		textdata = data['text'].encode('utf-16-' + ('le' if self.byteorder == '<' else 'be')) + b'\x00\x00'
+		self.pack('%ds4a' % len(textdata), textdata, output)
 		if 'call name' in data:
 			callnameoffset = output.tell() - startpos
 			self.pack('n4a', data['call name'].encode('utf-8'), output)
@@ -448,19 +448,29 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 
 		self.pack('I2f', len(data['entries']), data['x part scale'], data['y part scale'], output)
 		paneoffsets = {}
+		cploffsets = {}
 		extraoffsets = {}
 		tablepos = output.tell()
-		output.seek(40 * len(data['entries']))
+		output.seek(40 * len(data['entries']), 1)
+		if self.version >= 0x08000000:
+			self.pack('n4a', data['part name'], output)
 		for i, entry in enumerate(data['entries']):
 			if 'pane' in entry:
-				paneoffsets[i] = output.tell()
+				paneoffsets[i] = output.tell() - startpos
 				self.packsection(entry['pane name'], entry['pane'], output)
 				self.secnum -= 1  # prt1 subsections are not counted
 			else:
 				paneoffsets[i] = 0
 		for i, entry in enumerate(data['entries']):
+			if 'complement' in entry:
+				cploffsets[i] = output.tell() - startpos
+				self.packsection(entry['complement name'], entry['complement'], output)
+				self.secnum -= 1  # prt1 subsections are not counted
+			else:
+				cploffsets[i] = 0
+		for i, entry in enumerate(data['entries']):
 			if 'extra' in entry:
-				extraoffsets[i] = output.tell()
+				extraoffsets[i] = output.tell() - startpos
 				output.write(bytes.fromhex(entry['extra']))
 			else:
 				extraoffsets[i] = 0
@@ -468,9 +478,8 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 
 		output.seek(tablepos)
 		for i, entry in enumerate(data['entries']):
-			self.pack('n24a 2BH3I', entry['name'].encode('utf-8'), entry['unk1'], entry['flags'], entry['unk2'], paneoffsets[i], entry['unk3'], extraoffsets[i], output)
-		if self.version >= 0x08000000:
-			self.pack('n4a', data['part name'], output)
+			self.pack('n24a 2BH3I', entry['name'].encode('utf-8'), entry['unk1'], entry['flags'], entry['unk2'], paneoffsets[i], cploffsets[i], extraoffsets[i], output)
+		output.seek(endpos)
 
 		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
 		endpos = output.tell()

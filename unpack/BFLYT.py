@@ -14,12 +14,12 @@ WRAPS = (
 	'gx2 mirror once border'
 )
 
-MAPPING_METHODS = ('uv mapping', '<unknown>', '<unknown>' 'orthogonal projection','pane based projection')
-ALPHA_BLENDS = ('max', 'min')
+MAPPING_METHODS = ('uv mapping', '<unknown-1>', '<unknown-2>', 'orthogonal projection', 'pane based projection')
+ALPHA_BLENDS = ('max', 'min', '<unknown-2>', '<unknown-3>', '<unknown-4>')
 
 COLOR_BLENDS = (
 	'overwrite', 'multiply', 'add', 'exclude',
-	'<unknown>', 'subtract', 'dodge', 'burn',
+	'<unknown-4>', 'subtract', 'dodge', 'burn',
 	'overlay', 'indirect', 'blend indirect', 'each indirect'
 )
 
@@ -30,13 +30,13 @@ ALPHA_COMPARE_CONDITIONS = (
 )
 
 BLEND_CALC = (
-	'<unknown>', '<unknown>', 'fb color', 'fb color 1',
+	'<unknown-0>', '<unknown-1>', 'fb color', 'fb color 1',
 	'pixel alpha', 'pixel alpha 1', 'fb alpha', 'fb alpha 1',
 	'pixel color', 'pixel color 1'
 )
 
 BLEND_OPS = (
-	'<unknown>', 'add', 'subtract',
+	'<unknown-0>', 'add', 'subtract',
 	'reverse subtract', 'min', 'max'
 )
 
@@ -49,11 +49,11 @@ LOGICAL_OPS = (
 )
 
 PROJECTION_MAPPING_TYPES = (
-	'standard', 'entire layout', '<unknown>',
-	'<unknown>', 'pane r and s projection', '<unknown>', '<unknown>'
+	'standard', 'entire layout', '<unknown-2>',
+	'<unknown-3>', 'pane r and s projection', '<unknown-5>', '<unknown-6>'
 )
 
-TEXT_ALIGNS = ('undefined','left', 'center','right')
+TEXT_ALIGNS = ('undefined', 'left', 'center', 'right')
 ORIG_X = ('center', 'left', 'right')
 ORIG_Y = ('center', 'up', 'down')
 
@@ -194,39 +194,47 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 			matnode['background color'] = backcolor
 			if unknown is not None:
 				matnode['unknown'] = unknown
+			if flags == 0x00000815:
+				matnode['bad 0x800'] = True
+				flags &= 0xFFFFF7FF
+			else:
+				matnode['bad 0x800'] = False
 			texrefs = flags & 0x00000003
 			textransforms = (flags & 0x0000000c) >> 2
 			mapsettings = (flags & 0x00000030) >> 4
 			texcombiners = (flags & 0x000000c0) >> 6
-			blendmodes = (flags & 0x00000300) >> 8
-			blendalpha = (flags & 0x00000c00) >> 10
-			indirect = (flags & 0x00001000) >> 12
-			alphacompare = (flags & 0x00002000) >> 13
-			projectionmappings = (flags & 0x0000c000) >> 14
-			shadowblendings = (flags & 0x00030000) >> 16
-			for i in range(texrefs):
+			alphacompare = (flags & 0x00000200) >> 9
+			blendmodes = (flags & 0x00000c00) >> 10
+			blendalpha = (flags & 0x00003000) >> 12
+			indirect = (flags & 0x00004000) >> 14
+			projectionmappings = (flags & 0x00018000) >> 15
+			shadowblending = (flags & 0x00020000) >> 17
+			for i in range(texrefs):  # 4B
 				flagnode = self.makenode(matnode, 'texture reference %d' % i)
 				index, wraps, wrapt = self.unpack_from('H2B', data)
 				flagnode['texture'] = self.texnames[index]
 				flagnode['wrap s'] = WRAPS[wraps]
 				flagnode['wrap t'] = WRAPS[wrapt]
-			for i in range(textransforms):
+			for i in range(textransforms):  # 20B
 				flagnode = self.makenode(matnode, 'texture transformation %d' % i)
 				flagnode['x translation'], flagnode['y translation'], flagnode['rotation'], flagnode['x scale'], flagnode['y scale'] = self.unpack_from('5f', data)
-			for i in range(mapsettings):
+			for i in range(mapsettings):  # 8B
 				flagnode = self.makenode(matnode, 'mapping setting %d' % i)
-				unk1, method, unk2 = self.unpack_from('2B(6B)', data)
+				if self.version < 0x08000000:
+					unk1, method, unk2 = self.unpack_from('2B(6B)', data)
+				else:
+					unk1, method, unk2 = self.unpack_from('2B(14B)', data)
 				flagnode['method'] = MAPPING_METHODS[method]
 				flagnode['unk1'] = unk1
 				flagnode['unk2'] = unk2
-			for i in range(texcombiners):
+			for i in range(texcombiners):  # 4B
 				flagnode = self.makenode(matnode, 'texture combiner %d' % i)
 				colorblend, alphablend, unk1, unk2 = self.unpack_from('4B', data)
 				flagnode['color blending'] = COLOR_BLENDS[colorblend]
 				flagnode['alpha blending'] = ALPHA_BLENDS[alphablend]
 				flagnode['unk1'] = unk1
 				flagnode['unk2'] = unk2
-			if alphacompare:
+			if alphacompare:  # 8B
 				flagnode = self.makenode(matnode, 'alpha comparison')
 				condition, unk1, unk2, unk3, value = self.unpack_from('4Bf', data)
 				flagnode['condition'] = ALPHA_COMPARE_CONDITIONS[condition]
@@ -234,33 +242,32 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 				flagnode['unk1'] = unk1
 				flagnode['unk2'] = unk2
 				flagnode['unk3'] = unk3
-			for i in range(blendmodes):
+			for i in range(blendmodes):  # 4B
 				flagnode = self.makenode(matnode, 'blending mode %d' % i)
 				operation, sourceblending, destblending, logical = self.unpack_from('4B', data)
 				flagnode['operation'] = BLEND_OPS[operation]
 				flagnode['source blending'] = BLEND_CALC[sourceblending]
 				flagnode['destination blending'] = BLEND_CALC[destblending]
 				flagnode['logical operation'] = LOGICAL_OPS[logical]
-			for i in range(blendalpha):
+			for i in range(blendalpha):  # 4B
 				flagnode = self.makenode(matnode, 'alpha blending mode %d' % i)
-				if self.version != 0x07020100:  # ?
-					operation, sourceblending, destblending, logical = self.unpack_from('4B', data)
-					flagnode['operation'] = BLEND_OPS[operation]
-					flagnode['source blending'] = BLEND_CALC[sourceblending]
-					flagnode['destination blending'] = BLEND_CALC[destblending]
-					flagnode['logical operation'] = LOGICAL_OPS[logical]
-			if indirect:
+				operation, sourceblending, destblending, logical = self.unpack_from('4B', data)
+				flagnode['operation'] = BLEND_OPS[operation]
+				flagnode['source blending'] = BLEND_CALC[sourceblending]
+				flagnode['destination blending'] = BLEND_CALC[destblending]
+				flagnode['logical operation'] = LOGICAL_OPS[logical]
+			if indirect:  # 12B
 				flagnode = self.makenode(matnode, 'indirect adjustment')
 				flagnode['rotation'], flagnode['warp x'], flagnode['warp y'] = self.unpack_from('3f', data)
-			for i in range(projectionmappings):
+			for i in range(projectionmappings):  # 20B
 				flagnode = self.makenode(matnode, 'projection mapping %d' % i)
 				flagnode['x translation'], flagnode['y translation'], flagnode['x scale'], flagnode['y scale'], option, unk1, unk2, unk3 = self.unpack_from('4f4B', data)
 				flagnode['option'] = PROJECTION_MAPPING_TYPES[option]
 				flagnode['unk1'] = unk1
 				flagnode['unk2'] = unk2
 				flagnode['unk3'] = unk3
-			for i in range(shadowblendings):
-				flagnode = self.makenode(matnode, 'shadow blending %d' % i)
+			if shadowblending:  # 8B
+				flagnode = self.makenode(matnode, 'shadow blending')
 				flagnode['black blending'], flagnode['white blending'] = self.unpack_from('(3B)(4B)x', data)
 
 			self.matnames.append(matnode['name'])
@@ -271,7 +278,6 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 	def readpane(self, data, node):
 		flags, origin, alpha, scale, name = self.unpack_from('4B |n32a', data)
 		node['name'] = name.decode('utf-8')
-		print(node['name'])
 		node['visible'] = bool(flags & 0b00000001)
 		node['transmit alpha'] = bool(flags & 0b00000010)
 		node['position adjustment'] = bool(flags & 0b00000100)
@@ -351,7 +357,14 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 		node['shadow top color'], node['shadow bottom color'], node['shadow italic tilt'], chartransformoffset = self.unpack_from('(4B)(4B)fI', data)
 		if callnameoffset != 0:
 			node['call name'] = self.unpack_from('n', data, startpos + callnameoffset)[0].decode('utf-8')
-		node['text'] = self.unpack_from('n', data, startpos + textoffset)[0].decode('utf-16-' + ('le' if self.byteorder == '<' else 'be'))
+		# The null in UTF-16 is a double null... So let's decode by hand...
+		data.seek(startpos + textoffset)
+		text = b''
+		curchar = data.read(2)
+		while curchar != b'\x00\x00':
+			text += curchar
+			curchar = data.read(2)
+		node['text'] = text.decode('utf-16-' + ('le' if self.byteorder == '<' else 'be'))
 		# TODO : Researches about the per-character transform structure (probably a transform matrix or something)
 		if chartransformoffset != 0:
 			node['per character transform'] = self.unpack_from('48s', data, startpos + chartransformoffset)[0].hex()
@@ -379,19 +392,24 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 		node['entries'] = []
 		for i in range(subnum):
 			entry = OrderedDict()
-			name, unk1, flags, unk2, paneoffset, unk3, extraoffset = self.unpack_from('n24a 2BH 3I', data)
+			name, unk1, flags, unk2, paneoffset, cploffset, extraoffset = self.unpack_from('n24a 2BH 3I', data)
 			entry['name'] = name.decode('utf-8')
 			entry['flags'] = flags
 			entry['unk1'] = unk1
 			entry['unk2'] = unk2
-			entry['unk3'] = unk3
 			pos = data.tell()
 			if paneoffset != 0:
 				magic, size = self.unpack_from('4sI', data, startpos + paneoffset)
-				data.seek(pos)
+				data.seek(startpos + paneoffset)
 				name, subnode = self.readsection(data, magic, startpos + paneoffset)
 				entry['pane name'] = name
 				entry['pane'] = subnode
+			if cploffset != 0:
+				magic, size = self.unpack_from('4sI', data, startpos + cploffset)
+				data.seek(startpos + cploffset)
+				name, subnode = self.readsection(data, magic, startpos + cploffset)
+				entry['complement name'] = name
+				entry['complement'] = subnode
 			if extraoffset != 0:
 				entry['extra'] = self.unpack_from('48s', data, startoffset + extraoffset)[0].hex()
 			node['entries'].append(entry)

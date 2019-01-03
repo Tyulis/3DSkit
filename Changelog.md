@@ -438,3 +438,7 @@
 	*	Added docs about the BFLYT format
 	*	Brand new implementation for unpack.BFLYT and pack.BFLYT, added support for Switch files (v8.6.0)
 	*	Old BFLYT implementations are still accessible using `-f BFLYT_old`
+*	v1.32.73
+	*	Fixed many bugs in pack.BFLYT and unpack.BFLYT
+	*	Support for wrapped usd1 sections in part1 in BFLYT files
+	*	Fixed docs format and content

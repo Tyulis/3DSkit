@@ -82,12 +82,12 @@ Defines the materials used in the layout.
 			- Bit 2-3   (0x0000000c): Number of texture transformations
 			- Bit 4-5   (0x00000030): Number of mapping settings
 			- Bit 6-7   (0x000000C0): Number of texture combiners
-			- Bit 8-9   (0x00000300): Number of blending modes
-			- Bit 10-11 (0x00000C00): Number of alpha blending modes
-			- Bit 12    (0x00001000): Has indirect adjustment
-			- Bit 13    (0x00002000): Has alpha comparison conditions
-			- Bit 14-15 (0x0000C000): Number of projection mappings
-			- Bit 16-17 (0x00030000): Number of shadow blendings
+			- Bit 9     (0x00000200): Has alpha comparison conditions
+			- Bit 10-11 (0x00000C00): Number of blending modes
+			- Bit 12-13 (0x00003000): Number of alpha blending modes
+			- Bit 14    (0x00004000): Has indirect adjustment
+			- Bit 15-16 (0x00018000): Number of projection mappings
+			- Bit 17    (0x00020000): Has shadow blending
 	- {For versions >= 8.0.0 **/!\\ Warning : this is a supposition /!\\**}
 		- I  : Bitflags (same as above)
 		- 4B : Unknown
@@ -106,7 +106,10 @@ Defines the materials used in the layout.
 	- (Mapping settings, number defined above)
 		- B  : <unknown>
 		- B  : Mapping method (index in MAPPING METHODS, see below for constants)
-		- 6B : <unknown>
+		- {For versions < 8.0.0}
+			- 6B : <unknown>
+		- {For versions >= 8.0.0}
+			- 14B : <unknown>
 	- (Texture combiners, number defined above)
 		- B  : Color blending (index in COLOR BLENDING, see below for constants)
 		- B  : Alpha blending (index in ALPHA BLENDING, see below for constants)
@@ -136,7 +139,7 @@ Defines the materials used in the layout.
 		- f  : Y scale
 		- B  : Option (index in MAPPING OPTIONS, see below for constants)
 		- 3B : <unknown>
-	- (Shadow blending, number defined above)
+	- (Shadow blending, as defined above)
 		- 3B : Black blending, as an RGB triplet
 		- 4B : White blending, as an RGBA quadruplet
 		- B  : Probably padding
@@ -319,6 +322,7 @@ Defines a pane that displays an image
 
 **/!\ Some things here are not sure nor complete /!\\**
 This is a generic pane that contains other panes. Purpose unknown, maybe used to group panes for batch operations ?
+Note that these sub-sections are not counted by the number of sections in the main header
 
 - 4s : Magic number ("prt1")
 - I  : Section size (including contained panes)
@@ -332,7 +336,7 @@ This is a generic pane that contains other panes. Purpose unknown, maybe used to
 	- B  : Bitflags ?
 	- H  : Padding ?
 	- I  : Sub-pane offset, relative to the start of the section. If non-zero, links to the pane data, that is just an usual section, may be pic1, wnd1, bnd1, txt1 or prt1
-	- I  : <unknown>
+	- I  : Complementary data offset, relative to the start of the section. If non-zero, links to an usd1 sub-section
 	- I  : Extra data offset, relative to the start of the section. If non-zero, links to an "extra" data structure 48 bytes long, with an unknown structure.
 
 {Observed only with version >= 8.0.0, conditions not sure}
@@ -556,12 +560,12 @@ Y ORIGIN :
 
 *This is a format documentation originally made by Tyulis for the 3DSkit project.
 It is not an absolute reference, and may contain wrong, outdated or incomplete stuff.
-Sources used to make this document and contributors are listed below, the rest has been found by personal investigations
+Sources used to make this document and contributors are listed below, the rest has been found by personal investigations.
 If you find any error, incomplete or outdated stuff, dont't hesitate to open an issue or a pull request in the [3DSkit GitHub repository](https://github.com/Tyulis/3DSkit).
 This document is completely free of charge, you can read it, use it, share it, modify it, sell it if you want without any conditions
 (but leaving this paragraph and sharing extensions and corrections of this document on the original repository would just be the most basic of kindnesses)
 
-Documentation about the structure of this document is [here](https://github.com/Tyulis/3DSkit/doc/README.md)
+Documentation about the structure of this document is [here](https://github.com/Tyulis/3DSkit/doc/README.md)*
 
 ## Credits and sources
 - [BenzinU](https://gbatemp.net/threads/benzinu-release.423171/), by Diddy81
