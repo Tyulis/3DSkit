@@ -74,7 +74,7 @@ Defines the materials used in the layout.
 - [I]: Offset table, contains offsets to meterial descriptions, relative to the beginning of the section
 - [Material descriptions]:
 	- 28s : Material name, as a null-terminated string padded with zeros to 20 bytes
-	{For versions < 8.0.0}
+	- {For versions < 8.0.0}
 		- 4B  : Foreground color, as an RGBA quadruplet
 		- 4B  : Background color, as an RGBA quadruplet
 		- I   : Bitflags (when there is several textures, each information of the same type is probably for its respective texture)
@@ -88,7 +88,7 @@ Defines the materials used in the layout.
 			- Bit 13    (0x00002000): Has alpha comparison conditions
 			- Bit 14-15 (0x0000C000): Number of projection mappings
 			- Bit 16-17 (0x00030000): Number of shadow blendings
-	{For versions >= 8.0.0 **/!\\ Warning : this is a supposition /!\\**}
+	- {For versions >= 8.0.0 **/!\\ Warning : this is a supposition /!\\**}
 		- I  : Bitflags (same as above)
 		- 4B : Unknown
 		- 4B : Foreground color, as an RGBA quadruplet
