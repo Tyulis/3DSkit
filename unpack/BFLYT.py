@@ -412,7 +412,7 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 				entry['complement name'] = name
 				entry['complement'] = subnode
 			if extraoffset != 0:
-				entry['extra'] = self.unpack_from('48s', data, startoffset + extraoffset)[0].hex()
+				entry['extra'] = self.unpack_from('48s', data, startpos + extraoffset)[0].hex()
 			node['entries'].append(entry)
 			data.seek(pos)
 		if self.version >= 0x08000000:
