@@ -258,7 +258,7 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 				flagnode['logical operation'] = LOGICAL_OPS[logical]
 			if indirect:  # 12B
 				flagnode = self.makenode(matnode, 'indirect adjustment')
-				flagnode['rotation'], flagnode['warp x'], flagnode['warp y'] = self.unpack_from('3f', data)
+				flagnode['rotation'], flagnode['x warp'], flagnode['y warp'] = self.unpack_from('3f', data)
 			for i in range(projectionmappings):  # 20B
 				flagnode = self.makenode(matnode, 'projection mapping %d' % i)
 				flagnode['x translation'], flagnode['y translation'], flagnode['x scale'], flagnode['y scale'], option, unk1, unk2, unk3 = self.unpack_from('4f4B', data)

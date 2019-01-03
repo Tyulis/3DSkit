@@ -346,7 +346,7 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 		except: error.BadDataError('In %s : Material name %s does not match with any in mat1' % (name, data['material']))
 		self.pack('HBx', material, len(data['uv coordinates']), output)
 		for coords in data['uv coordinates']:
-			self.pack('(2f)(2f)(2f)(2f)', node['top left'], node['top right'], node['bottom left'], node['bottom right'], output)
+			self.pack('(2f)(2f)(2f)(2f)', coords['top left'], coords['top right'], coords['bottom left'], coords['bottom right'], output)
 
 		# Window frames
 		framesoffset = output.tell() - startpos
