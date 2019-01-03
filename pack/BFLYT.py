@@ -13,7 +13,7 @@ WRAPS = (
 	'gx2 mirror once border'
 )
 
-MAPPING_METHODS = ('uv mapping', '<unknown-1>', '<unknown-2>' 'orthogonal projection','pane based projection')
+MAPPING_METHODS = ('uv mapping', '<unknown-1>', '<unknown-2>', 'orthogonal projection', 'pane based projection')
 ALPHA_BLENDS = ('max', 'min', '<unknown-2>', '<unknown-3>', '<unknown-4>')
 
 COLOR_BLENDS = (
@@ -386,7 +386,7 @@ class packBFLYT(ClsFunc, rawutil.TypeWriter):
 		try: linealign = TEXT_ALIGNS.index(data['line alignment'])
 		except: error.BadDataError('In %s : Bad line alignment %s' % (name, data['line alignment']))
 		alignment = xalign | (yalign << 2)
-		flags = data['shadow enabled'] | (data['restricted length enabled'] << 1) | (data['invisible border'] << 2) | (data['two cycles border rendering'] << 3) | (data['per char transform enabled'] << 4)
+		flags = data['shadow enabled'] | (data['restricted length enabled'] << 1) | (data['invisible border'] << 2) | (data['two cycles border rendering'] << 3) | (data['per char transform enabled'] << 4) | (data['unknown'] << 5)
 		self.pack('3Bx f', alignment, linealign, flags, data['italic tilt'], output)
 		textoffsetpos = output.tell()
 		self.pack('4x (4B)(4B) 4f', data['font top color'], data['font bottom color'], data['x font size'], data['y font size'], data['char spacing'], data['line spacing'], output)

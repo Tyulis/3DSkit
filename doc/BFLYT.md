@@ -271,6 +271,7 @@ Defines a pane displaying text
 - B  : Text alignment flags
 	- Bit 0-1 (0b00000011) : Horizontal alignment (index in X ORIGIN, see below for constants)
 	- Bit 2-3 (0b00001100) : Vertical alignment (index in Y ORIGIN, see below for constants)
+	- Other bits : <unknown>
 - B  : Line alignment (index in TEXT ALIGNMENT, see below for constants)
 - B  : Bitflags
 	- Bit 0 (0b00000001) : Shadow enabled
@@ -278,6 +279,7 @@ Defines a pane displaying text
 	- Bit 2 (0b00000100) : Invisible border
 	- Bit 3 (0b00001000) : Two-cycles border rendering
 	- Bit 4 (0b00010000) : Per character transform enabled
+	- Bit 5 (0b00100000) : Unknown, only seen in versions > 8.0.0
 - B  : Padding ?
 - f  : Italic tilt
 - I  : Text offset, relative to the start of the section. The text is null terminated (theorically of the defined length), and encoded in UTF-16

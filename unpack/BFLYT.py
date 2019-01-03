@@ -352,6 +352,7 @@ class extractBFLYT (rawutil.TypeReader, ClsFunc):
 		node['invisible border'] = bool(flags & 0b00000100)
 		node['two cycles border rendering'] = bool(flags & 0b00001000)
 		node['per char transform enabled'] = bool(flags & 0b00010000)
+		node['unknown'] = bool(flags & 0b00100000)
 		node['italic tilt'], textoffset, node['font top color'], node['font bottom color'], node['x font size'], node['y font size'] = self.unpack_from('fI (4B)(4B)2f', data)
 		node['char spacing'], node['line spacing'], callnameoffset, node['shadow x'], node['shadow y'], node['shadow width'], node['shadow height'] = self.unpack_from('2f I 4f', data)
 		node['shadow top color'], node['shadow bottom color'], node['shadow italic tilt'], chartransformoffset = self.unpack_from('(4B)(4B)fI', data)
