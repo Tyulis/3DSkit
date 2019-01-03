@@ -186,7 +186,7 @@ This defines a "null" pane, an invisible abstract pane with only an pane meta-da
 
 - 4s : Magic number ("pan1")
 - I  : Section size
-- *<Pane data section>*
+- *\<Pane data section\>*
 
 ### pas1 section (PAne Start)
 
@@ -209,7 +209,7 @@ This is always a node pane
 
 - 4s : Magic number ("pan1")
 - I  : Section size
-- *<Pane data section>*
+- *\<Pane data section\>*
 
 ### wnd1 section (WiNDow)
 
@@ -217,7 +217,7 @@ This defines a "window", where other panes are shown. This is usually a node.
 
 - 4s : Magic number ("wnd1")
 - I  : Section size
-- *<Pane data section>*
+- *\<Pane data section\>*
 - H  : Left stretch
 - H  : Right stretch
 - H  : Top stretch
@@ -260,7 +260,7 @@ Defines a pane displaying text
 
 - 4s : Magic number ("txt1")
 - I  : Section size
-- *<Pane data section>*
+- *\<Pane data section\>*
 - H  : Text length
 - H  : Restricted text length
 - H  : Material index
@@ -301,7 +301,7 @@ Defines a pane that displays an image
 
 - 4s : Magic number ("pic1")
 - I  : Section size
-- *<Pane data section>*
+- *\<Pane data section\>*
 - 4B : Top-left vertex color (RGBA)
 - 4B : Top-right vertex color (RGBA)
 - 4B : Bottom-left vertex color (RGBA)
@@ -322,7 +322,7 @@ This is a generic pane that contains other panes. Purpose unknown, maybe used to
 
 - 4s : Magic number ("prt1")
 - I  : Section size (including contained panes)
-- *<Pane data section>*
+- *\<Pane data section\>*
 - I  : Number of entries
 - 2f : Sections scale (X, Y)
 
