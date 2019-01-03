@@ -29,16 +29,16 @@ Description of the section
 - i  : Signed 32-bits integer (int32 / int, 4o)
 - Q  : Unsigned 64-bits integer (uint64, 8o)
 - q  : Signed 64-bits integer (int64, 8o)
-(Group of data, may be conditional or in several copies, or at an other place in the file)
+- (Group of data, may be conditional or in several copies, or at an other place in the file)
 	- f : 32-bits single-precision float (float, 4o)
 	- d : 64-bits double-precision float (double, 8o)
-{Differences between several possibilities, usually related to file format versions}
+- {Differences between several possibilities, usually related to file format versions}
 	- ? : 8-bits boolean, typically 0 or 1 (bool / uint8_t, 1o)
-{Other possibility}
+- {Other possibility}
 	- [I]: List, number of elements is usually precised.
 - 4B : Group of 4 related uint8 (a color, for example)
 - n  : String of arbitrary size, terminated by a null byte
 - B  : Example of bitflags
 	- Bit 0-2 (0b00000111) : Bytes are counted from least to most significant bit, with the associated bit mask
 	- Bit 3   (0b00001000) : <unknown> (indicates something unknown, to be completed)
-*<Some other information, for example a reference to another part or an unknown structure>*
+- *<Some other information, for example a reference to another part or an unknown structure>*

@@ -184,53 +184,53 @@ which has always the same structure for all pane types :
 
 This defines a "null" pane, an invisible abstract pane with only an pane meta-data section. It is usually used for tree nodes, while "concrete" panes are usually leaves of the tree
 
-4s : Magic number ("pan1")
-I  : Section size
-*<Pane data section>*
+- 4s : Magic number ("pan1")
+- I  : Section size
+- *<Pane data section>*
 
 ### pas1 section (PAne Start)
 
 A little section that indicates the start of the children list
 
-4s : Magic number ("pas1")
-I  : Section size (theorically 8)
+- 4s : Magic number ("pas1")
+- I  : Section size (theorically 8)
 
 ### pae1 section (PAne End)
 
 A little section that indicates the end of a tree node
 
-4s : Magic number ("pae1")
-I  : Section size (theorically 8)
+- 4s : Magic number ("pae1")
+- I  : Section size (theorically 8)
 
 ### bnd1 section (BouNDary)
 
 This defines a "boundary", and is basically a pane without any additional information. Purpose unknown, maybe something to hide children outside of it.
 This is always a node pane
 
-4s : Magic number ("pan1")
-I  : Section size
-*<Pane data section>*
+- 4s : Magic number ("pan1")
+- I  : Section size
+- *<Pane data section>*
 
 ### wnd1 section (WiNDow)
 
 This defines a "window", where other panes are shown. This is usually a node.
 
-4s : Magic number ("wnd1")
-I  : Section size
-*<Pane data section>*
-H  : Left stretch
-H  : Right stretch
-H  : Top stretch
-H  : Bottom stretch
-H  : Custom left
-H  : Custom right
-H  : Custom top
-H  : Custom bottom
-B  : Number of frames
-B  : Bitflags ?
-H  : Padding
-I  : Content offset, relative to the start of the section
-I  : Frame offset table offset, relative to the start of the section
+- 4s : Magic number ("wnd1")
+- I  : Section size
+- *<Pane data section>*
+- H  : Left stretch
+- H  : Right stretch
+- H  : Top stretch
+- H  : Bottom stretch
+- H  : Custom left
+- H  : Custom right
+- H  : Custom top
+- H  : Custom bottom
+- B  : Number of frames
+- B  : Bitflags ?
+- H  : Padding
+- I  : Content offset, relative to the start of the section
+- I  : Frame offset table offset, relative to the start of the section
 
 (Window content, offset defined above)
 	- 4B : Top left vertex color (RGBA)
@@ -258,39 +258,39 @@ I  : Frame offset table offset, relative to the start of the section
 
 Defines a pane displaying text
 
-4s : Magic number ("txt1")
-I  : Section size
-*<Pane data section>*
-H  : Text length
-H  : Restricted text length
-H  : Material index
-H  : Font index
-B  : Text alignment flags
+- 4s : Magic number ("txt1")
+- I  : Section size
+- *<Pane data section>*
+- H  : Text length
+- H  : Restricted text length
+- H  : Material index
+- H  : Font index
+- B  : Text alignment flags
 	- Bit 0-1 (0b00000011) : Horizontal alignment (index in X ORIGIN, see below for constants)
 	- Bit 2-3 (0b00001100) : Vertical alignment (index in Y ORIGIN, see below for constants)
-B  : Line alignment (index in TEXT ALIGNMENT, see below for constants)
-B  : Bitflags
+- B  : Line alignment (index in TEXT ALIGNMENT, see below for constants)
+- B  : Bitflags
 	- Bit 0 (0b00000001) : Shadow enabled
 	- Bit 1 (0b00000010) : Restricted text length enabled
 	- Bit 2 (0b00000100) : Invisible border
 	- Bit 3 (0b00001000) : Two-cycles border rendering
 	- Bit 4 (0b00010000) : Per character transform enabled
-B  : Padding ?
-f  : Italic tilt
-I  : Text offset, relative to the start of the section. The text is null terminated (theorically of the defined length), and encoded in UTF-16
-4B : Font top color (RGBA)
-4B : Font bottom color (RGBA)
-f  : X font size
-f  : Y font size
-f  : Character spacing
-f  : Line spacing
-I  : Textbox name offset (*"call name"*), relative to the start of the section. The call name is null terminated and encoded in ASCII
-2f : Shadow position (X, Y)
-2f : Shadow size (X, Y)
-4B : Shadow top color (RGBA)
-4B : Shadow bottom color (RGBA)
-f  : Shadow italic tilt ? [reference needed]
-I  : Per character transform structure offset, relative to the start of the section
+- B  : Padding ?
+- f  : Italic tilt
+- I  : Text offset, relative to the start of the section. The text is null terminated (theorically of the defined length), and encoded in UTF-16
+- 4B : Font top color (RGBA)
+- 4B : Font bottom color (RGBA)
+- f  : X font size
+- f  : Y font size
+- f  : Character spacing
+- f  : Line spacing
+- I  : Textbox name offset (*"call name"*), relative to the start of the section, if non zero. The call name is null terminated and encoded in ASCII
+- 2f : Shadow position (X, Y)
+- 2f : Shadow size (X, Y)
+- 4B : Shadow top color (RGBA)
+- 4B : Shadow bottom color (RGBA)
+- f  : Shadow italic tilt ? [reference needed]
+- I  : Per character transform structure offset, relative to the start of the section, if non zero
 
 (Per character transform structure, offset defined above)
 <unknown>
@@ -299,44 +299,44 @@ I  : Per character transform structure offset, relative to the start of the sect
 
 Defines a pane that displays an image
 
-4s : Magic number ("pic1")
-I  : Section size
-*<Pane data section>*
-4B : Top-left vertex color (RGBA)
-4B : Top-right vertex color (RGBA)
-4B : Bottom-left vertex color (RGBA)
-4B : Bottom-right vertex color (RGBA)
-H  : Material index
-B  : Number of UV coordinates
-B  : Padding
-(UV coordinates, number defined above)
-	2f : Top-left UV coordinates
-	2f : Top-right UV coordinates
-	2f : Bottom-left UV coordinates
-	2f : Bottom-right UV coordinates
+- 4s : Magic number ("pic1")
+- I  : Section size
+- *<Pane data section>*
+- 4B : Top-left vertex color (RGBA)
+- 4B : Top-right vertex color (RGBA)
+- 4B : Bottom-left vertex color (RGBA)
+- 4B : Bottom-right vertex color (RGBA)
+- H  : Material index
+- B  : Number of UV coordinates
+- B  : Padding
+- (UV coordinates, number defined above)
+	- 2f : Top-left UV coordinates
+	- 2f : Top-right UV coordinates
+	- 2f : Bottom-left UV coordinates
+	- 2f : Bottom-right UV coordinates
 
 ### prt1 section (PaRT ?)
 
 **/!\ Some things here are not sure nor complete /!\\**
 This is a generic pane that contains other panes. Purpose unknown, maybe used to group panes for batch operations ?
 
-4s : Magic number ("prt1")
-I  : Section size (including contained panes)
-*<Pane data section>*
-I  : Number of entries
-2f : Sections scale (X, Y)
+- 4s : Magic number ("prt1")
+- I  : Section size (including contained panes)
+- *<Pane data section>*
+- I  : Number of entries
+- 2f : Sections scale (X, Y)
 
 (Sub-panes table entries, number defined above)
-	24s: Entry name, null terminated and padded with zeros to 24 bytes
-	B  : <unknown>
-	B  : Bitflags ?
-	H  : Padding ?
-	I  : Sub-pane offset, relative to the start of the section. If non-zero, links to the pane data, that is just an usual section, may be pic1, wnd1, bnd1, txt1 or prt1
-	I  : <unknown>
-	I  : Extra data offset, relative to the start of the section. If non-zero, links to an "extra" data structure 48 bytes long, with an unknown structure.
+	- 24s: Entry name, null terminated and padded with zeros to 24 bytes
+	- B  : <unknown>
+	- B  : Bitflags ?
+	- H  : Padding ?
+	- I  : Sub-pane offset, relative to the start of the section. If non-zero, links to the pane data, that is just an usual section, may be pic1, wnd1, bnd1, txt1 or prt1
+	- I  : <unknown>
+	- I  : Extra data offset, relative to the start of the section. If non-zero, links to an "extra" data structure 48 bytes long, with an unknown structure.
 
 {Observed only with version >= 8.0.0, conditions not sure}
-	24s : Part name ?
+	- 24s : Part name ?
 
 ## Group tree
 
@@ -354,30 +354,30 @@ There is always a root group called "RootGroup".
 
 Contains informations about a group
 
-4s : Magic number ("grp1")
-I  : Section size
-{For version <= 0x05020000 (5.2.0)}
-	24s: Group name, null-terminated and padded with zeros to 24 bytes (0x18)
-	H  : Number of children
-	H  : Padding
-{For version > 0x05020000 (5.2.0)}
- 	34s: Group name, null-terminated and padded with zeros to 34 bytes (0x22)
-	H  : Number of children
-[24s] : Children panes names, number defined above, each name is null terminated and padded with zeros to 24 bytes (0x18)
+- 4s : Magic number ("grp1")
+- I  : Section size
+- {For version <= 0x05020000 (5.2.0)}
+	- 24s: Group name, null-terminated and padded with zeros to 24 bytes (0x18)
+	- H  : Number of children
+	- H  : Padding
+- {For version > 0x05020000 (5.2.0)}
+	- 34s: Group name, null-terminated and padded with zeros to 34 bytes (0x22)
+	- H  : Number of children
+- [24s] : Children panes names, number defined above, each name is null terminated and padded with zeros to 24 bytes (0x18)
 
 ### grs1 section (GRoup Start)
 
 Starts the list of children groups of a group
 
-4s : Magic number ("grs1")
-I  : Section size (theorically 8)
+- 4s : Magic number ("grs1")
+- I  : Section size (theorically 8)
 
 ### gre1 section (GRoup End)
 
 Ends the list of children groups of a group
 
-4s : Magic number ("gre1")
-I  : Section size (theorically 8)
+- 4s : Magic number ("gre1")
+- I  : Section size (theorically 8)
 
 ## cnt1 section
 
@@ -385,56 +385,57 @@ I  : Section size (theorically 8)
 
 This section is usually the last in the file, and contains information related to animations
 
-4s : Magic number ("cnt1")
-I  : Section size
-I  : Section name offset, relative to the start of the section. Point on a null terminated ASCII name aligned to have a length multiple of 4
-I  : Main table offset, relative to the start of the section.
-H  : Number of parts
-H  : Number of animations
-I  : Parts table offset, relative to the start of the section.
-I  : Animations table offset, relative to the start of the section ? [supposition, maybe one table by part]
-{Only observed with version >= 8.0.0, conditions not sure}
-	n : Duplicate of the section name ?
+- 4s : Magic number ("cnt1")
+- I  : Section size
+- I  : Section name offset, relative to the start of the section. Point on a null terminated ASCII name aligned to have a length multiple of 4
+- I  : Main table offset, relative to the start of the section.
+- H  : Number of parts
+- H  : Number of animations
+- I  : Parts table offset, relative to the start of the section.
+- I  : Animations table offset, relative to the start of the section ? [supposition, maybe one table by part]
+- n : Duplicate of the section name ?
 
 (Main table, offset defined above)
-	[24s]: Parts names, as ASCII null terminated strings padded by zeros to 24 bytes
-	[I]  : Animation name offsets relative to the start of this table, number is number of animations defined above
-	[n]  : Animation names, as null-terminated ASCII strings at defined offsets
+	- [24s]: Parts names, as ASCII null terminated strings padded by zeros to 24 bytes
+	- [I]  : Animation name offsets relative to the start of this table, number is number of animations defined above
+	- [n]  : Animation names, as null-terminated ASCII strings at defined offsets
+
 (Parts table, offset defined above)
-	[I]  : Name offsets, relative to the start of this table. Number is the number of parts
-	[n]  : Parts names, as ASCII null terminated strings
+	- [I]  : Name offsets, relative to the start of this table. Number is the number of parts
+	- [n]  : Parts names, as ASCII null terminated strings
+
 (Animations table, offset defined above)
-	[I]  : Name offsets, relative to the start of this table. Number is the number of animations
-	[n]  : Animation names, as ASCII null terminated strings
+	- [I]  : Name offsets, relative to the start of this table. Number is the number of animations
+	- [n]  : Animation names, as ASCII null terminated strings
 
 ## usd1 sections (USer Defined ?)
 
 usd1 sections give additional data about another section. Content is defined by the creator, and usually just follows the section it is related.
 Completed sections are usually panes, but it may also be anywhere in the file, for example just after the lyt1 section.
 
-4s : Magic number ("usd1")
-I  : Section size
-H  : Number of entries
-H  : <unknown>
-(Entries, number defined above)
-	I : Entry's name offset, relative to the start of the entry. Links to the name encoded in ASCII, null terminated.
-	I : Data offset, relative to the start of the entry
-	H : Number of values or length of the value, depending of the data type
-	B : Data type, see below.
-	B : <unknown>
-	{For data type 0, offset defined above}
-		s : Raw data, usually a string, length defined above
-	{For data type 1, offset defined above}
-		[i]: Signed 32-bits integers, number defined above
-	{For data type 2, offset defined above}
-		[f]: 32-bits single-precision floats, number defined above
-	{For data type 3, offset defined above. Only encountered in Switch files}
-		2H : <unknown>
-		I  : <unknown>
-		I  : <unknown>. The offset reference is at this position
-		I  : Number of strings
-		[I]: Strings offsets, number defined above, relative to 4 bytes before the number of strings (see above)
-		Then null terminated strings at defined offsets
+- 4s : Magic number ("usd1")
+- I  : Section size
+- H  : Number of entries
+- H  : <unknown>
+- (Entries, number defined above)
+	- I : Entry's name offset, relative to the start of the entry. Links to the name encoded in ASCII, null terminated.
+	- I : Data offset, relative to the start of the entry
+	- H : Number of values or length of the value, depending of the data type
+	- B : Data type, see below.
+	- B : <unknown>
+	- {For data type 0, offset defined above}
+		- s : Raw data, usually a string, length defined above
+	- {For data type 1, offset defined above}
+		- [i]: Signed 32-bits integers, number defined above
+	- {For data type 2, offset defined above}
+		- [f]: 32-bits single-precision floats, number defined above
+	- {For data type 3, offset defined above. Only encountered in Switch files}
+		- 2H : <unknown>
+		- I  : <unknown>
+		- I  : <unknown>. The offset reference is at this position
+		- I  : Number of strings
+		- [I]: Strings offsets, number defined above, relative to 4 bytes before the number of strings (see above)
+		- Then null terminated strings at defined offsets
 
 ## Constants
 
