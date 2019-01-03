@@ -61,7 +61,7 @@ class _ClsFunc (object):
 class TypeUser (object):
 	def __init__(self, byteorder='@'):
 		self.byteorder = byteorder
-	
+
 	def pack(self, stct, *data, out=None):
 		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
 		stct = stct.lstrip('<>=!@')
@@ -76,7 +76,7 @@ class TypeUser (object):
 			out = None
 		packed = _pack(stct, data, byteorder, out)
 		return packed
-	
+
 	def unpack(self, stct, data, names=None, refdata=()):
 		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
 		stct = stct.lstrip('<>=!@')
@@ -90,7 +90,7 @@ class TypeUser (object):
 		elif hasattr(names, '_fields') and hasattr(names, '_asdict'):  #trying to recognize a namedtuple
 			unpacked = names(unpacked)
 		return unpacked
-	
+
 	def unpack_from(self, stct, data, offset=None, names=None, refdata=(), getptr=False):
 		byteorder = stct[0] if stct[0] in '@=><!' else self.byteorder
 		stct = stct.lstrip('<>=!@')
@@ -119,14 +119,14 @@ def _readermethod(el):
 class TypeReader (TypeUser):
 	def tobits(self, n, align=8):
 		return [int(bit) for bit in bin(n, align)]
-		
+
 	def bit(self, n, bit, length=1):
 		mask = ((2 ** length) - 1) << bit
 		return (n & mask) >> (bit - length)
-	
+
 	def nibbles(self, n):
 		return (n >> 4, n & 0xf)
-	
+
 	def signed_nibbles(self, n):
 		high = (n >> 4)
 		if high >= 8:
@@ -135,7 +135,7 @@ class TypeReader (TypeUser):
 		if low >= 8:
 			low -= 16
 		return high, low
-	
+
 	uint8 = _readermethod('B')
 	uint16 = _readermethod('H')
 	uint24 = _readermethod('U')
@@ -146,10 +146,10 @@ class TypeReader (TypeUser):
 	int24 = _readermethod('u')
 	int32 = _readermethod('i')
 	int64 = _readermethod('q')
-	float32 = float = _readermethod('f')
-	double = _readermethod('d')
+	float32 = float = single = _readermethod('f')
+	float64 = double = _readermethod('d')
 	string = _readermethod('n')
-	
+
 	def utf16string(self, data, ptr):
 		subdata = data[ptr:]
 		s = []
@@ -164,7 +164,7 @@ class TypeReader (TypeUser):
 				break
 		endian = 'le' if self.byteorder == '<' else 'be'
 		return bytes(s[:-2]).decode('utf-16-%s' % endian), ptr + i
-		
+
 
 def _writermethod(el):
 	def _TypeWriter_Method(self, data, out=None):
@@ -178,14 +178,14 @@ def _writermethod(el):
 class TypeWriter (TypeUser):
 	def nibbles(self, high, low):
 		return (high << 4) + (low & 0xf)
-	
+
 	def signed_nibbles(self, high, low):
 		if high < 0:
 			high += 16
 		if low < 0:
 			low += 16
 		return (high << 4) + (low & 0xf)
-		
+
 	uint8 = _writermethod('B')
 	uint16 = _writermethod('H')
 	uint24 = _writermethod('U')
@@ -196,9 +196,9 @@ class TypeWriter (TypeUser):
 	int24 = _writermethod('u')
 	int32 = _writermethod('i')
 	int64 = _writermethod('q')
-	float32 = float = _writermethod('f')
-	double = _writermethod('d')
-	
+	float32 = float = single = _writermethod('f')
+	float64 = double = _writermethod('d')
+
 	def string(self, data, align=0, out=None):
 		if isinstance(data, str):
 			data = data.encode('utf-8')
@@ -209,7 +209,7 @@ class TypeWriter (TypeUser):
 			return res
 		else:
 			out.write(res)
-	
+
 	def utf16string(self, data, align=0, out=None):
 		endian = 'le' if self.byteorder == '<' else 'be'
 		s = data.encode('utf-16-%s' % endian) + b'\x00\x00'
@@ -220,10 +220,10 @@ class TypeWriter (TypeUser):
 			return res
 		else:
 			out.write(res)
-	
+
 	def pad(self, num):
 		return b'\x00' * num
-	
+
 	def align(self, data, alignment):
 		padding = alignment - (len(data) % alignment or alignment)
 		return b'\x00' * padding
@@ -232,7 +232,7 @@ class TypeWriter (TypeUser):
 class _InternRef (object):
 	def __init__(self, type='s', index=1):
 		self.type, self.index = type, index
-	
+
 	def __repr__(self):
 		return '/%s%d' % (self.type, self.index)
 
@@ -240,7 +240,7 @@ class _InternRef (object):
 class _Sub (object):
 	def __init__(self, type, structure):
 		self.type, self.stct = type, structure
-	
+
 	def __repr__(self):
 		return '%s%s%s' % (self.type[0], self.stct, self.type[1])
 
@@ -321,7 +321,7 @@ class _unpack (_ClsFunc, _StructParser):
 			self.data = self.data[ptr:]
 			self.ptr = 0
 			return self.unpack(stct)
-	
+
 	def unpack(self, stct):
 		groupbase = self.ptr
 		final = []
@@ -394,7 +394,7 @@ class _unpack (_ClsFunc, _StructParser):
 					self.ptr += length
 					final += struct.unpack(substruct, subdata)
 		return final, self.ptr + self.offset
-	
+
 	def unpack_file(self, stct):
 		groupbase = self.data.tell()
 		final = []
@@ -480,7 +480,7 @@ class _pack (_StructParser, _ClsFunc):
 		else:
 			self.final = out
 			self.pack_file(stct, data)
-	
+
 	def pack(self, stct, data):
 		ptr = 0
 		groupbase = len(self.final)
@@ -555,7 +555,7 @@ class _pack (_StructParser, _ClsFunc):
 					ptr += count
 					self.final += struct.pack(substruct, *subdata)
 		return ptr
-	
+
 	def pack_file(self, stct, data):
 		ptr = 0
 		groupbase = self.final.tell()

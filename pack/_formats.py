@@ -5,4 +5,5 @@ formats = (
 	'BFLYT', 'ALYT', 'BFLIM',
 	'BCSTM',
 	'mini', 'MINI', #avoids error with format.upper()
+	'BFLYT_old',  # temporary
 )

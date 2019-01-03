@@ -13,7 +13,7 @@ from io import BytesIO, StringIO
 from util import error
 import util
 
-__version__ = '1.31.72'
+__version__ = '1.32.72'
 
 
 def parse_opts(s):
@@ -28,7 +28,7 @@ def parse_opts(s):
 		name, value = opt.split('=')
 		opts[name] = value
 	return opts
-	
+
 
 def parse_old_opts(s):
 	opts = {}

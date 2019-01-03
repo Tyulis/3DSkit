@@ -61,8 +61,9 @@ class error (ClsFunc):
 	InvalidFormatError = classmethod(_Error(304, 'InvalidFormatError'))
 
 	NeededDataNotFoundError = classmethod(_Error(401, 'NeededDataNotFoundError'))
+	BadDataError = classmethod(_Error(402, 'BadDataError'))
 	FileNotFoundError = classmethod(_Error(404, 'FileNotFoundError'))
-	
+
 	UnrecognizedFormatWarning = classmethod(_Warning(901, 'UnrecognizedFormatWarning'))
 	UnsupportedDataFormatWarning = classmethod(_Warning(902, 'UnsupportedDataFormatWarning'))
 	InternalCorrectionWarning = classmethod(_Warning(903, 'InternalCorrectionWarning'))
@@ -72,7 +73,7 @@ class error (ClsFunc):
 	SettingWarning = classmethod(_Warning(907, 'SettingWarning'))
 	NotImplementedWarning = classmethod(_Warning(908, 'NotImplementedWarning'))
 	UnsupportedValueWarning = classmethod(_Warning(909, 'UnsupportedValueWarning'))
-	
+
 	def main(self, msg, errno):
 		if math.floor(errno / 100) != 9:
 			print('Error: %s (%d)' % (msg, errno))

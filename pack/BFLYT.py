@@ -1,662 +1,614 @@
 # -*- coding:utf-8 -*-
-from util.txtree import load
+import json
+from collections import OrderedDict
 from util import error, BOMS
-import util.rawutil as rawutil
 from util.utils import ClsFunc
-from util.filesystem import read, bwrite
+import util.rawutil as rawutil
+from util.filesystem import *
 
-FLYT_HEADER = '%s4s4H I 2H'
 WRAPS = (
-	'Near-Clamp',
-	'Near-Repeat',
-	'Near-Mirror',
-	'GX2-Mirror-Once',
-	'Clamp',
-	'Repeat',
-	'Mirror',
-	'GX2-Mirror-Once-Border'
+	'near clamp', 'near repeat', 'near mirror',
+	'gx2 mirror once',
+	'clamp', 'repeat', 'mirror',
+	'gx2 mirror once border'
 )
-MAPPING_METHODS = (
-	'UV-Mapping',
-	'',
-	'',
-	'Orthogonal-Projection',
-	'PaneBasedProjection'
-)
-BLENDS = (
-	'Max',
-	'Min'
-)
+
+MAPPING_METHODS = ('uv mapping', '<unknown>', '<unknown>' 'orthogonal projection','pane based projection')
+ALPHA_BLENDS = ('max', 'min')
 
 COLOR_BLENDS = (
-	'Overwrite',
-	'Multiply',
-	'Add',
-	'Exclude',
-	'4',
-	'Subtract',
-	'Dodge',
-	'Burn',
-	'Overlay',
-	'Indirect',
-	'Blend-Indirect',
-	'Each-Indirect'
+	'overwrite', 'multiply', 'add', 'exclude',
+	'<unknown>', 'subtract', 'dodge', 'burn',
+	'overlay', 'indirect', 'blend indirect', 'each indirect'
 )
 
 ALPHA_COMPARE_CONDITIONS = (
-	'Never',
-	'Less',
-	'Less-or-Equal',
-	'Equal',
-	'Not-Equal',
-	'Greater-or-Equal',
-	'Greater',
-	'Always'
+	'never', 'less', 'less or equal',
+	'equal', 'not equal',
+	'greater or equal', 'greater', 'always'
 )
+
 BLEND_CALC = (
-	'0',
-	'1',
-	'FBColor',
-	'1-FBColor',
-	'PixelAlpha',
-	'1-PixelAlpha',
-	'FBAlpha',
-	'1-FBAlpha',
-	'PixelColor',
-	'1-PixelColor'
+	'<unknown>', '<unknown>', 'fb color', 'fb color 1',
+	'pixel alpha', 'pixel alpha 1', 'fb alpha', 'fb alpha 1',
+	'pixel color', 'pixel color 1'
 )
 
-BLEND_CALC_OPS = (
-	'0',
-	'Add',
-	'Subtract',
-	'Reverse-Subtract',
-	'Min',
-	'Max'
+BLEND_OPS = (
+	'<unknown>', 'add', 'subtract',
+	'reverse subtract', 'min', 'max'
 )
 
-LOGICAL_CALC_OPS = (
-	'None',
-	'NoOp',
-	'Clear',
-	'Set',
-	'Copy',
-	'InvCopy',
-	'Inv',
-	'And',
-	'Nand',
-	'Or',
-	'Nor',
-	'Xor',
-	'Equiv',
-	'RevAnd',
-	'InvAnd',
-	'RevOr',
-	'InvOr'
+LOGICAL_OPS = (
+	'none', 'no operation', 'clear', 'set',
+	'copy', 'invert copy', 'invert', 'and',
+	'not and', 'or', 'not or', 'xor',
+	'equivalent', 'reverse and', 'invert and',
+	'reverse or', 'invert or'
 )
 
 PROJECTION_MAPPING_TYPES = (
-	'Standard',
-	'Entire-Layout',
-	'2',
-	'3',
-	'Pane-RandS-Projection',
-	'5',
-	'6'
+	'standard', 'entire layout', '<unknown>',
+	'<unknown>', 'pane r and s projection', '<unknown>', '<unknown>'
 )
 
-TEXT_ALIGNS = (
-	'NA',
-	'Left',
-	'Center',
-	'Right'
-)
-ORIG_X = (
-	'Center',
-	'Left',
-	'Right'
-)
-ORIG_Y = (
-	'Center',
-	'Up',
-	'Down'
-)
+TEXT_ALIGNS = ('undefined','left', 'center','right')
+ORIG_X = ('center', 'left', 'right')
+ORIG_Y = ('center', 'up', 'down')
 
-
-class TypeWriter (rawutil.TypeWriter):
-	def magiccount(self, data, magic):
-		count = 0
-		for key in data.keys():
-			if '-'.join(key.split('-')[:-1]) == magic:
-				count += 1
-		return count
-
-	def sechdr(self, data, name):
-		return self.pack('4sI', name.encode('ascii'), len(data) + 8)
-	
-	def color(self, data, format):
-		format = format.upper()
-		out = b''
-		if format in ('RGB8', 'RGBA8'):
-			out += self.uint8(data['RED'])
-			out += self.uint8(data['GREEN'])
-			out += self.uint8(data['BLUE'])
-			if format == 'RGBA8':
-				out += self.uint8(data['ALPHA'])
-		return out
-	
-	def string4(self, s):
-		if isinstance(s, str):
-			s = s.encode('utf-8')
-		pad = 4 - (len(s) % 4 or 4)
-		return s + bytes(pad)
-
-
-class packBFLYT(ClsFunc, TypeWriter):
+class packBFLYT(ClsFunc, rawutil.TypeWriter):
 	def main(self, filenames, outname, endian, verbose, opts={}):
-		filename = filenames[0]
 		self.verbose = verbose
-		tree = load(read(filename))
-		if list(tree.keys())[2] != 'BFLYT':
-			error.InvalidInputError('This is not a converted BFLYT file')
-		self.version = tree['version']
-		self.byteorder = endian
-		self.sections = tree['BFLYT']
-		self.final = self.repackdata()
-		bwrite(self.final, outname)
+		inname = filenames[0]
+		with open(inname, 'r') as f:
+			data = json.load(f, object_pairs_hook=OrderedDict)
+		self.data = data
+		self.byteorder = data['FLYT']['byte order']
+		self.version = data['FLYT']['version']
+		output = open(outname, 'wb+')
+		self.packdata(data, output)
+		self.packheader(data, output)
+		output.close()
 
-	def repackdata(self):
+	def packheader(self, data, output):
+		output.seek(0, 2)
+		filesize = output.tell()
+		output.seek(0)
+		output.write(b'FLYT' + rawutil.pack('>H', BOMS[self.byteorder]))
+		self.pack('H2IH2x', 0x14, data['FLYT']['version'], filesize, self.secnum, output)
+
+	def packdata(self, data, output):
 		self.secnum = 0
-		data = self.repacktree(self.sections, True)
-		hdr = self.repackhdr(data)
-		return hdr + data
+		output.seek(0x14)  # Skipping the header, it will be written at the end
+		for secname in data.keys():
+			if secname == 'FLYT':
+				continue
+			section = data[secname]
+			self.packsection(secname, section, output)
 
-	def repackhdr(self, data):
-		final = b'FLYT'
-		final += rawutil.pack('>H', BOMS[self.byteorder])
-		final += self.uint16(0x14)
-		final += self.uint16(self.version)
-		final += self.uint16(0x0702)
-		final += self.uint32(len(data) + 0x14)
-		final += self.uint16(self.secnum)
-		final += self.uint16(0)
-		return final
+	def packsection(self, name, data, output):
+		self.secnum += 1
+		if name.startswith('lyt1'):
+			self.packlyt1(name, data, output)
+		elif name.startswith('txl1'):
+			self.packtxl1(name, data, output)
+		elif name.startswith('fnl1'):
+			self.packfnl1(name, data, output)
+		elif name.startswith('mat1'):
+			self.packmat1(name, data, output)
+		elif name.startswith('pan1'):
+			self.packpan1(name, data, output)
+		elif name.startswith('pas1'):
+			self.packpas1(name, data, output)
+		elif name.startswith('pae1'):
+			self.packpae1(name, data, output)
+		elif name.startswith('bnd1'):
+			self.packbnd1(name, data, output)
+		elif name.startswith('wnd1'):
+			self.packwnd1(name, data, output)
+		elif name.startswith('txt1'):
+			self.packtxt1(name, data, output)
+		elif name.startswith('pic1'):
+			self.packpic1(name, data, output)
+		elif name.startswith('prt1'):
+			self.packprt1(name, data, output)
+		elif name.startswith('grp1'):
+			self.packgrp1(name, data, output)
+		elif name.startswith('grs1'):
+			self.packgrs1(name, data, output)
+		elif name.startswith('gre1'):
+			self.packgre1(name, data, output)
+		elif name.startswith('usd1'):
+			self.packusd1(name, data, output)
+		elif name.startswith('cnt1'):
+			self.packcnt1(name, data, output)
 
-	def repacktree(self, tree, top=False, safe=False):
-		final = b''
-		for section in tree.keys():
-			magic = section.split('-')[0]
-			try:
-				method = eval('self.pack%s' % magic)
-			except AttributeError:
-				if not safe:
-					error.InvalidSectionError('Invalid section: %s' % magic)
-				else:
-					continue
-			if top:
-				self.secnum += 1
-			final += method(tree[section])
-		return final
+	def packlyt1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x B3x 4f n', data['drawn from middle'], data['screen width'], data['screen height'], data['max parts width'], data['max parts height'], data['name'], output)
 
-	def packlyt1(self, data):
-		final = b''
-		final += self.uint8(data['drawn-from-middle'])
-		final += self.pad(3)
-		final += self.float32(data['screen-width'])
-		final += self.float32(data['screen-height'])
-		final += self.float32(data['max-parts-width'])
-		final += self.float32(data['max-parts-height'])
-		final += self.string4(data['name'])
-		hdr = self.sechdr(final, 'lyt1')
-		return hdr + final
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'lyt1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
 
-	def packtxl1(self, data):
-		final = b''
-		final += self.uint16(data['texture-number'])
-		final += self.uint16(0)  #data offset. Seems to be always 0
-		filetable = b''
+	def packtxl1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x I', len(data['textures']), output)
+		baseoffset = 4 * len(data['textures'])
+		strings = b''
 		offsets = []
-		self.textures = data['file-names']
-		offset_tbl_length = len(self.textures) * 4
-		for name in self.textures:
-			offsets.append(len(filetable) + offset_tbl_length)
-			filetable += name + b"\x00"
-		offsettbl = b''
-		for offset in offsets:
-			offsettbl += self.uint32(offset)
-		final += offsettbl
-		final += filetable
-		if len(final) % 4 != 0:
-			final += self.pad(4 - (len(final) % 4))
-		hdr = self.sechdr(final, 'txl1')
-		return hdr + final
+		for string in data['textures']:
+			offsets.append(baseoffset + len(strings))
+			strings += string.encode('utf-8') + b'\x00'
+		self.pack('%d(I)' % len(offsets), offsets, output)
+		output.write(strings)
 
-	def packfnl1(self, data):
-		final = b''
-		final += self.uint16(data['fonts-number'])
-		final += self.uint16(0)  #data offset. Seems to be always 0
-		filetable = b''
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'txl1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packfnl1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x I', len(data['fonts']), output)
+		baseoffset = 4 * len(data['fonts'])
+		strings = b''
 		offsets = []
-		filenames = data['file-names']
-		self.fontnames = filenames
-		offset_tbl_length = len(filenames) * 4
-		for name in filenames:
-			offsets.append(len(filetable) + offset_tbl_length)
-			filetable += self.string(name)
-		offsettbl = b''
-		for offset in offsets:
-			offsettbl += self.uint32(offset)
-		final += offsettbl
-		final += filetable
-		final += self.pad(4 - (len(final) % 4))
-		hdr = self.sechdr(final, 'fnl1')
-		return hdr + final
+		for string in data['fonts']:
+			offsets.append(baseoffset + len(strings))
+			strings += string.encode('utf-8') + b'\x00'
+		self.pack('%d(I)' % len(offsets), offsets, output)
+		output.write(strings)
 
-	def packmat1(self, data):
-		final = b''
-		final += self.uint16(data['materials-number'])
-		final += self.uint16(0)
-		self.materials = data['materials']
-		self.matnames = [el['name'] for el in self.materials]
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'fnl1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packmat1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x I', len(data['materials']), output)
 		offsets = []
-		offset_tbl_length = 12 + len(self.materials) * 4
-		matdata = b''
-		for mat in self.materials:
-			offsets.append(offset_tbl_length + len(matdata))
-			matsec = b''
-			matsec += self.string(mat['name'], 0x1C)
-			matsec += self.color(mat['fore-color'], 'RGBA8')
-			matsec += self.color(mat['back-color'], 'RGBA8')
-			flags = 0
-			flags |= self.magiccount(mat, 'texref')
-			flags |= self.magiccount(mat, 'textureSRT') << 2
-			flags |= self.magiccount(mat, 'mapping-settings') << 4
-			flags |= self.magiccount(mat, 'texture-combiner') << 6
-			flags |= ('alpha-compare' in mat.keys()) << 8
-			flags |= self.magiccount(mat, 'blend-mode') << 9
-			flags |= self.magiccount(mat, 'blend-alpha') << 11
-			flags |= ('indirect-adjustment' in mat.keys()) << 13
-			flags |= self.magiccount(mat, 'projection-mapping') << 14
-			flags |= ('shadow-blending' in mat.keys())
-			if mat['false-0x800']:
-				flags |= 0x800
-			matsec += self.uint32(flags)
-			items = list(mat.keys())[3:]
-			for item in items:
-				itemtype = '-'.join(item.split('-')[:-1])
-				dic = mat[item]
-				if itemtype == 'texref':
-					matsec += self.uint16(self.textures.index(dic['file']))
-					matsec += self.uint8(WRAPS.index(dic['wrap-S']))
-					matsec += self.uint8(WRAPS.index(dic['wrap-T']))
-				elif itemtype == 'textureSRT':
-					matsec += self.float32(dic['X-translate'])
-					matsec += self.float32(dic['Y-translate'])
-					matsec += self.float32(dic['rotate'])
-					matsec += self.float32(dic['X-scale'])
-					matsec += self.float32(dic['Y-scale'])
-				elif itemtype == 'mapping-settings':
-					matsec += self.uint8(dic['unknown-1'])
-					matsec += self.uint8(MAPPING_METHODS.index(dic['mapping-method']))
-					matsec += self.uint8(dic['unknown-2'])
-					matsec += self.uint8(dic['unknown-3'])
-					matsec += self.uint8(dic['unknown-4'])
-					matsec += self.uint8(dic['unknown-5'])
-					matsec += self.uint8(dic['unknown-6'])
-					matsec += self.uint8(dic['unknown-7'])
-				elif itemtype == 'texture-combiner':
-					matsec += self.uint8(COLOR_BLENDS.index(dic['color-blend']))
-					matsec += self.uint8(BLENDS.index(dic['alpha-blend']))
-					matsec += self.uint8(dic['unknown-1'])
-					matsec += self.uint8(dic['unknown-2'])
-				elif itemtype == 'alpha-compare':
-					matsec += self.uint8(ALPHA_COMPARE_CONDITIONS.index(dic['condition']))
-					matsec += self.uint8(dic['unknown-1'])
-					matsec += self.uint8(dic['unknown-2'])
-					matsec += self.uint8(dic['unknown-3'])
-					matsec += self.uint32(dic['value'])
-				elif itemtype == 'blend-mode':
-					matsec += self.uint8(BLEND_CALC_OPS.index(dic['blend-operation']))
-					matsec += self.uint8(BLEND_CALC.index(dic['source']))
-					matsec += self.uint8(BLEND_CALC.index(dic['destination']))
-					matsec += self.uint8(LOGICAL_CALC_OPS.index(dic['logical-operation']))
-				elif itemtype == 'blend-alpha':
-					matsec += self.uint8(BLEND_CALC_OPS.index(dic['blend-operation']))
-					matsec += self.uint8(BLEND_CALC.index(dic['source']))
-					matsec += self.uint8(BLEND_CALC.index(dic['destination']))
-					matsec += self.uint8(dic['unknown'])
-				elif itemtype == 'indirect-adjustment':
-					matsec += self.float32(dic['rotate'])
-					matsec += self.float32(dic['X-warp'])
-					matsec += self.float32(dic['Y-warp'])
-				elif itemtype == 'projection-mapping':
-					matsec += self.float32(dic['X-translate'])
-					matsec += self.float32(dic['Y-translate'])
-					matsec += self.float32(dic['X-scale'])
-					matsec += self.float32(dic['Y-scale'])
-					matsec += self.uint8(PROJECTION_MAPPING_TYPES.index(dic['option']))
-					matsec += self.uint8(dic['unknown-1'])
-					matsec += self.uint16(dic['unknown-2'])
-				elif itemtype == 'shadow-blending':
-					matsec += self.color(dic['black-blending'], 'RGB8')
-					matsec += self.color(dic['white-blending'], 'RGBA8')
-					matsec += self.pad(1)
-			matdata += matsec
-		offsettbl = b''
-		for offset in offsets:
-			offsettbl += self.uint32(offset)
-		final += offsettbl
-		final += matdata
-		if 'extra' in data.keys():
-			final += bytes.fromhex(data['extra'])
-		hdr = self.sechdr(final, 'mat1')
-		return hdr + final
+		offsetspos = output.tell()
+		output.seek(len(data['materials']) * 4, 1)  # Skips offset table, written later
+		self.matnames = []
+		for material in data['materials']:
+			offsets.append(output.tell() - startpos)
+			self.matnames.append(material['name'])
+			self.pack('n28a', material['name'].encode('utf-8'), output)
+			texrefs = {}
+			textransforms = {}
+			mapsettings = {}
+			texcombiners = {}
+			blendmodes = {}
+			blendalpha = {}
+			indirect = {}
+			alphacompare = {}
+			projmappings = {}
+			shadowblendings = {}
+			for setting in material:
+				if setting.startswith('texture reference'): texrefs[setting] = material[setting]
+				elif setting.startswith('texture transformation'): textransforms[setting] = material[setting]
+				elif setting.startswith('mapping setting'): mapsettings[setting] = material[setting]
+				elif setting.startswith('texture combiner'): texcombiners[setting] = material[setting]
+				elif setting.startswith('alpha comparison'): alphacompare[setting] = material[setting]
+				elif setting.startswith('blending mode'): blendmodes[setting] = material[setting]
+				elif setting.startswith('alpha blending mode'): blendalpha[setting] = material[setting]
+				elif setting.startswith('indirect adjustment'): indirect[setting] = material[setting]
+				elif setting.startswith('projection mapping'): projmappings[setting] = material[setting]
+				elif setting.startswith('shadow blending'): shadowblendings[setting] = material[setting]
+			flags = (len(texrefs) + (len(textransforms) << 2) + (len(mapsettings) << 4) + (len(texcombiners) << 6) +
+				(len(blendmodes) << 8) + (len(blendalpha) << 10) + (len(indirect) << 12) + (len(alphacompare) << 13) +
+				(len(projmappings) << 14) + (len(shadowblendings) << 16))
+			if self.version >= 0x08000000:
+				self.pack('I(4B)(4B)(4B)', flags, material['unknown'], material['foreground color'], material['background color'], output)
+			else:
+				self.pack('(4B)(4B)I', material['foreground color'], material['background color'], flags, output)
+			for nodename in sorted(texrefs.keys()):
+				node = material[nodename]
+				try: texture = self.data['txl1']['textures'].index(node['texture'])
+				except: error.BadDataError('In mat1, %s, %s : Texture name %s does not match with any in txl1' % (material['name'], nodename, node['texture']))
+				try: wraps = WRAPS.index(node['wrap s'])
+				except: error.BadDataError('In mat1, %s, %s : Bad wrapping type %s' % (material['name'], nodename, node['wrap s']))
+				try: wrapt = WRAPS.index(node['wrap t'])
+				except: error.BadDataError('In mat1, %s, %s : Bad wrapping type %s' % (material['name'], nodename, node['wrap t']))
+				self.pack('H2B', texture, wraps, wrapt, output)
+			for nodename in sorted(textransforms.keys()):
+				node = material[nodename]
+				self.pack('5f', node['x translation'], node['y translation'], node['rotation'], node['x scale'], node['y scale'], output)
+			for nodename in sorted(mapsettings.keys()):
+				node = material[nodename]
+				try: method = MAPPING_METHODS.index(node['method'])
+				except: error.BadDataError('In mat1, %s, %s : Bad mapping method' % (material['name'], nodename, node['method']))
+				self.pack('2B(6B)', node['unk1'], method, node['unk2'], output)
+			for nodename in sorted(texcombiners.keys()):
+				node = material[nodename]
+				try: colorblend = COLOR_BLENDS.index(node['color blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad color blending method' % (material['name'], nodename, node['color blending']))
+				try: alphablend = ALPHA_BLENDS.index(node['alpha blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad alpha blending method' % (material['name'], nodename, node['alpha blending']))
+				self.pack('4B', colorblend, alphablend, node['unk1'], node['unk2'], output)
+			for nodename in sorted(alphacompare.keys()):
+				node = material[nodename]
+				try: condition = ALPHA_COMPARE_CONDITIONS.index(node['condition'])
+				except: error.BadDataError('In mat1, %s, %s : Bad alpha comparison condition' % (material['name'], nodename, node['condition']))
+				self.pack('4Bf', condition, node['unk1'], node['unk2'], node['unk3'], node['value'], output)
+			for nodename in sorted(blendmodes.keys()):
+				node = material[nodename]
+				try: operation = BLEND_OPS.index(node['operation'])
+				except: error.BadDataError('In mat1, %s, %s : Bad blending operation' % (material['name'], nodename, node['operation']))
+				try: sourceblend = BLEND_CALC.index(node['source blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad source blending operation' % (material['name'], nodename, node['source blending']))
+				try: destblend = BLEND_CALC.index(node['destination blending'])
+				except: error.BadDataError('In mat1, %s, %s : Bad destination blending operation' % (material['name'], nodename, node['destination blending']))
+				try: logical = LOGICAL_OPS.index(node['logical operation'])
+				except: error.BadDataError('In mat1, %s, %s : Bad logical operation' % (material['name'], nodename, node['logical operation']))
+				self.pack('4B', operation, sourceblend, destblend, logical, output)
+			for nodename in sorted(blendalpha.keys()):
+				if self.version != 0x07020100:
+					node = material[nodename]
+					try: operation = BLEND_OPS.index(node['operation'])
+					except: error.BadDataError('In mat1, %s, %s : Bad blending operation' % (material['name'], nodename, node['operation']))
+					try: sourceblend = BLEND_CALC.index(node['source blending'])
+					except: error.BadDataError('In mat1, %s, %s : Bad source blending operation' % (material['name'], nodename, node['source blending']))
+					try: destblend = BLEND_CALC.index(node['destination blending'])
+					except: error.BadDataError('In mat1, %s, %s : Bad destination blending operation' % (material['name'], nodename, node['destination blending']))
+					try: logical = LOGICAL_OPS.index(node['logical operation'])
+					except: error.BadDataError('In mat1, %s, %s : Bad logical operation' % (material['name'], nodename, node['logical operation']))
+					self.pack('4B', operation, sourceblend, destblend, logical, output)
+			for nodename in sorted(indirect.keys()):
+				node = material[nodename]
+				self.pack('3f', node['rotation'], node['x warp'], node['y warp'], output)
+			for nodename in sorted(projmappings.keys()):
+				node = material[nodename]
+				try: option = PROJECTION_MAPPING_TYPES.index(node['option'])
+				except: error.BadDataError('In mat1, %s, %s : Bad projection mapping option' % (material['name'], nodename, node['option']))
+				self.pack('4f4B', node['x translation'], node['y translation'], node['x scale'], node['y scale'], option, node['unk1'], node['unk2'], node['unk3'], output)
+			for nodename in sorted(shadowblendings.keys()):
+				node = material[nodename]
+				self.pack('(4B)(3B)x', node['black blending'], node['white blending'], output)
+			if self.version >= 0x08000000:
+				output.write(8 * b'\x00')  # FIXME : Why ?
 
-	def packpane(self, data):  #pane section: 76B
-		panesec = b''
-		flags = 0
-		flags |= data['visible']
-		flags |= data['transmit-alpha-to-children'] << 1
-		flags |= data['position-adjustment'] << 2
-		panesec += self.uint8(flags)
-		origin_x = ORIG_X.index(data['origin']['x'])
-		origin_y = ORIG_Y.index(data['origin']['y'])
-		parent_origin_x = ORIG_X.index(data['parent-origin']['x'])
-		parent_origin_y = ORIG_Y.index(data['parent-origin']['y'])
-		main_origin = (origin_y * 4) + origin_x
-		parent_origin = (parent_origin_y * 4) + parent_origin_x
-		origin = (parent_origin * 16) + main_origin
-		panesec += self.uint8(origin)
-		panesec += self.uint8(data['alpha'])
-		panesec += self.uint8(data['part-scale'])
-		panesec += self.string(data['name'], 32)
-		panesec += self.float32(data['X-translation'])
-		panesec += self.float32(data['Y-translation'])
-		panesec += self.float32(data['Z-translation'])
-		panesec += self.float32(data['X-rotation'])
-		panesec += self.float32(data['Y-rotation'])
-		panesec += self.float32(data['Z-rotation'])
-		panesec += self.float32(data['X-scale'])
-		panesec += self.float32(data['Y-scale'])
-		panesec += self.float32(data['width'])
-		panesec += self.float32(data['height'])
-		return panesec
+		endpos = output.tell()
+		output.seek(offsetspos)
+		self.pack('%d(I)' % len(data['materials']), offsets, output)
+		output.seek(endpos)
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'mat1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
 
-	def packpan1(self, data):
-		final = self.packpane(data)
-		hdr = self.sechdr(final, 'pan1')
-		return hdr + final
+	def packpane(self, name, data, output):
+		flags = data['visible'] | (data['transmit alpha'] << 1) | (data['position adjustment'] << 2)
+		try: xorigin = ORIG_X.index(data['x origin'])
+		except: error.BadDataError('In %s : Bad X origin name %s' % (name, data['x origin']))
+		try: yorigin = ORIG_Y.index(data['y origin'])
+		except: error.BadDataError('In %s : Bad Y origin name %s' % (name, data['y origin']))
+		try: parentxorigin = ORIG_X.index(data['parent x origin'])
+		except: error.BadDataError('In %s : Bad parent X origin name %s' % (name, data['parent x origin']))
+		try: parentyorigin = ORIG_Y.index(data['parent y origin'])
+		except: error.BadDataError('In %s : Bad parent Y origin name %s' % (name, data['parent y origin']))
+		origin = xorigin | (yorigin << 2) | (parentxorigin << 4) | (parentyorigin << 6)
+		self.pack('4B |n32a 10f', flags, origin, data['alpha'], data['scale'], data['name'].encode('utf-8'), data['x translation'], data['y translation'], data['z translation'], data['x rotation'], data['y rotation'], data['z rotation'], data['x scale'], data['y scale'], data['width'], data['height'], output)
 
-	def packpas1(self, data):
-		tree = self.repacktree(data, True)
-		pas1 = self.sechdr(b'', 'pas1')
-		return pas1 + tree
+	def packpan1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
 
-	def packpae1(self, data):
-		return self.sechdr(b'', 'pae1')
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'pan1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
 
-	def packwnd1(self, data):
-		final = self.packpane(data)
-		final += self.uint16(data['stretch-left'])
-		final += self.uint16(data['stretch-right'])
-		final += self.uint16(data['stretch-up'])
-		final += self.uint16(data['stretch-down'])
-		final += self.uint16(data['custom-left'])
-		final += self.uint16(data['custom-right'])
-		final += self.uint16(data['custom-up'])
-		final += self.uint16(data['custom-down'])
-		final += self.uint8(data['frame-count'])
-		final += self.uint8(data['flags'])
-		final += self.pad(2)
-		final += self.uint32(0x70)  #the offset1. Always 0x70
-		final += self.uint32(132 + (32 * data['coordinates-count']))  #the offset2
-		final += self.color(data['color-1'], 'RGBA8')
-		final += self.color(data['color-2'], 'RGBA8')
-		final += self.color(data['color-3'], 'RGBA8')
-		final += self.color(data['color-4'], 'RGBA8')
-		final += self.uint16(self.matnames.index(data['material']))
-		final += self.uint8(data['coordinates-count'])
-		final += self.pad(1)
-		for i in range(0, data['coordinates-count']):
-			dic = data['coords-%d' % i]
-			for texcoord in dic.values():
-				final += self.float32(texcoord)
-		part1len = len(final)
-		for i in range(0, len(data['wnd4-materials'])):
-			offset = part1len + 4 * (len(data['wnd4-materials'])) + (4 * i) + 8
-			final += self.uint32(offset)
-		for mat in data['wnd4-materials']:
-			final += self.uint16(self.matnames.index(mat['material']))
-			final += self.uint8(mat['index'])
-			final += self.pad(1)
-		hdr = self.sechdr(final, 'wnd1')
-		return hdr + final
+	def packpas1(self, name, data, output):
+		self.pack('4sI', b'pas1', 8, output)  # Writing the section header
+		for subsection in data:
+			self.packsection(subsection, data[subsection], output)
 
-	def packtxt1(self, data):
-		final = self.packpane(data)
-		final += self.uint16(data['restrict-length'])
-		final += self.uint16(data['length'])
-		final += self.uint16(self.matnames.index(data['material']))
-		final += self.uint16(self.fontnames.index(data['font']))
-		align = (ORIG_Y.index(data['alignment']['y']) * 4) + ORIG_X.index(data['alignment']['x'])
-		final += self.uint8(align)
-		final += self.uint8(TEXT_ALIGNS.index(data['line-alignment']))
-		final += self.uint8(data['active-shadows'])
-		final += self.uint8(data['unknown-1'])
-		final += self.float32(data['italic-tilt'])
-		final += self.uint32(164)  #the start offset. Always 164
-		final += self.color(data['top-color'], 'RGBA8')
-		final += self.color(data['bottom-color'], 'RGBA8')
-		final += self.float32(data['font-size-x'])
-		final += self.float32(data['font-size-y'])
-		final += self.float32(data['char-space'])
-		final += self.float32(data['line-space'])
-		final += self.uint32(0)
-		shadow = data['shadow']
-		final += self.float32(shadow['offset-X'])
-		final += self.float32(shadow['offset-Y'])
-		final += self.float32(shadow['scale-X'])
-		final += self.float32(shadow['scale-Y'])
-		final += self.color(shadow['top-color'], 'RGBA8')
-		final += self.color(shadow['bottom-color'], 'RGBA8')
-		final += self.uint32(shadow['unknown-2'])
-		text = data['text'].encode('utf-16-%se' % ('l' if self.byteorder == '<' else 'b'))
-		final += self.pad(4)
-		final += text
-		if len(final) % 4 != 0:
-			final += self.pad(4 - (len(text) % 4))
-		final += data['call-name'].encode('ascii')  #because of padding issues
-		if not final.endswith(b'\x00\x00'):
-			final += self.pad(4 - (len(final) % 4))
-		hdr = self.sechdr(final, 'txt1')
-		return hdr + final
+	def packpae1(self, name, data, output):
+		self.pack('4sI', b'pae1', 8, output)  # Writing the section header
 
-	def packusd1(self, data):
-		final = b''
-		entrynum = data['entry-number']
-		final += self.uint16(data['entry-number'])
-		final += self.uint16(data['unknown'])
+	def packbnd1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'bnd1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packwnd1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
+
+		self.pack('8H', data['left stretch'], data['right stretch'], data['top stretch'], data['bottom stretch'], data['custom left'], data['custom right'], data['custom top'], data['custom bottom'], output)
+		self.pack('2B2x', len(data['frames']), data['flags'], output)
+		offsetspos = output.tell()
+		self.pack('8x', output)
+
+		# Window content
+		contentoffset = output.tell() - startpos
+		self.pack('(4B)(4B)(4B)(4B)', data['top left vertex'], data['top right vertex'], data['bottom left vertex'], data['bottom right vertex'], output)
+		try: material = self.matnames.index(data['material'])
+		except: error.BadDataError('In %s : Material name %s does not match with any in mat1' % (name, data['material']))
+		self.pack('HBx', material, len(data['uv coordinates']), output)
+		for coords in data['uv coordinates']:
+			self.pack('(2f)(2f)(2f)(2f)', node['top left'], node['top right'], node['bottom left'], node['bottom right'], output)
+
+		# Window frames
+		framesoffset = output.tell() - startpos
+		offsets = [framesoffset + 4 * i for i in range(len(data['frames']))]
+		self.pack('%d(I)' % len(data['frames']), offsets, output)
+		for frame in data['frames']:
+			try: material = self.matnames.index(frame['material'])
+			except: error.BadDataError('In %s : Material name %s does not match with any in mat1' % (name, frame['material']))
+			self.pack('HBx', material, frame['texture flip'], output)
+
+		endpos = output.tell()
+		output.seek(offsetspos)
+		self.pack('2I', contentoffset, framesoffset, output)
+		output.seek(endpos)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'wnd1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packtxt1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
+
+		try: material = self.matnames.index(data['material'])
+		except: error.BadDataError('In %s : Material name %s does not match with any in mat1' % (name, data['material']))
+		try: font = self.data['fnl1']['fonts'].index(data['font'])
+		except: error.BadDataError('In %s : Font name %s does not match with any in fnl1' % (name, data['font']))
+		self.pack('4H', data['length'], data['restricted length'], material, font, output)
+
+		try: xalign = ORIG_X.index(data['x alignment'])
+		except: error.BadDataError('In %s : Bad X alignment %s' % (name, data['x alignment']))
+		try: yalign = ORIG_Y.index(data['y alignment'])
+		except: error.BadDataError('In %s : Bad Y alignment %s' % (name, data['y alignment']))
+		try: linealign = TEXT_ALIGNS.index(data['line alignment'])
+		except: error.BadDataError('In %s : Bad line alignment %s' % (name, data['line alignment']))
+		alignment = xalign | (yalign << 2)
+		flags = data['shadow enabled'] | (data['restricted length enabled'] << 1) | (data['invisible border'] << 2) | (data['two cycles border rendering'] << 3) | (data['per char transform enabled'] << 4)
+		self.pack('3Bx f', alignment, linealign, flags, data['italic tilt'], output)
+		textoffsetpos = output.tell()
+		self.pack('4x (4B)(4B) 4f', data['font top color'], data['font bottom color'], data['x font size'], data['y font size'], data['char spacing'], data['line spacing'], output)
+		callnameoffsetpos = output.tell()
+		self.pack('4x 4f (4B)(4B)f', data['shadow x'], data['shadow y'], data['shadow width'], data['shadow height'], data['shadow top color'], data['shadow bottom color'], data['shadow italic tilt'], output)
+		chartransformoffsetpos = output.tell()
+		self.pack('4x', output)
+		if 'text' in data:
+			textoffset = output.tell() - startpos
+			self.pack('n4a', data['text'].encode('utf-16-' + ('le' if self.byteorder == '<' else 'be')), output)
+		else:
+			textoffset = 0
+		if 'call name' in data:
+			callnameoffset = output.tell() - startpos
+			self.pack('n4a', data['call name'].encode('utf-8'), output)
+		else:
+			callnameoffset = 0
+		if 'per character transform' in data:
+			chartransformoffset = output.tell() - startpos
+			output.write(bytes.fromhex(data['per character transform']))
+		else:
+			chartransformoffset = 0
+
+		endpos = output.tell()
+		output.seek(textoffsetpos)
+		self.pack('I', textoffset, output)
+		output.seek(callnameoffsetpos)
+		self.pack('I', callnameoffset, output)
+		output.seek(chartransformoffsetpos)
+		self.pack('I', chartransformoffset, output)
+		output.seek(endpos)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'txt1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packpic1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
+
+		self.pack('(4B)(4B)(4B)(4B)', data['top left vertex'], data['top right vertex'], data['bottom left vertex'], data['bottom right vertex'], output)
+		try: material = self.matnames.index(data['material'])
+		except: error.BadDataError('In %s : Material name %s does not match with any in mat1' % (name, data['material']))
+		self.pack('HBx', material, len(data['uv coordinates']), output)
+		for coords in data['uv coordinates']:
+			self.pack('(2f)(2f)(2f)(2f)', coords['top left'], coords['top right'], coords['bottom left'], coords['bottom right'], output)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'pic1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packprt1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+		self.packpane(name, data, output)
+
+		self.pack('I2f', len(data['entries']), data['x part scale'], data['y part scale'], output)
+		paneoffsets = {}
+		extraoffsets = {}
+		tablepos = output.tell()
+		output.seek(40 * len(data['entries']))
+		for i, entry in enumerate(data['entries']):
+			if 'pane' in entry:
+				paneoffsets[i] = output.tell()
+				self.packsection(entry['pane name'], entry['pane'], output)
+				self.secnum -= 1  # prt1 subsections are not counted
+			else:
+				paneoffsets[i] = 0
+		for i, entry in enumerate(data['entries']):
+			if 'extra' in entry:
+				extraoffsets[i] = output.tell()
+				output.write(bytes.fromhex(entry['extra']))
+			else:
+				extraoffsets[i] = 0
+		endpos = output.tell()
+
+		output.seek(tablepos)
+		for i, entry in enumerate(data['entries']):
+			self.pack('n24a 2BH3I', entry['name'].encode('utf-8'), entry['unk1'], entry['flags'], entry['unk2'], paneoffsets[i], entry['unk3'], extraoffsets[i], output)
+		if self.version >= 0x08000000:
+			self.pack('n4a', data['part name'], output)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'prt1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packgrp1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x', output)
+
+		if self.version <= 0x05020000:
+			self.pack('n24a H2x', data['name'], len(data['children']), output)
+		else:
+			self.pack('n34a H', data['name'], len(data['children']), output)
+		for child in data['children']:
+			self.pack('n24a', child, output)
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'grp1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
+
+	def packgrs1(self, name, data, output):
+		self.pack('4sI', b'grs1', 8, output)
+		for subsection in data:
+			self.packsection(subsection, data[subsection], output)
+
+	def packgre1(self, name, data, output):
+		self.pack('4sI', b'gre1', 8, output)
+
+	def packusd1(self, name, data, output):
+		startpos = output.tell()
+		self.pack('8x 2H', len(data['entries']), data['unknown'], output)
+		names = [entry['name'] for entry in data['entries']]
 		nametbl = b''
 		datatbl = b''
-		for i, entry in enumerate(data['entries']):
-			entry['nameoffset'] = len(nametbl)
-			entry['dataoffset'] = len(datatbl)
-			nametbl += entry['name'] + b"\x00"
-			datatype = entry["type"]
-			if datatype == 3:
-				datatbl += self.pack("2H2I", entry["unk1"], entry["unk2"], entry["unk3"], entry["unk4"])
-				datatbl += self.uint32(len(entry["data"]))
-				offset = 8 + len(entry["data"]) * 4
-				for item in entry["data"]:
-					datatbl += self.uint32(offset)
-					offset += len(item) + 1
-				for item in entry["data"]:
-					datatbl += item + b"\x00"
-			else:
-				for el in entry['data']:
-					if datatype == 0:
-						datatbl += self.string(el)
-					elif datatype == 1:
-						datatbl += self.int32(el)
-					elif datatype == 2:
-						datatbl += self.float32(el)
-		datatbl += self.pad(4 - (len(datatbl) % 4 or 4))
-		nametbl += self.pad(4 - (len(nametbl) % 4 or 4))
-		for i, entry in enumerate(data['entries']):
-			entryoffset = len(final)
-			remaining_entries = entrynum - (i + 1)
-			nameoffset = entry['nameoffset']
-			dataoffset = entry['dataoffset']
-			nameoffset += remaining_entries * 0x0c + len(datatbl) + 0x0c
-			dataoffset += remaining_entries * 0x0c + 0x0c
-			final += self.uint32(nameoffset)
-			final += self.uint32(dataoffset)
-			final += self.uint16(len(entry['data']))
-			final += self.uint8(entry['type'])
-			final += self.uint8(entry['unknown'])
-		final += datatbl
-		final += nametbl
-		hdr = self.sechdr(final, 'usd1')
-		return hdr + final
-
-	def packpic1(self, data):
-		final = self.packpane(data)
-		final += self.color(data['top-left-vtx-color'], 'RGBA8')
-		final += self.color(data['top-right-vtx-color'], 'RGBA8')
-		final += self.color(data['bottom-left-vtx-color'], 'RGBA8')
-		final += self.color(data['bottom-right-vtx-color'], 'RGBA8')
-		final += self.uint16(self.matnames.index(data['material']))
-		texcoordnum = data['tex-coords-number']
-		final += self.uint8(texcoordnum)
-		final += self.pad(1)
-		for texcoord in data['tex-coords']:
-			final += self.float32(texcoord['top-left']['s'])
-			final += self.float32(texcoord['top-left']['t'])
-			final += self.float32(texcoord['top-right']['s'])
-			final += self.float32(texcoord['top-right']['t'])
-			final += self.float32(texcoord['bottom-left']['s'])
-			final += self.float32(texcoord['bottom-left']['t'])
-			final += self.float32(texcoord['bottom-right']['s'])
-			final += self.float32(texcoord['bottom-right']['t'])
-		hdr = self.sechdr(final, 'pic1')
-		return hdr + final
-
-	def packbnd1(self, data):
-		final = self.packpane(data)
-		hdr = self.sechdr(final, 'bnd1')
-		return hdr + final
-
-	def packprt1(self, data):
-		final = self.packpane(data)
-		final += self.uint32(data['section-count'])
-		final += self.float32(data['section-scale-X'])
-		final += self.float32(data['section-scale-Y'])
-		entrydata = b''
-		extradata = b''
+		nameoffsets = []
 		dataoffsets = []
-		extraoffsets = []
 		for entry in data['entries']:
-			sec = self.repacktree(entry, safe=True)
-			if sec != b'':
-				dataoffsets.append(len(entrydata) + len(data['entries']) * 40 + 112)
+			nameoffsets.append(len(nametbl))
+			nametbl += entry['name'].encode('utf-8') + b'\x00'
+			dataoffsets.append(len(datatbl))
+			if entry['type'] == 0:
+				datatbl += entry['data'].encode('utf-8') + b'\x00'
+				datatbl += b'\x00' * (4 - (len(datatbl) % 4 or 4))
+			elif entry['type'] == 1:
+				datatbl += self.pack('%d(i)' % len(entry['data']), entry['data'])
+			elif entry['type'] == 2:
+				datatbl += self.pack('%d(f)' % len(entry['data']), entry['data'])
+			elif entry['type'] == 3:
+				datatbl += self.pack('(2H2I)I', entry['unk2'], len(entry['data']))
+				stringtbl = b''
+				offsets = []
+				for string in entry['data']:
+					offsets.append(len(stringtbl))
+					stringtbl += string.encode('utf-8') + b'\x00'
+				stringtbl += b'\x00' * (128 - (len(stringtbl) % 128 or 128))  # FIXME : Why ?
+				datatbl += self.pack('%d(I)' % len(entry['data']), [offset + 4 * len(entry['data']) + 8 for offset in offsets])
+				datatbl += stringtbl
+				datatbl += b'\x00' * (4 - (len(datatbl) % 4 or 4))
+		nametbl += b'\x00' * (4 - (len(nametbl) % 4 or 4))
+
+		entrybase = output.tell()
+		output.seek(12 * len(data['entries']), 1)
+		database = output.tell()
+		output.write(datatbl)
+		namebase = output.tell()
+		output.write(nametbl)
+		endpos = output.tell()
+		output.seek(entrybase)
+
+		for i, entry in enumerate(data['entries']):
+			entrypos = output.tell()
+			if entry['type'] == 3:
+				length = 1
 			else:
-				dataoffsets.append(0)
-			entrydata += sec
-		for entry in data['entries']:
-			if 'extra' in entry.keys():
-				extraoffsets.append(len(extradata) + len(entrydata) + len(data['entries']) * 40 + 112)
-				extradata += bytes.fromhex(entry['extra'])
-			else:
-				extraoffsets.append(0)
-		i = 0
-		for entry in data['entries']:  #1 entry=40B
-			final += self.string(entry['name'], 24)
-			final += self.uint8(entry['unknown'])
-			final += self.uint8(entry['flags'])
-			final += self.pad(2)
-			final += self.uint32(dataoffsets[i])
-			final += self.pad(4)
-			final += self.uint32(extraoffsets[i])
-			i += 1
-		if len(entrydata) % 4 != 0:
-			entrydata += self.pad(4 - (len(entrydata) % 4))
-		extradata += self.pad(4 - (len(extradata) % 4 or 4))
-		if 'extra' in data.keys():
-			final += data['extra']
-			final += self.pad(4 - (len(final) % 4 or 4))
-		final += entrydata
-		final += extradata
-		if 'dump' in data.keys():
-			final += data['dump']
-		hdr = self.sechdr(final, 'prt1')
-		return hdr + final
+				length = len(entry['data'])
+			self.pack('2IH2B', nameoffsets[i] + namebase - entrypos, dataoffsets[i] + database - entrypos, length, entry['type'], entry['unk1'], output)
 
-	def packgrp1(self, data):
-		final = b''
-		final += self.string(data['name'], 34)
-		final += self.uint16(len(data['subs']))
-		for sub in data['subs']:
-			final += self.string(sub, 24)
-		hdr = self.sechdr(final, 'grp1')
-		return hdr + final
+		output.seek(endpos)
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI', b'usd1', endpos - startpos, output)  # Writing the section header
+		output.seek(endpos)
 
-	def packgrs1(self, data):
-		final = b''
-		hdr = self.sechdr(final, 'grs1')
-		content = self.repacktree(data, top=True)
-		final += content
-		return hdr + final
+	def packcnt1(self, name, data, output):
+		startpos = output.tell()
 
-	def packgre1(self, data):
-		final = b''
-		hdr = self.sechdr(final, 'gre1')
-		return hdr + final
+		self.pack('28x', output)
+		self.pack('n4a', data['name duplicate'], output)
+		nameoffset = output.tell() - startpos
+		self.pack('n4a', data['name'], output)
+		maintableoffset = output.tell() - startpos
+		for name in data['part names']:
+			self.pack('n24a', name, output)
+		reference = output.tell()
+		offsets = []
+		output.seek(4 * len(data['animation names']), 1)
+		for name in data['animation names']:
+			offsets.append(output.tell() - reference)
+			self.pack('n', name, output)
+		endpos = output.tell()
+		output.seek(reference)
+		self.pack('%d(I)' % len(offsets), offsets, output)
+		output.seek(endpos)
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
 
-	def packcnt1(self, data):
-		final = b''
-		sec1 = b''
-		sec2 = b''
-		sec3 = b''
-		partnum = 0
-		animnum = 0
-		if 'parts' in data.keys():
-			partnum = len(data['parts'])
-			for part in data['parts']:
-				sec1 += self.string(part, 24)
-		if 'anim-part' in data.keys():
-			animnode = data['anim-part']
-			animnum = len(animnode['anims'])
-			animname = self.string4(animnode['name'])
-			sec2 += self.uint32(len(animname))
-			sec2 += animname
-			offsets = [4 * len(animnode['anims'])]
-			names = self.string(animnode['anims'][0])
-			for anim in animnode['anims'][1:]:
-				offsets.append(offsets[0] + len(names))
-				names += self.string(anim)
-			names += self.pad(4 - (len(names) % 4))
-			for offset in offsets:
-				sec3 += self.uint32(offset)
-			sec3 += names
-		name = self.string(data['name'])
-		if len(name) % 4 != 0:
-			name += self.pad(4 - len(name) % 4)
-		offset1 = len(name) + 28
-		offset2 = len(name) * 2 + 28
-		offset3 = len(sec1) + len(sec2) + len(name) * 2 + 28
-		offset4 = offset3 + len(sec3)
-		final += self.uint32(offset1)
-		final += self.uint32(offset2)
-		final += self.uint16(partnum)
-		final += self.uint16(animnum)
-		final += self.uint32(offset3)
-		final += self.uint32(offset4)
-		final += name + name
-		final += sec1
-		final += sec2
-		final += sec3
-		final += sec2  #?
-		if 'dump' in data.keys():
-			final += data['dump']
-		hdr = self.sechdr(final, 'cnt1')
-		return hdr + final
+		partstablepos = output.tell()
+		partstableoffset = partstablepos - startpos
+		offsets = []
+		output.seek(4 * len(data['parts']), 1)
+		for name in data['parts']:
+			offsets.append(output.tell() - partstablepos)
+			self.pack('n', name, output)
+		endpos = output.tell()
+		output.seek(partstablepos)
+		self.pack('%d(I)' % len(offsets), offsets, output)
+		output.seek(endpos)
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+
+		animtablepos = output.tell()
+		animtableoffset = animtablepos - startpos
+		offsets = []
+		output.seek(4 * len(data['animations']), 1)
+		for name in data['animations']:
+			offsets.append(output.tell() - animtablepos)
+			self.pack('n', name, output)
+		endpos = output.tell()
+		output.seek(animtablepos)
+		self.pack('%d(I)' % len(offsets), offsets, output)
+		output.seek(endpos)
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+
+		output.write(b'\x00' * (4 - (output.tell() % 4 or 4)))  # Padding to a multiple of 4
+		endpos = output.tell()
+		output.seek(startpos)
+		self.pack('4sI 2I2H2I', b'cnt1', endpos - startpos, nameoffset, maintableoffset, len(data['parts']), len(data['animations']), partstableoffset, animtableoffset, output)  # Writing the section header
+		output.seek(endpos)

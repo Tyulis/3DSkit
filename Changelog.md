@@ -431,3 +431,10 @@
 	*	Added usd1 type 3 entry in unpack.BFLYT and pack.BFLYT
 	*	Fixed bugs with numbers and bytes in txtree
 	*	Fixed support for strings in rawutil and pack.BFLYT
+
+**v1.32**
+
+*	v1.32.72
+	*	Added docs about the BFLYT format
+	*	Brand new implementation for unpack.BFLYT and pack.BFLYT, added support for Switch files (v8.6.0)
+	*	Old BFLYT implementations are still accessible using `-f BFLYT_old`
