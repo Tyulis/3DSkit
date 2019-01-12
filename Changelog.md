@@ -442,3 +442,11 @@
 	*	Fixed many bugs in pack.BFLYT and unpack.BFLYT
 	*	Support for wrapped usd1 sections in part1 in BFLYT files
 	*	Fixed docs format and content
+
+**v1.33**
+
+*	v1.33.73
+	*	New implementation of unpack.BFLAN, with JSON output
+	*	Old BFLAN implementation is still accessible using `-f BFLAN_old`
+	*	Added a doc about the BFLAN format
+	*	Added support for filenames in unpack.NARC, thanks to cesarmiquel

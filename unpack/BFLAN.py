@@ -1,162 +1,130 @@
 # -*- coding:utf-8 -*-
 import os
+import json
+from collections import OrderedDict
 from util import error, ENDIANS
 from util.utils import byterepr, ClsFunc
 from util.filesystem import *
 import util.rawutil as rawutil
-from util.txtree import dump
-from collections import OrderedDict
 
-FLAN_HEADER = '4s2H 2HI2H'
-pat1_SECTION = '4sI 2H2I2HBU'
-pai1_SECTION = '4sI H2B2HI /5[I]'
-pai1_ENTRY = 'n28a2BH /1[I]'
-pai1_TAG = '4sBU /1[I]'
-pai1_TAGENTRY = '2B3HI'
-
-FLPA_types = ('X-trans', 'Y-trans', 'Z-trans', 'X-rotate', 'Y-rotate', 'Z-rotate', 'X-scale', 'Y-scale', 'X-size', 'Y-size')
-
-FLVI_types = ('visible')
-
-FLTP_types = ('texture-pattern')
-
-FLVC_types = ('LT-red', 'LT-green', 'LT-blue', 'LT-alpha', 'RT-red', 'RT-green', 'RT-blue', 'RT-alpha', 'LB-red', 'LB-green', 'LB-blue', 'LB-alpha', 'RB-red', 'RB-green', 'RB-blue', 'RB-alpha', 'pane-alpha')
-
-FLMC_types = ('BlackColor-red', 'BlackColo-green', 'BlackColor-blue', 'BlackColor-alpha', 'WhiteColor-red', 'WhiteColor-green', 'WhiteColor-blue', 'WhiteColor-alpha')
-
-FLTS_types = ('U-trans', 'V-trans', 'rotate', 'U-scale', 'V-scale')
-
-FLIM_types = ('rotate', 'U-scale', 'V-scale')
+TYPE2 = {
+	b'FLPA': ('X translation', 'Y translation', 'Z translation', 'X rotation', 'Y rotation',
+				'Z rotation', 'X scale', 'Y scale', 'X size', 'Y size'),
+	b'FLVI': ('Visibility', ),
+	b'FLTP': ('Texture pattern', ),
+	b'FLVC': ('Top left red', 'Top left green', 'Top left blue', 'Top left alpha',
+				'Top right red', 'Top right green', 'Top right blue', 'Top right alpha',
+				'Bottom left red', 'Bottom left green', 'Bottom left blue', 'Bottom left alpha'
+				'Bottom right red', 'Bottom right green', 'Bottom right blue', 'Bottom right alpha', 'Pane alpha'),
+	b'FLMC': ('Black color red', 'Black color green', 'Black color blue', 'Black color alpha',
+				'White color red', 'White color green', 'White color blue', 'White color alpha'),
+	b'FLTS': ('U translation', 'V translation', 'Rotation', 'U scale', 'V scale'),
+	b'FLIM': ('Rotation', 'U scale', 'V scale'),
+}
 
 
 class extractBFLAN (rawutil.TypeReader, ClsFunc):
-	def main(self, filename, file, verbose, opts={}):
-		self.outfile = make_outfile(filename, 'tflan')
+	def main(self, filename, data, verbose, opts={}):
+		self.outfile = make_outfile(filename, 'json')
 		self.verbose = verbose
-		self.file = file
-		self.tree = OrderedDict()
-		self.tree['BFLAN'] = OrderedDict()
-		self.root = self.tree['BFLAN']
-		ptr = self.readheader()
-		self.extract_sections(ptr)
-		write(dump(self.tree), self.outfile)
-	
-	def readheader(self):
-		self.byteorder = ENDIANS[rawutil.unpack_from('>H', self.file, 4)[0]]
-		header = self.unpack_from(FLAN_HEADER, self.file, 0)
-		if header[0] != b'FLAN':
-			error.InvalidMagicError('Invalid magic %s, expected FLAN' % byterepr(header[0]))
-		#bom = header[1]
-		headerlen = header[2]
-		self.version = header[3]
-		#unknown = header[4]
-		self.filelen = header[5]
-		self.seccount = header[6]
-		#padding = header[7]
-		return headerlen
-	
-	def extract_sections(self, ptr):
-		for i in range(self.seccount):
-			magic, seclen = self.unpack_from('4sI', self.file, ptr)
-			magic = magic.decode('ascii')
-			method = eval('self.read%s' % magic)
-			method(ptr)
-			ptr += seclen
-			
-	def readpat1(self, ptr):
-		data = self.unpack_from(pat1_SECTION, self.file, ptr)
-		magic = data[0]
-		if magic != b'pat1':
-			error.InvalidMagicError('Invalid pat1 magic %s' % byterepr(magic))
-		seclen = data[1]
-		order = data[2]
-		seconds = data[3]
-		firstoffset = data[4]
-		secondsoffset = data[5]
-		start = data[6]
-		end = data[7]
-		childbinding = data[8]
-		#padding = data[9]
-		first = self.unpack_from('n', self.file, ptr + firstoffset)[0].decode('ascii')
-		groups = []
-		for i in range(seconds):
-			groups.append(self.unpack_from('n', self.file, ptr + secondsoffset + i * 28)[0].decode('ascii'))
-		self.root['pat1'] = OrderedDict()
-		node = self.root['pat1']
-		node['order'] = order
-		node['seconds-number'] = seconds
-		node['start'] = start
-		node['end'] = end
-		node['child-binding'] = childbinding
-		node['first-group'] = first
-		node['seconds-group-names'] = groups
-	
-	def readpai1(self, ptr):
-		data = self.unpack_from(pai1_SECTION, self.file, ptr)
-		magic = data[0]
-		if magic != b'pai1':
-			error.InvalidMagicError('Invalid pai1 magic %s' % byterepr(magic))
-		seclen = data[1]
-		framesize = data[2]
-		flags = data[3]
-		#padding = data[4]
-		timgcount = data[5]
-		entrycount = data[6]
-		entryoffset = data[7]
-		timgoffsets = data[8]
-		self.root['pai1'] = OrderedDict()
-		node = self.root['pai1']
-		node['frame-size'] = framesize
-		node['flags'] = flags
-		timgs = []
-		for (offset, ) in timgoffsets:
-			timgs.append(self.unpack_from('n', self.file, ptr + offset + 20)[0].decode('ascii'))
-		node['timgs'] = timgs
-		offsets = []
-		for i in range(entrycount):
-			offsets.append(self.unpack_from('I', self.file, ptr + entryoffset + i * 4)[0])
-		node['entries'] = []
-		for offset in offsets:
-			entry = OrderedDict()
-			data = self.unpack_from(pai1_ENTRY, self.file, offset + ptr)
-			entry['name'] = data[0]
-			tagcount = data[1]
-			ismaterial = data[2]
-			#padding = data[3]
-			tagoffsets = data[4]
-			entry['tags'] = []
-			for (tagoffset, ) in tagoffsets:
-				tagpos = ptr + offset + tagoffset
-				tag = OrderedDict()
-				data = self.unpack_from(pai1_TAG, self.file, tagpos)
-				type = data[0].decode('ascii')
-				entrycount = data[1]
-				#padding = data[2]
-				suboffsets = data[3]
-				tag['type'] = type
-				tag['entries'] = []
-				for (suboffset, ) in suboffsets:
-					pos = tagpos + suboffset
-					tagentry = OrderedDict()
-					data = self.unpack_from(pai1_TAGENTRY, self.file, pos)
-					type1 = data[0]
-					type2 = data[1]
-					datatype = data[2]
-					coordcount = data[3]
-					totag = data[4]
-					tagentry['type1'] = type1
-					tagentry['type2'] = self.gettype(type2, type)
-					tagentry['data-type'] = datatype
-					tagentry['coord-count'] = coordcount
-					tagentry['offset-to-tag'] = rawutil.hex(totag, 8)
-					if datatype == 0x100:
-						tagentry['frame'], tagentry['data2'] = self.unpack_from('2f', self.file)
-					elif datatype == 0x200:
-						tagentry['frame'], tagentry['value'], tagentry['blend'] = self.unpack_from('3f', self.file)
-					tag['entries'].append(tagentry)
-				entry['tags'].append(tag)
-			node['entries'].append(entry)
-	
-	def gettype(self, type, tagtype):
-		el = eval('%s_types[type]' % tagtype)
-		return el
+		self.output = OrderedDict()
+		self.readheader(data)
+		self.readdata(data)
+		self.cleanout(self.output)
+		with open(self.outfile, 'w') as f:
+			json.dump(self.output, f, indent=4)
+
+	def makenode(self, parent, name):
+		parent[name] = OrderedDict()
+		return parent[name]
+
+	def cleanout(self, dic):
+		toremove = []
+		for key in dic.keys():
+			if key.startswith('__'):
+				toremove.append(key)
+			elif isinstance(dic[key], OrderedDict):
+				self.cleanout(dic[key])
+		for key in toremove:
+			del dic[key]
+
+	def readheader(self, data):
+		magic, bom = self.unpack_from('>4sH', data)
+		if magic != b'FLAN':
+			error.InvalidMagicError('Invalid magic %s, expected FLAN' % byterepr(magic))
+		node = self.makenode(self.output, 'FLAN')
+		self.byteorder = ENDIANS[bom]
+		headerlen, self.version, filesize, self.secnum, padding = self.unpack_from("H2I2H", data)
+		node['byte order'] = self.byteorder
+		node['version'] = self.version
+		node['readable version'] = '%d.%d.%d.%d' % (self.version >> 24, (self.version >> 16) & 0xff, (self.version >> 8) & 0xFF, self.version & 0xFF)
+		node['number of sections'] = self.secnum
+		if self.verbose:
+			print('Format version : %s' % node['readable version'])
+			print('Number of sections : %d' % self.secnum)
+
+	def readdata(self, data):
+		for i in range(self.secnum):
+			startpos = data.tell()
+			magic, size = self.unpack_from('4sI', data)
+			data.seek(startpos)
+			name, node = self.readsection(data, magic, startpos)
+			self.output[name] = node
+			data.seek(startpos + size)
+
+	def readsection(self, data, magic, startpos):
+		if magic == b'pat1':
+			name, node = self.readpat1(data, startpos)
+		elif magic == b'pai1':
+			name, node = self.readpai1(data, startpos)
+		else:
+			error.InvalidSectionError('Invalid section magic %s at 0x%08X' % (byterepr(magic), startpos))
+		return name, node
+
+	def readpat1(self, data, startpos):
+		node = OrderedDict()
+		magic, size, node['order'], groupnum, nameoffset, groupnamesoffset, node['file start'], node['file end'], node['child binding'] = self.unpack_from('4sI2H2I2HB3x', data)
+		name = self.unpack_from('n', data, startpos + nameoffset)[0]
+		node['name'] = name.decode('utf-8')
+		data.seek(startpos + groupnamesoffset)
+		node['groups'] = []
+		for i in range(groupnum):
+			name = self.unpack_from('n28a', data)[0]
+			node['groups'].append(name.decode('utf-8'))
+		return 'pat1', node
+
+	def readpai1(self, data, startpos):
+		node = OrderedDict()
+		magic, size, node['frame size'], node['flags'], texnum, entrynum, tableoffset = self.unpack_from('4sI HBx 2HI', data)
+		basepos = data.tell()
+		texnamesoffsets = self.unpack_from('%dI' % texnum, data)
+		node['textures'] = []
+		for offset in texnamesoffsets:
+			name = self.unpack_from('n', data, basepos + offset)[0]
+			node['textures'].append(name.decode('utf-8'))
+		basepos = data.tell()
+		entryoffsets = self.unpack_from('%dI' % entrynum, data, startpos + tableoffset)
+		for i, offset in enumerate(entryoffsets):
+			entry = self.makenode(node, 'entry-%d' % i)
+			entrypos = startpos + offset
+			name, tagnum, ismaterial = self.unpack_from('n28a 2B2x', data, entrypos)
+			tagoffsets = self.unpack_from('%dI' % tagnum, data)
+			for j, tagoffset in enumerate(tagoffsets):
+				tagpos = entrypos + tagoffset
+				magic, tagentrynum = self.unpack_from('4sI', data, tagpos)
+				tag = self.makenode(entry, '%s-%d' % (magic.decode('utf-8'), j))
+				tagentryoffsets = self.unpack_from('%dI' % tagentrynum, data)
+				for k, tagentryoffset in enumerate(tagentryoffsets):
+					tagentry = self.makenode(tag, 'entry-%d' % k)
+					tagentry['type 1'], type2, datatype, coordnum, unknown = self.unpack_from('4BI', data, tagpos + tagentryoffset)
+					tagentry['type 2'] = TYPE2[magic][type2]
+					tagentry['data type'] = datatype
+					tagentry['unknown'] = unknown
+					for l in range(coordnum):
+						coordnode = self.makenode(tagentry, 'coordinate-%d' % l)
+						if datatype == 512:
+							coordnode['frame'], coordnode['value'], coordnode['blend'] = self.unpack_from('3f', data)
+						elif datatype == 256:
+							coordnode['frame'], coordnode['value'], coordnode['unknown'] = self.unpack_from('f2H', data)
+
+		return 'pai1', node
