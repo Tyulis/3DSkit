@@ -14,7 +14,7 @@ TYPE2 = {
 	b'FLTP': ('Texture pattern', ),
 	b'FLVC': ('Top left red', 'Top left green', 'Top left blue', 'Top left alpha',
 				'Top right red', 'Top right green', 'Top right blue', 'Top right alpha',
-				'Bottom left red', 'Bottom left green', 'Bottom left blue', 'Bottom left alpha'
+				'Bottom left red', 'Bottom left green', 'Bottom left blue', 'Bottom left alpha',
 				'Bottom right red', 'Bottom right green', 'Bottom right blue', 'Bottom right alpha', 'Pane alpha'),
 	b'FLMC': ('Black color red', 'Black color green', 'Black color blue', 'Black color alpha',
 				'White color red', 'White color green', 'White color blue', 'White color alpha'),
