@@ -10,8 +10,8 @@ NARC_HEADER_STRUCT = '4s2HI2H'
 NARC_HEADER_NAMES = 'magic, bom, unknown, filelen, headerlen, sectioncount'
 NARC_FATB_SECTION = '4s2I /p1[2I]'
 NARC_FATB_NAMES = 'magic, sectionlen, entrycount, entries'
-NARC_FNTB_SECTION = '4sI I2H /p1[I2HB /p1s H]'
-NARC_FNTB_NAMES = 'magic, sectionlen, startoffset, firstfilepos, dircount, entries'
+NARC_FNTB_SECTION = '4sI I2H'
+NARC_FNTB_NAMES = 'magic, sectionlen, startoffset, firstfilepos, dircount'
 
 class extractNARC (rawutil.TypeReader):
 	def __init__(self, filename, file, verbose, opts={}):
@@ -44,7 +44,10 @@ class extractNARC (rawutil.TypeReader):
 			self.has_names = False
 		else:
 			self.has_names = True
-			error.NotImplementedWarning('NARC with file names are not implemented yet. Continuing without them.')
+			self.names = []
+			for i in enumerate(self.entries):
+			    file_info = self.unpack_from('B /p1s', self.file, None, 'length, name')
+			    self.names.append(file_info.name.decode())
 		self.fimgoffset = offset + fntb.sectionlen
 
 	def extract(self):
@@ -53,6 +56,7 @@ class extractNARC (rawutil.TypeReader):
 			filedata = self.file.read(entry[1] - entry[0])
 			if self.has_names:
 				file = open(self.outdir + self.names[i], 'wb')
+				print('  Generating %s' % self.names[i])
 			else:
 				file = open(self.outdir + str(i) + get_ext(filedata), 'wb')
 			file.write(filedata)
