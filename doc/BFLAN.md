@@ -26,7 +26,7 @@ Quite similiar to the BFLYT header
 ## pat1 section (Part Animation Table ?)
 
 The pat1 section seems to be always the first, and some kind of "header" for pai1.
-It contains mostly global informations about animations
+It contains mostly global informations about animations.
 
 - 4s : Magic number ("pat1")
 - I  : Section size
@@ -61,28 +61,34 @@ The pai1 section contains the actual animation data
 - (Entries, at offsets defined by the table)
 	- 28s: Entry name, as an ASCII null-terminated string padded to 28 bytes
 	- B  : Number of tags
-	- B  : Is material ?
+	- B  : Animation target type (0 = pane, 1 = material)
 	- H  : Padding
 	- [I]: Tags offsets, relative to the entry's start (number defined above)
 	- (Tags, at offsets defined above)
+		- {If target type = 2}
+			- I : <unknown>
 		- 4s : Magic (indicates tag's type, see below)
 		- I  : Number of entries
 		- [I]: Entries' offsets relative to the start of the tag, number defined above
 		- (Data entries, at offsets defined above)
-			- B : Type 1
-			- B : Type 2 (see below)
-			- B : Data type (512 for triplet, 256 for pair)
-			- B : Number of coordinates
-			- I : <unknown>
-			- (Coordinates, number defined above)
-				- {If data type = 512}
+			- B : Index ?
+			- B : Animation target (see below)
+			- H : Data type
+			- H : Number of key frames
+			- H : Padding ?
+			- I : Offset to the first key frame, theorically always 0x0C
+			- (Key frames, number defined above)
+				- {If data type = 2}
 					- f : Frame
 					- f : Value
 					- f : Blend
-				- {If data type = 256}
+				- {If data type = 1}
 					- f : Frame
 					- H : Value
 					- H : Padding ?
+			- {Only if tag = "FLEU" ?}
+				- I : Entry name length
+				- s : Entry name
 
 ## Constants
 
@@ -94,6 +100,7 @@ TAGS:
 	- FLMC : FLAN Material Color
 	- FLTS : FLAN Texture SRT
 	- FLIM : FLAN Image Matrix ??
+	- FLEU : FLAN ????
 
 FLPA TYPE 2 :
 
@@ -146,6 +153,31 @@ FLMC TYPE 2 :
 - 5 : White color green
 - 6 : White color blue
 - 7 : White color alpha
+- 8 : Texture color blend ratio
+- 9 : Tev color 0 red
+- 10 : Tev color 0 green
+- 11 : Tev color 0 blue
+- 12 : Tev color 0 alpha
+- 13 : Tev color 1 red
+- 14 : Tev color 1 green
+- 15 : Tev color 1 blue
+- 16 : Tev color 1 alpha
+- 17 : Tev color 2 red
+- 18 : Tev color 2 green
+- 19 : Tev color 2 blue
+- 20 : Tev color 2 alpha
+- 21 : Tev konstant color 0 red
+- 22 : Tev konstant color 0 green
+- 23 : Tev konstant color 0 blue
+- 24 : Tev konstant color 0 alpha
+- 25 : Tev konstant color 1 red
+- 26 : Tev konstant color 1 green
+- 27 : Tev konstant color 1 blue
+- 28 : Tev konstant color 1 alpha
+- 29 : Tev konstant color 2 red
+- 30 : Tev konstant color 2 green
+- 31 : Tev konstant color 2 blue
+- 32 : Tev konstant color 2 alpha
 
 FLTS TYPE 2 :
 
@@ -176,3 +208,4 @@ Documentation about the structure of this document is [here](https://github.com/
 - [BenzinU](https://gbatemp.net/threads/benzinu-release.423171/), by Diddy81
 - [http://mk8.tockdom.com/wiki/BFLAN_(File_Format)]
 - [https://www.3dbrew.org/wiki/CLAN_format]
+- [http://wiki.tockdom.com/wiki/BRLAN]

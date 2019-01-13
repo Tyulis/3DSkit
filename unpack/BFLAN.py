@@ -7,7 +7,7 @@ from util.utils import byterepr, ClsFunc
 from util.filesystem import *
 import util.rawutil as rawutil
 
-TYPE2 = {
+TARGETS = {
 	b'FLPA': ('X translation', 'Y translation', 'Z translation', 'X rotation', 'Y rotation',
 				'Z rotation', 'X scale', 'Y scale', 'X size', 'Y size'),
 	b'FLVI': ('Visibility', ),
@@ -17,10 +17,20 @@ TYPE2 = {
 				'Bottom left red', 'Bottom left green', 'Bottom left blue', 'Bottom left alpha',
 				'Bottom right red', 'Bottom right green', 'Bottom right blue', 'Bottom right alpha', 'Pane alpha'),
 	b'FLMC': ('Black color red', 'Black color green', 'Black color blue', 'Black color alpha',
-				'White color red', 'White color green', 'White color blue', 'White color alpha'),
+				'White color red', 'White color green', 'White color blue', 'White color alpha',
+				'Texture color blend ratio',
+				'Tev color 0 red', 'Tev color 0 green', 'Tev color 0 blue', 'Tev color 0 alpha',
+				'Tev color 1 red', 'Tev color 1 green', 'Tev color 1 blue', 'Tev color 1 alpha',
+				'Tev color 2 red', 'Tev color 2 green', 'Tev color 2 blue', 'Tev color 2 alpha',
+				'Tev konstant color 0 red', 'Tev konstant color 0 green', 'Tev konstant color 0 blue', 'Tev konstant color 0 alpha',
+				'Tev konstant color 1 red', 'Tev konstant color 1 green', 'Tev konstant color 1 blue', 'Tev konstant color 1 alpha',
+				'Tev konstant color 2 red', 'Tev konstant color 2 green', 'Tev konstant color 2 blue', 'Tev konstant color 2 alpha',),
 	b'FLTS': ('U translation', 'V translation', 'Rotation', 'U scale', 'V scale'),
 	b'FLIM': ('Rotation', 'U scale', 'V scale'),
+	b'FLEU': ('<unknown-FLEU>', ),
 }
+
+ANIM_TARGET_TYPES = ('pane', 'material', '<unknown-2>')
 
 
 class extractBFLAN (rawutil.TypeReader, ClsFunc):
@@ -105,26 +115,37 @@ class extractBFLAN (rawutil.TypeReader, ClsFunc):
 		basepos = data.tell()
 		entryoffsets = self.unpack_from('%dI' % entrynum, data, startpos + tableoffset)
 		for i, offset in enumerate(entryoffsets):
-			entry = self.makenode(node, 'entry-%d' % i)
+			animation = self.makenode(node, 'animation %d' % i)
 			entrypos = startpos + offset
-			name, tagnum, ismaterial = self.unpack_from('n28a 2B2x', data, entrypos)
+			name, tagnum, targettype = self.unpack_from('n28a 2B2x', data, entrypos)
+			animation['name'] = name.decode('utf-8')
+			animation['target type'] = ANIM_TARGET_TYPES[targettype]
 			tagoffsets = self.unpack_from('%dI' % tagnum, data)
 			for j, tagoffset in enumerate(tagoffsets):
-				tagpos = entrypos + tagoffset
-				magic, tagentrynum = self.unpack_from('4sI', data, tagpos)
-				tag = self.makenode(entry, '%s-%d' % (magic.decode('utf-8'), j))
+				data.seek(entrypos + tagoffset)
+				if targettype == 2:
+					unknown = self.unpack_from('I', data)[0]
+				tagpos = data.tell()
+				magic, tagentrynum = self.unpack_from('4sI', data)
+				tag = self.makenode(animation, '%s %d' % (magic.decode('utf-8'), j))
+				if targettype == 2:
+					tag['unknown'] = unknown
 				tagentryoffsets = self.unpack_from('%dI' % tagentrynum, data)
 				for k, tagentryoffset in enumerate(tagentryoffsets):
-					tagentry = self.makenode(tag, 'entry-%d' % k)
-					tagentry['type 1'], type2, datatype, coordnum, unknown = self.unpack_from('4BI', data, tagpos + tagentryoffset)
-					tagentry['type 2'] = TYPE2[magic][type2]
+					tagentry = self.makenode(tag, 'entry %d' % k)
+					tagentrypos = tagentryoffset + tagpos
+					tagentry['index'], target, datatype, framenum, firstframeoffset = self.unpack_from('2B2H2xI', data, tagpos + tagentryoffset)
+					tagentry['target'] = TARGETS[magic][target]
 					tagentry['data type'] = datatype
-					tagentry['unknown'] = unknown
-					for l in range(coordnum):
-						coordnode = self.makenode(tagentry, 'coordinate-%d' % l)
-						if datatype == 512:
+					data.seek(tagentrypos + firstframeoffset)
+					for l in range(framenum):
+						coordnode = self.makenode(tagentry, 'key frame %d' % l)
+						if datatype == 2:
 							coordnode['frame'], coordnode['value'], coordnode['blend'] = self.unpack_from('3f', data)
-						elif datatype == 256:
+						elif datatype == 1:
 							coordnode['frame'], coordnode['value'], coordnode['unknown'] = self.unpack_from('f2H', data)
+					if magic == b'FLEU':
+						namelen, name = self.unpack_from('I/p1s', data)
+						tagentry['name'] = name.decode('utf-8')
 
 		return 'pai1', node

@@ -449,4 +449,7 @@
 	*	New implementation of unpack.BFLAN, with JSON output
 	*	Old BFLAN implementation is still accessible using `-f BFLAN_old`
 	*	Added a doc about the BFLAN format
-	*	Added support for filenames in unpack.NARC, thanks to cesarmiquel
+	*	Added support for filenames in unpack.NARC, thanks to **cesarmiquel**
+*	v1.33.74
+	*	Fixed bad tag entry decoding in unpack.BFLAN
+	*	Added and fixed many things in unpack.BFLAN
