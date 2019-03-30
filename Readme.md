@@ -153,9 +153,6 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 	*	**format**: Specify the audio format. Can be `DSP-ADPCM`, `IMA-ADPCM`, `PCM16` or `PCM8` (currently only DSP-ADPCM is supported). Defaults to `DSP-ADPCM`
 	*	**loop**: Makes a looping BCSTM. Must be of the form <start>-<end> (eg. 688123-2976543). If not given, the packed BCSTM won't loop at all.
 	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to `false` to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
-*	BFFNT:
-	*	**meta**: **REQUIRED !** Specify the path of the metadata JSON file (something like `<font name>_meta.json`)
-	*	**reverse**: If you used this option at extraction, set it also to `true` when you repack the font. Defaults to `false`.
 
 Supported formats
 =================
