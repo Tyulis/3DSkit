@@ -2,7 +2,7 @@
 
 In this folder will be placed documentation about file formats handled by 3DSkit
 
-Note that this is probably not complete nor perfect, and some things have been found by home made retro-engineering.
+Note that this is probably not complete nor perfect, and some things have been found by home-made retro-engineering.
 There are also sometimes several versions of the same format, so be careful.
 
 If you find anything that is not there, an error, or something outdated, don't hesitate to open an issue or a pull request, any help is welcome :)

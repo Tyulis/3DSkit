@@ -558,7 +558,7 @@ Y ORIGIN :
 - 1 : Up
 - 2 : Down
 
-# About
+## About
 
 *This is a format documentation originally made by Tyulis for the 3DSkit project.
 It is not an absolute reference, and may contain wrong, outdated or incomplete stuff.

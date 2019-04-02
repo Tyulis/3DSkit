@@ -64,7 +64,7 @@ BNTI_FORMAT_NAMES = {
 	0x1f01: 'BC6H', 0x1f02: 'BC6H_SF16',
 	0x2001: 'BC7', 0x2006: 'BC7_SRGB',
 }
-	
+
 
 class extractBFFNT (rawutil.TypeReader, ClsFunc):
 	def main(self, filename, data, verbose, opts={}):
@@ -87,7 +87,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.readTGLP(data, self.tglpoffset - 8)
 		meta = {'glyphmap': self.glyphmap, 'glyphwidths': self.glyphwidths}
 		write(json.dumps(meta, indent=4), self.filebase + '_meta.json')
-	
+
 	def read_header(self, data):
 		magic, bom = rawutil.unpack_from('>4sH', data, 0)
 		if magic != b'FFNT':
@@ -100,7 +100,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			self.version = VERSIONS[version]
 		if self.verbose:
 			print('Version %d.%d.%d (%s)' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF, self.version))
-	
+
 	def readFINF(self, data):
 		magic, size = self.unpack_from('4sI', data)
 		if magic != b'FINF':
@@ -108,7 +108,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.fonttype, self.height, self.width, self.ascent, self.linefeed, self.alterindex = self.unpack_from('4B2H', data)
 		self.defaultleftwidth, self.defaultglyphwidth, self.defaultcharwidth, self.encoding = self.unpack_from('4B', data)
 		self.tglpoffset, self.cwdhoffset, self.cmapoffset = self.unpack_from('3I', data)
-	
+
 	def readTGLP(self, data, offset):
 		magic, size = self.unpack_from('4sI', data, offset)
 		if magic != b'TGLP':
@@ -147,7 +147,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			if self.reverse:
 				sheet = sheet.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 			sheet.save(outname, 'PNG')
-	
+
 	def extract_sheet(self, data, width, height, size, format, swizzlesize):
 		out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
 		indata = np.ascontiguousarray(np.fromstring(data.read(size), dtype=np.uint8))
@@ -156,7 +156,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			error.UnsupportedDataFormatError('%s texture format is not supported yet' % format)
 		libkit.extractTiledTexture(indata, out, width, height, formatid, swizzlesize, self.byteorder == '<')
 		return out
-	
+
 	def extract_underlying_BNTX(self, data):
 		if self.verbose:
 			print('\nExtracting wrapped BNTX')
@@ -201,7 +201,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				if self.reverse:
 					img = img.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 				img.save(outname, 'PNG')
-	
+
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)
 		if magic != b'CWDH':
@@ -211,7 +211,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			self.glyphwidths[chr(startcode + i)] = {'left': width[0], 'glyph': width[1], 'char': width[2]}
 		if nextoffset > 0:
 			self.readCWDH(data, nextoffset - 8)
-	
+
 	def readCMAP(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)
 		if magic != b'CMAP':
