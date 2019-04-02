@@ -86,7 +86,7 @@ The pai1 section contains the actual animation data
 					- f : Frame
 					- H : Value
 					- H : Padding ?
-			- {Only if tag = "FLEU" ?}
+			- {Only if tag = FLEU ?}
 				- I : Entry name length
 				- s : Entry name
 
@@ -99,7 +99,7 @@ TAGS:
 	- FLVC : FLAN Vertex Colors
 	- FLMC : FLAN Material Color
 	- FLTS : FLAN Texture SRT
-	- FLIM : FLAN Image Matrix ??
+	- FLIM : FLAN Image Material ??
 	- FLEU : FLAN ????
 
 FLPA TYPE 2 :

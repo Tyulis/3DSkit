@@ -17,10 +17,10 @@ Preparing
 
 Now, some 3DSkit modules are based on libkit. This is a "virtual" module, which can be either
 c3DSkit, a C extension, or py3DSkit its equivalent in pure Python.
-This means that you can use 3DSkit directly as is, without any setup : 
+This means that you can use 3DSkit directly as is, without any setup :
 all 3DSkit modules can work without c3DSkit.
 
-However, some formats are VERY, very slow to process in pure Python : 
+However, some formats are VERY, very slow to process in pure Python :
 for example, textures, fonts, audio... So if you can, build c3DSkit, which
 computes them much faster (sometimes 10000x or more).
 
@@ -79,7 +79,7 @@ Examples
 Extract a DARC archive:
 
 	python3 3DSkit.py -x archive.darc
-	
+
 Recursively extract all the contents of a directory:
 
 	python3 3DSkit.py -x my-directory/
@@ -153,9 +153,6 @@ You can specify them with `-O option1=value1 -O option2=value2 ...`
 	*	**format**: Specify the audio format. Can be `DSP-ADPCM`, `IMA-ADPCM`, `PCM16` or `PCM8` (currently only DSP-ADPCM is supported). Defaults to `DSP-ADPCM`
 	*	**loop**: Makes a looping BCSTM. Must be of the form <start>-<end> (eg. 688123-2976543). If not given, the packed BCSTM won't loop at all.
 	*	**writetracks**: If a BCSTM contains only 1 track, sometimes the track is explicitely written in the file, and sometimes not. If you want to pack only one track, you can set it to `false` to not write the track info. Defaults to true, change only if default don't work. _Note that a track is theorically a standalone stream, it's different than a channel_
-*	BFFNT:
-	*	**meta**: **REQUIRED !** Specify the path of the metadata JSON file (something like `<font name>_meta.json`)
-	*	**reverse**: If you used this option at extraction, set it also to `true` when you repack the font. Defaults to `false`.
 
 Supported formats
 =================
@@ -173,22 +170,22 @@ Crosses:
 *	e : experimental
 *	p : partial support
 *	  : no support
-	
-Output: Output format at extracting. See the output formats help for informations
-As explained previously, modules which use c3DSkit may be very slow in pure Python and much faster if you have c3DSkit installed
+
+Output: Output format of the unpacker.
+As explained previously, modules which use libkit may be very slow in pure Python and much faster if you have c3DSkit installed
 
 	Format | X | P | R | Extensions          | Output  | Uses libkit
 	-----------------------------------------------------------------
-	ALYT   | x |   | x | .alyt               | files   | 
+	ALYT   | x |   | x | .alyt               | files   |
 	BCGRP  | x |   |   | .bcgrp              | files   |
 	BCSAR  | e |   |   | .bcsar              | files   |
 	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
-	BCWAR  | x |   |   | .bcwar              | files   | 
+	BCWAR  | x |   |   | .bcwar              | files   |
 	BCWAV  | x |   |   | .bcwav              | WAV     | Yes
 	BFFNT  | p |   |   | .bffnt              | PNG     | Yes
-	BFLAN  | p |   |   | .bflan              | TX      | 
+	BFLAN  | p |   |   | .bflan              | JSON    |
 	BFLIM  | x | x |   | .bflim              | PNG     | Yes
-	BFLYT  | x |   | x | .bflyt              | TX      |
+	BFLYT  | x |   | x | .bflyt              | JSON    |
 	CBMD   | e |   |   | .bnr banner[.bin]   | files   |
 	DARC   | x | e |   | .arc .bcma (...)    | files   |
 	GARC   | x |   | x | .garc (none)        | files   |
@@ -211,9 +208,8 @@ There is also:
 
 Compressions:
 
-D: Decompressible
-
-C: Compressible
+- D: Decompressible
+- C: Compressible
 
 	Compression | D | C | Extensions                   | Uses libkit
 	-----------------------------------------------------------------
