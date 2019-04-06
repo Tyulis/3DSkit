@@ -187,7 +187,7 @@ TEXTURE FORMATS :
 
 ## About
 
-*This is a format documentation originally made by Tyulis for the 3DSkit project.
+*This is a format documentation originally made by Tyulis for the 3DSkit project, mostly based on the sources below.
 It is not an absolute reference, and may contain wrong, outdated or incomplete stuff.
 Sources used to make this document and contributors are listed below, the rest has been found by personal investigations.
 If you find any error, incomplete or outdated stuff, dont't hesitate to open an issue or a pull request in the [3DSkit GitHub repository](https://github.com/Tyulis/3DSkit).
