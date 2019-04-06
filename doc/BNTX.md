@@ -24,25 +24,25 @@ The only known version is 0.4.0.0
 - 4s : Target platform ("NX  " (NX and two spaces) for Switch, "GEN " (with one space) for computer)
 - I  : Number of textures
 - Q  : Texture table offset. Points to a table of 64 bits pointer to the BRTI sections for each texture, length is the number of textures
-- Q  : Textures' data offset
+- Q  : BRTD section offset
 - Q  : \_DIC section offset
 - Q  : Texture memory pool offset
 - Q  : Current memory pool pointer (set only at runtime)
 - I  : Base memory pool offset (set only at runtime)
 - I  : <unknown>
 
-### BRTI section (Texture Info)
+### BRTI section (BNTX Texture Info)
 
 This section stores informations about a texture
 
 - 4s : Magic number ("BRTI")
 - I  : Next section offset
 - I  : Section size
-- I  : <unknown>
+- I  : Size too ?
 - H  : <unknown>
 - H  : Tile mode (0 = swizzled, 1 = not swizzled)
 - H  : Swizzle value
-- H  : Number of images
+- H  : Number of mipmaps
 - H  : Number of multi-samples
 - H  : <unknown>
 - I  : Image format (see TEXTURE FORMATS below)
@@ -67,6 +67,14 @@ This section stores informations about a texture
 - q  : Texture view pointer, used only at runtime
 - q  : Descriptor slot data offset, used only at runtime
 - q  : User data dictionary offset, points to a \_DIC section containing the user data's names
+
+### BRTD section (BNTX Texture Data)
+
+This section holds the actual texture data. Each texture is aligned to the alignment defined in their BRTI and stored contiguously
+
+- 4s : Magic number ("BRTD")
+- I  : Unknown
+- I  : Section size (including the header)
 
 ### \_STR section (STRing table)
 
@@ -128,6 +136,72 @@ This is a structure used by developers to store data in the file to be used by t
     - H : Array count
     - B : Offset count
     - B : Padding size
+
+## Constants
+
+The texture format is in two bytes, it is actually split in two parts : The first byte is the pixel format, the second is the color space
+
+TEXTURE FORMATS (first byte) :
+
+- 0x02 : L8
+- 0x07 : RGB565
+- 0x09 : RG8
+- 0x0A : L16
+- 0x0B : RGBA8
+- 0x0F : R11G11B10
+- 0x14 : L32
+- 0x1A : BC1
+- 0x1B : BC2
+- 0x1C : BC3
+- 0x1D : BC4
+- 0x1E : BC5
+- 0x1F : BC6H
+- 0x20 : BC7
+- 0x2D : ASTC4x4
+- 0x2E : ASTC5x4
+- 0x2F : ASTC5x5
+- 0x30 : ASTC6x5
+- 0x31 : ASTC6x6
+- 0x32 : ASTC8x5
+- 0x33 : ASTC8x6
+- 0x34 : ASTC8x8
+- 0x35 : ASTC10x5
+- 0x36 : ASTC10x6
+- 0x37 : ASTC10x8
+- 0x38 : ASTC10x10
+- 0x39 : ASTC12x10
+- 0x3A : ASTC12x12
+
+TEXTURE COLOR FORMAT (second byte):
+
+- 0x01 : UNorm
+- 0x02 : SNorm
+- 0x03 : UInt
+- 0x04 : SInt
+- 0x05 : Single
+- 0x06 : SRGB
+- 0x0A : UHalf
+
+TEXTURE DIMENSIONS :
+
+- 0x00 : 1D
+- 0x01 : 2D
+- 0x02 : 3D
+- 0x03 : Cube
+- 0x04 : 1D array
+- 0x05 : 2D array
+- 0x06 : 2D multi-sample
+- 0x07 : 2D multi-sample array
+- 0x08 : Cube array
+
+CHANNEL SOURCES :
+
+- 0x00 : Zero
+- 0x01 : One
+- 0x02 : Red
+- 0x03 : Green
+- 0x04 : Blue
+- 0x05 : Alpha
 
 ## About
 

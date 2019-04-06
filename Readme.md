@@ -176,26 +176,27 @@ As explained previously, modules which use libkit may be very slow in pure Pytho
 
 	Format | X | P | R | Extensions          | Output  | Uses libkit
 	-----------------------------------------------------------------
-	ALYT   | x |   | x | .alyt               | files   |
-	BCGRP  | x |   |   | .bcgrp              | files   |
-	BCSAR  | e |   |   | .bcsar              | files   |
-	BCSTM  | x | x |   | .bcstm              | WAV     | Yes
-	BCWAR  | x |   |   | .bcwar              | files   |
-	BCWAV  | x |   |   | .bcwav              | WAV     | Yes
-	BFFNT  | p |   |   | .bffnt              | PNG     | Yes
-	BFLAN  | p |   |   | .bflan              | JSON    |
-	BFLIM  | x | x |   | .bflim              | PNG     | Yes
-	BFLYT  | x |   | x | .bflyt              | JSON    |
-	CBMD   | e |   |   | .bnr banner[.bin]   | files   |
-	DARC   | x | e |   | .arc .bcma (...)    | files   |
-	GARC   | x |   | x | .garc (none)        | files   |
-	GFA    | x |   |   | .gfa                | files   |
-	mini   | x |   | x | .mini .bl .wd (none)| files   |
-	MSBT   | x |   |   | .msbt               | TX      |
-	NARC   | p |   |   | .narc               | files   |
-	NCCH   | x |   |   | .app .cxi .cfa      | sections|
-	NDS    | x |   |   | .nds                | files   |
-	SARC   | x | x |   | .sarc .arc .szs     | files   |
+	ALYT   | x |   | x | .alyt               | files    |
+	BCGRP  | x |   |   | .bcgrp              | files    |
+	BCSAR  | e |   |   | .bcsar              | files    |
+	BCSTM  | x | x |   | .bcstm              | WAV      | Yes
+	BCWAR  | x |   |   | .bcwar              | files    |
+	BCWAV  | x |   |   | .bcwav              | WAV      | Yes
+	BFFNT  | p |   |   | .bffnt              | PNG+JSON | Yes
+	BFLAN  | p |   |   | .bflan              | JSON     |
+	BFLIM  | x | x |   | .bflim              | PNG      | Yes
+	BFLYT  | x |   | x | .bflyt              | JSON     |
+	BNTX   | x |   |   | .bntx               | PNG+JSON | Yes
+	CBMD   | e |   |   | .bnr banner[.bin]   | files    |
+	DARC   | x | e |   | .arc .bcma (...)    | files    |
+	GARC   | x |   | x | .garc (none)        | files    |
+	GFA    | x |   |   | .gfa                | files    |
+	mini   | x |   | x | .mini .bl .wd (none)| files    |
+	MSBT   | x |   |   | .msbt               | TX       |
+	NARC   | p |   |   | .narc               | files    |
+	NCCH   | x |   |   | .app .cxi .cfa      | sections |
+	NDS    | x |   |   | .nds                | files    |
+	SARC   | x | x |   | .sarc .arc .szs     | files    |
 
 There is also:
 

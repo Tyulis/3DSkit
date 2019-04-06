@@ -157,7 +157,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		libkit.extractTiledTexture(indata, out, width, height, formatid, swizzlesize, self.byteorder == '<')
 		return out
 
-	def extract_underlying_BNTX(self, data):
+	"""def extract_underlying_BNTX(self, data):
 		if self.verbose:
 			print('\nExtracting wrapped BNTX')
 		bntxpos = data.tell()
@@ -200,7 +200,14 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 				img = Image.frombytes('RGBA', (self.sheetwidth, self.sheetheight), sheet.tostring())
 				if self.reverse:
 					img = img.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
-				img.save(outname, 'PNG')
+				img.save(outname, 'PNG')"""
+
+	def extract_underlying_BNTX(self, data):
+		bntxpos = data.tell()
+		magic, version, bom, revision, nameoffset, stroffset, relocoffset, filesize = self.unpack_from('8sI2H4I', data)
+		data.seek(bntxpos)
+		with open(self.filebase + '_texture.bntx', 'wb') as f:
+			f.write(data.read(filesize))
 
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)

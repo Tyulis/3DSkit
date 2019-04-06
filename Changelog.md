@@ -453,3 +453,9 @@
 *	v1.33.74
 	*	Fixed bad tag entry decoding in unpack.BFLAN
 	*	Added and fixed many things in unpack.BFLAN
+
+**v1.34**
+
+*	v1.34.74
+	*	Added unpack.BNTX
+	*	Now unpack.BFFNT only extracts the BNTX section if any
