@@ -107,6 +107,8 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			error.InvalidMagicError('Invalid BRTI magic, found %s' % byterepr(magic))
 		if dimension not in (1, 5):
 			error.UnsupportedSettingError('Only 2D textures are currently supported (found %s)' % DIMENSIONS[dimension])
+		if mipmapnum > 1:
+			error.UnsupportedSettingError('Mipmaps are not supported yet')
 		texname = self.unpack_from('H/p1s', data, texname_offset)[1].decode('utf-8')
 		pixelformat = (format >> 8) & 0xFF
 		valueformat = (format & 0xFF)
@@ -136,18 +138,14 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			format = libkit.getTextureFormatId(PIXEL_FORMATS[pixelformat])
 			if format == -1:
 				error.UnsupportedDataFormatError('Pixel format %s is not supported yet' % PIXEL_FORMATS[pixelformat])
-			datasize = self.data_size(PIXEL_FORMATS[pixelformat], width, height)
-			indata = np.ascontiguousarray(np.fromstring(data.read(datasize), dtype=np.uint8))
+			#datasize = self.data_size(PIXEL_FORMATS[pixelformat], width, height)
+			indata = np.ascontiguousarray(np.fromstring(data.read(mipmapdata_size), dtype=np.uint8))
 			out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
 			libkit.extractTiledTexture(indata, out, width, height, format, swizzle_value if tilemode == 0 else -1, self.byteorder == '<')
 			img = Image.frombytes('RGBA', (width, height), out.tostring())
 			outname = '%s_%s_el%d.png' % (self.filebase, texname, i)
 			img.save(outname, 'PNG')
-			self.texturepos += datasize + (texdata_alignment - (datasize % texdata_alignment or texdata_alignment))
+			basepos = self.texturepos
+			self.texturepos += mipmapdata_size + (texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment))
+			print((texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment)))
 		return node
-
-	def data_size(self, format, width, height):
-		if format in PIXEL_SIZES:
-			return PIXEL_SIZES[format] * width * height
-		else:
-			error.UnsupportedDataFormatError('Pixel format %s is not supported yet' % format)
