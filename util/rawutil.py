@@ -225,7 +225,11 @@ class TypeWriter (TypeUser):
 		return b'\x00' * num
 
 	def align(self, data, alignment):
-		padding = alignment - (len(data) % alignment or alignment)
+		if isinstance(data, int):
+			length = data
+		else:
+			length = len(data)
+		padding = alignment - (length % alignment or alignment)
 		return b'\x00' * padding
 
 

@@ -31,6 +31,38 @@ The only known version is 0.4.0.0
 - I  : Base memory pool offset (set only at runtime)
 - I  : <unknown>
 
+### \_STR section (STRing table)
+
+A table that contains all strings
+The first string is always an empty string and is not counted for the number of strings
+
+- 4s : Magic number ("\_STR")
+- I  : Next section offset (relative to the start of the section, does not point on \_DIC)
+- I  : Section size (including the following \_DIC)
+- I  : <unknown>
+- I  : Number of strings in the table
+- Then the null string (size 0, empty string, so just 0x00000000)
+- (Then strings, number is defined just above)
+    - H : String length, does not include the terminating null byte
+    - n : The null-terminated string
+
+### \_DIC section (DICtionary)
+
+A dictionary used for fast name lookup
+
+- 4s : Magic number ("\_DIC")
+- I  : Number of entries
+
+ Then a root entry, that is **not** included in the number of section.
+ After the root entry, the actual entries follow
+
+ - (Entry structure, number defined above + the root entry)
+    - I : Reference bit
+    - H : Left child node index
+    - H : Right child node index
+    - Q : Key offset, to the stored key name
+
+
 ### BRTI section (BNTX Texture Info)
 
 This section stores informations about a texture
@@ -38,7 +70,7 @@ This section stores informations about a texture
 - 4s : Magic number ("BRTI")
 - I  : Next section offset
 - I  : Section size
-- I  : Size too ?
+- I  : <unknown>
 - H  : <unknown>
 - H  : Tile mode (0 = swizzled, 1 = not swizzled)
 - H  : Swizzle value
@@ -61,7 +93,7 @@ This section stores informations about a texture
 - 3B : <unknown>
 - q  : Texture's name offset
 - q  : Texture container offset (see above)
-- q  : Texture table offset (same use as the Texture Container's field)
+- q  : Texture data levels table offset, points on an array of 64-bits integers that point to the different levels of the texture
 - q  : User data offset
 - q  : Texture pointer, used only at runtime
 - q  : Texture view pointer, used only at runtime
@@ -70,41 +102,11 @@ This section stores informations about a texture
 
 ### BRTD section (BNTX Texture Data)
 
-This section holds the actual texture data. Each texture is aligned to the alignment defined in their BRTI and stored contiguously
+This section holds the actual texture data. Each texture is aligned to the alignment defined in its BRTI and stored contiguously
 
 - 4s : Magic number ("BRTD")
 - I  : Unknown
-- I  : Section size (including the header)
-
-### \_STR section (STRing table)
-
-A table that contains all strings
-The first string is always an empty string and is not counted for the number of strings
-
-- 4s : Magic number ("\_STR")
-- I  : Next section offset
-- I  : Section size
-- I  : <unknown>
-- I  : Number of strings in the table
-- (Then strings, number is defined just above)
-    - H : String length, does not include the terminating null byte
-    - n : The null-terminated string
-
-### \_DIC section (DICtionary)
-
-A dictionary used for fast name lookup
-
-- 4s : Magic number ("\_DIC")
-- I  : Number of entries
-
- Then a root entry, that is **not** included in the number of section.
- After the root entry, the actual entries follow
-
- - (Entry structure, number defined above + the root entry)
-    - I : Reference bit
-    - H : Left child node index
-    - H : Right child node index
-    - Q : Key offset, to the stored key name
+- Q  : Section size (including the header)
 
 ### User data
 

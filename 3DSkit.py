@@ -150,11 +150,11 @@ def compress_file(inname, outname, compression, verbose):
 def main(args, opts):
 	global basedir
 	if args.ckit:
-		error.SettingWarning('Forcing usage of c3DSkit. Remember that if it is not used by default, there is probably a reason.')
+		error.SettingWarning('Forcing usage of c3DSkit. Remember that if it is not used by default, there is probably a very good reason.')
 		import c3DSkit
 		util.libkit = c3DSkit
 	elif args.pykit:
-		error.SettingWarning('Forcing usage of py3DSkit. Remember that if it is not used by default, there is probably a reason.')
+		error.SettingWarning('Forcing usage of py3DSkit. Remember that if it is not used by default, there is probably a very good reason.')
 		import py3DSkit
 		util.libkit = py3DSkit
 	if args.quiet:
@@ -164,7 +164,7 @@ def main(args, opts):
 		error.SettingWarning('Entering debugging mode. This will turn every error into Python exception. It is only useful with a debugger, you should not use it as an end user.')
 		args.verbose = True
 		error.debug = True
-	elif args.extract:
+	if args.extract:
 		for filename in args.files:
 			extract_files(filename, args.big, args.format, args.verbose, opts)
 	elif args.pack:

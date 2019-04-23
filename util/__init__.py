@@ -37,7 +37,7 @@ def _Warning(errno, type):
 	return _Warning_Function
 
 class error (ClsFunc):
-	debug = False  #-V option, turns errors into exceptions
+	debug = False  # -V option, turns errors into exceptions
 	UnsupportedFormatError = classmethod(_Error(101, 'UnsupportedFormatError'))
 	UnrecognizedFormatError = classmethod(_Error(102, 'UnrecognizedFormatError'))
 	UnsupportedCompressionError = classmethod(_Error(103, 'UnsupportedCompressionError'))

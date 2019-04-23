@@ -79,13 +79,13 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			self.reverse = False
 		self.filebase = os.path.splitext(filename)[0]
 		self.read_header(data)
-		self.readFINF(data)
+		finf = self.readFINF(data)
 		self.glyphmap = {}
 		self.readCMAP(data, self.cmapoffset - 8)
 		self.glyphwidths = {}
 		self.readCWDH(data, self.cwdhoffset - 8)
-		self.readTGLP(data, self.tglpoffset - 8)
-		meta = {'glyphmap': self.glyphmap, 'glyphwidths': self.glyphwidths}
+		tglp = self.readTGLP(data, self.tglpoffset - 8)
+		meta = {'info': finf, 'glyphmap': self.glyphmap, 'glyphwidths': self.glyphwidths, 'textures': tglp}
 		write(json.dumps(meta, indent=4), self.filebase + '_meta.json')
 
 	def read_header(self, data):
@@ -108,6 +108,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.fonttype, self.height, self.width, self.ascent, self.linefeed, self.alterindex = self.unpack_from('4B2H', data)
 		self.defaultleftwidth, self.defaultglyphwidth, self.defaultcharwidth, self.encoding = self.unpack_from('4B', data)
 		self.tglpoffset, self.cwdhoffset, self.cmapoffset = self.unpack_from('3I', data)
+		node = {'type': self.fonttype, 'ascent': self.ascent, 'line_feed': self.linefeed, 'alter_index': self.alterindex,
+				'defaut_left_width': self.defaultleftwidth, 'default_glyph_width': self.defaultglyphwidth, 'default_char_width': self.defaultcharwidth,
+				'encoding': self.encoding}
+		return node
 
 	def readTGLP(self, data, offset):
 		magic, size = self.unpack_from('4sI', data, offset)
@@ -116,6 +120,8 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.cellwidth, self.cellheight, self.sheetcount, self.maxwidth = self.unpack_from('4B', data)
 		self.sheetsize, self.baselinepos, format = self.unpack_from('I2H', data)
 		self.colcount, self.rowcount, self.sheetwidth, self.sheetheight, dataoffset = self.unpack_from('4HI', data)
+		node = {'cell_width': self.cellwidth, 'cell_height': self.cellheight, 'max_width': self.maxwidth,
+				'base_line_position': self.baselinepos}
 		'''elif self.version == 'CTR':
 			self.cellwidth, self.cellheight, self.baselinepos, self.maxwidth = self.unpack_from('4B', data)
 			self.sheetsize, self.sheetcount, format, self.colcount, self.rowcount = self.unpack_from('I4H', data)
@@ -126,6 +132,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			self.format = FORMAT_NAMES_CAFE[format]
 		elif self.version == 'NX':
 			self.format = FORMAT_NAMES_NX[format]
+		node['format'] = self.format
 		if self.verbose:
 			print('Number of sheets: %d' % self.sheetcount)
 			print('Texture format: %s' % self.format)
@@ -135,8 +142,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		magic = data.read(4)
 		data.seek(-4, 1)
 		if (magic == b'BNTX'):
-			self.extract_underlying_BNTX(data)
-			return
+			node['output'] = [self.extract_underlying_BNTX(data)]
+			node['BNTX'] = True
+			return node
+		texfilenames = []
 		for i in range(self.sheetcount):
 			if self.sheetcount > 1:
 				outname = self.filebase + '_sheet%d.png' % i
@@ -147,6 +156,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			if self.reverse:
 				sheet = sheet.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 			sheet.save(outname, 'PNG')
+			texfilenames.append(outname)
+		node['output'] = texfilenames
+		node['BNTX'] = False
+		return node
 
 	def extract_sheet(self, data, width, height, size, format, swizzlesize):
 		out = np.ascontiguousarray(np.zeros(width * height * 4, dtype=np.uint8))
@@ -206,8 +219,10 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		bntxpos = data.tell()
 		magic, version, bom, revision, nameoffset, stroffset, relocoffset, filesize = self.unpack_from('8sI2H4I', data)
 		data.seek(bntxpos)
-		with open(self.filebase + '_texture.bntx', 'wb') as f:
+		bntxname = self.filebase + '_texture.bntx'
+		with open(bntxname, 'wb') as f:
 			f.write(data.read(filesize))
+		return bntxname
 
 	def readCWDH(self, data, secoffset):
 		magic, size = self.unpack_from('4sI', data, secoffset)

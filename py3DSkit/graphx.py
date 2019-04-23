@@ -39,10 +39,10 @@ TEXTURE_FORMATS = {
 	'A8': A8, 'LA4': LA4, 'L4': L4, 'A4': A4,
 	'ETC1': ETC1, 'ETC1A4': ETC1A4, 'BC4': BC4, 'BC4_SNORM': BC4_SNORM,
 	#'BC1': BC1, 'BC2': BC2, 'BC3': BC3, 'BC5': BC5,
-	#'BC6H': BC6H, 'BC7': BC7, 
+	#'BC6H': BC6H, 'BC7': BC7,
 	'RGBA8_SRGB': RGBA8_SRGB,
 	#'BC1_SRGB': BC1_SRGB, 'BC2_SRGB': BC2_SRGB,
-	#'BC3_SRGB': BC3_SRGB, 
+	#'BC3_SRGB': BC3_SRGB,
 	#'BC5_SNORM': BC5_SNORM, 'BC6H_SF16': BC6H_SF16,
 	#'BC7_SRGB': BC7_SRGB,
 }
@@ -72,7 +72,7 @@ class Swizzle (object):
 		self.bppshift = self._getShift(bpp)
 		self.gobstride = int(512 * blockheight * np.ceil(width * bpp / 64.0))
 		self.xshift = self._getShift(512 * blockheight)
-	
+
 	def _getShift(self, value):
 		if value == 0:
 			return 0
@@ -80,7 +80,7 @@ class Swizzle (object):
 		while ((value >> shift) & 1) == 0:
 			shift += 1
 		return shift;
-	
+
 	def getSwizzleOffset(self, x, y):
 		x <<= self.bppshift
 		pos = (y >> self.bhshift) * self.gobstride
@@ -92,7 +92,7 @@ class Swizzle (object):
 		pos += ((y & 0x01) >> 0) << 4
 		pos += ((x & 0x0f) >> 0) << 0
 		return pos
-		
+
 def getTextureFormatId(format):
 	if format in TEXTURE_FORMATS:
 		return TEXTURE_FORMATS[format]
@@ -322,10 +322,14 @@ def _extractBC4Texture(input, output, width, height, format, swizzlesize, little
 	theight = int(np.floor((height + 3) / 4))
 	lums = np.zeros(8, dtype=np.uint8)
 	#int offset = 0;
+	print(swizzlesize)
 	swizzle = Swizzle(twidth, BC4_BYTESPERTEXEL, swizzlesize);
 	for ytile in range(theight):
 		for xtile in range(twidth):
-			offset = swizzle.getSwizzleOffset(xtile, ytile)
+			if swizzlesize < 0:
+				offset = (ytile * twidth + xtile) * BC4_BYTESPERTEXEL
+			else:
+				offset = swizzle.getSwizzleOffset(xtile, ytile)
 			lums[0] = input[offset]
 			lums[1] = input[offset + 1]
 			for i in range(2, 8):
@@ -355,7 +359,7 @@ def _extractBC4Texture(input, output, width, height, format, swizzlesize, little
 						lum = lums[(pixels2 >> ((codeindex - 8) * 3)) & 7]
 					output[outpos] = output[outpos + 1] = output[outpos + 2] = lum
 					output[outpos + 3] = 0xFF
-	
+
 def extractTiledTexture(input, output, width, height, format, swizzlesize, littleendian):
 	if format in (ETC1, ETC1A4):
 		_extractETC1Texture(input, output, width, height, format)

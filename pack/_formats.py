@@ -3,7 +3,7 @@
 formats = (
 	'SARC', 'DARC', 'GARC',
 	'BFLYT', 'ALYT', 'BFLIM',
-	'BCSTM',
+	'BCSTM', 'BNTX',
 	'mini', 'MINI', #avoids error with format.upper()
 	'BFLYT_old',  # temporary
 )

@@ -51,6 +51,7 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		self.meta = {}
 		self.read_header(data)
 		self.read_container(data)
+		self.read_meta(data)
 		self.read_textable(data)
 		texmeta = []
 		self.texturepos = self.brtd_offset + 0x10
@@ -91,6 +92,13 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		node['unknown'] = unknown
 		self.meta['container'] = node
 
+	def read_meta(self, data):
+		magic, nextoffset, secsize = self.unpack_from('4s2I', data, self.firstsection_offset)
+		dicsize = secsize - (self.dic_offset - self.firstsection_offset)
+		data.seek(self.dic_offset)
+		dicdata = data.read(dicsize)
+		self.meta['dictionary'] = dicdata.hex()
+
 	def read_textable(self, data):
 		data.seek(self.textable_offset)
 		self.brtioffsets = self.unpack_from('%dQ' % self.texnum, data)
@@ -101,7 +109,7 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		magic, nextoffset, seclen, seclen2, unk1, tilemode, swizzle_value, mipmapnum, multisampnum, unk2 = self.unpack_from('4s3I6H', data)
 		format, gpuaccesstype, width, height, depth, arraylength, blockheight_exponent, unk3, unk4 = self.unpack_from('8I20s', data)
 		mipmapdata_size, texdata_alignment, redsource, greensource, bluesource, alphasource, dimension = self.unpack_from('2I5B3x', data)
-		texname_offset, texcontainer_offset, textable_offset, userdata_offset, texpointer, texview_pointer, descriptorslot_offset, userdata_dict_offset = self.unpack_from('8q', data)
+		texname_offset, texcontainer_offset, lvltable_offset, userdata_offset, texpointer, texview_pointer, descriptorslot_offset, userdata_dict_offset = self.unpack_from('8q', data)
 		endpos = data.tell()
 		if magic != b'BRTI':
 			error.InvalidMagicError('Invalid BRTI magic, found %s' % byterepr(magic))
@@ -119,22 +127,28 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		node['pixel_format'] = PIXEL_FORMATS[pixelformat]
 		node['value_format'] = VALUE_FORMATS[valueformat]
 		node['gpu_access_type'] = gpuaccesstype
+		node['depth'] = depth
 		node['array_length'] = arraylength
 		node['block_height_exponent'] = blockheight_exponent
 		node['texture_data_alignment'] = texdata_alignment
-		node['red_source'] = redsource
-		node['green_source'] = greensource
-		node['blue_source'] = bluesource
-		node['alpha_source'] = alphasource
+		node['red_source'] = CHANNEL_SOURCES[redsource]
+		node['green_source'] = CHANNEL_SOURCES[greensource]
+		node['blue_source'] = CHANNEL_SOURCES[bluesource]
+		node['alpha_source'] = CHANNEL_SOURCES[alphasource]
 		node['dimension'] = DIMENSIONS[dimension]
 		node['texture_name'] = texname
 		node['unk1'] = unk1
 		node['unk2'] = unk2
 		node['unk3'] = unk3
 		node['unk4'] = unk4.hex()
+		if userdata_offset != 0:
+			error.NotImplementedWarning('User data is not supported yet')
+		mipmapoffsets = self.unpack_from('%dI' % mipmapnum, data, lvltable_offset)
+		imageoffset = mipmapoffsets[0]
+		node['output'] = []
 		for i in range(arraylength):
 			print('Extracting texture %s, element %d' % (texname, i))
-			data.seek(self.texturepos)
+			data.seek(imageoffset)
 			format = libkit.getTextureFormatId(PIXEL_FORMATS[pixelformat])
 			if format == -1:
 				error.UnsupportedDataFormatError('Pixel format %s is not supported yet' % PIXEL_FORMATS[pixelformat])
@@ -145,7 +159,7 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			img = Image.frombytes('RGBA', (width, height), out.tostring())
 			outname = '%s_%s_el%d.png' % (self.filebase, texname, i)
 			img.save(outname, 'PNG')
-			basepos = self.texturepos
-			self.texturepos += mipmapdata_size + (texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment))
-			print((texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment)))
+			node['output'].append(outname)
+			basepos = imageoffset
+			imageoffset += mipmapdata_size + (texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment))
 		return node

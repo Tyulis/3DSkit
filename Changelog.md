@@ -459,3 +459,9 @@
 *	v1.34.74
 	*	Added unpack.BNTX
 	*	Now unpack.BFFNT only extracts the BNTX section if any
+*	v1.34.75
+	*	Added pack.BNTX
+	*	Debugged the debug mode (?!)
+	*	Fixed some typos and language errors in the README
+	*	Added textures compressions in libkit
+	*	Fixed py3DSkit's BC4 decompression function
