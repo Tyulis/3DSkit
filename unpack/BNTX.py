@@ -145,8 +145,10 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			error.NotImplementedWarning('User data is not supported yet')
 		mipmapoffsets = self.unpack_from('%dI' % mipmapnum, data, lvltable_offset)
 		imageoffset = mipmapoffsets[0]
+		imagesize = mipmapdata_size // arraylength
 		node['output'] = []
 		for i in range(arraylength):
+			print(hex(imageoffset))
 			print('Extracting texture %s, element %d' % (texname, i))
 			data.seek(imageoffset)
 			format = libkit.getTextureFormatId(PIXEL_FORMATS[pixelformat])
@@ -161,5 +163,5 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			img.save(outname, 'PNG')
 			node['output'].append(outname)
 			basepos = imageoffset
-			imageoffset += mipmapdata_size + (texdata_alignment - (mipmapdata_size % texdata_alignment or texdata_alignment))
+			imageoffset += imagesize
 		return node

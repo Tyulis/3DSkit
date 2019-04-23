@@ -22,7 +22,7 @@ def _packBC4Texture(input, output, width, height, format, swizzlesize, littleend
     indices = np.zeros((4, 4), dtype=np.uint8)
     for ytexel in range(theight):
         for xtexel in range(twidth):
-            print('-------------------- (%d, %d)' % (xtexel, ytexel))
+            #print('-------------------- (%d, %d)' % (xtexel, ytexel))
             for ypix in range(4):
                 for xpix in range(4):
                     ypos = ytexel * 4 + ypix
@@ -42,7 +42,7 @@ def _packBC4Texture(input, output, width, height, format, swizzlesize, littleend
                     maxvalue += 1
             step = (maxvalue - minvalue) / 7
             slices = np.asarray([minvalue + step * i for i in range(8)], dtype=np.uint8)
-            print(slices)
+            #print(slices)
             for ypix in range(4):
                 for xpix in range(4):
                     index = find_nearest(slices, texel[ypix, xpix])
@@ -53,7 +53,7 @@ def _packBC4Texture(input, output, width, height, format, swizzlesize, littleend
                     else:
                         index = 8 - index
                     indices[ypix, xpix] = index
-            print(indices)
+            #print(indices)
             #outpos = ytexel * 8 * (padwidth // 8) + xtexel * 8
             if swizzlesize < 0:
                 offset = (ytexel * twidth + xtexel) * BC4_BYTESPERTEXEL

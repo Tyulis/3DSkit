@@ -146,17 +146,17 @@ class packBNTX(ClsFunc, TypeWriter):
 
 	def pack_brtd(self, out, minposition, textures, images):
 		self.brtd_offset = minposition + (0x1000 - (minposition % 0x1000 or 0x1000)) - 0x10
-		print(hex(self.brtd_offset))
 		out.seek(self.brtd_offset)
 		self.pack('4sIQ', b'BRTD', 0, 0, out)
 		texsizes = []
 		texoffsets = []
 		imgindex = 0
-		for texture in textures:
+		for texindex, texture in enumerate(textures):
 			startpos = out.tell()
-			for outfile in texture['output']:
+			for element, outfile in enumerate(texture['output']):
+				print('Packing texture %d, element %d' % (texindex, element))
 				self.pack_texture(out, texture, images[imgindex])
-			imgindex += 1
+				imgindex += 1
 			texsizes.append(out.tell() - startpos)
 			texoffsets.append(startpos)
 

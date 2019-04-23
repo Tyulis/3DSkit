@@ -186,7 +186,7 @@ As explained previously, modules which use libkit may be very slow in pure Pytho
 	BFLAN  | p |   |   | .bflan              | JSON     |
 	BFLIM  | x | x |   | .bflim              | PNG      | Yes
 	BFLYT  | x |   | x | .bflyt              | JSON     |
-	BNTX   | x |   |   | .bntx               | PNG+JSON | Yes
+	BNTX   | x |   | p | .bntx               | PNG+JSON | Yes
 	CBMD   | e |   |   | .bnr banner[.bin]   | files    |
 	DARC   | x | e |   | .arc .bcma (...)    | files    |
 	GARC   | x |   | x | .garc (none)        | files    |
