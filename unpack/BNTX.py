@@ -148,7 +148,6 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		imagesize = mipmapdata_size // arraylength
 		node['output'] = []
 		for i in range(arraylength):
-			print(hex(imageoffset))
 			print('Extracting texture %s, element %d' % (texname, i))
 			data.seek(imageoffset)
 			format = libkit.getTextureFormatId(PIXEL_FORMATS[pixelformat])

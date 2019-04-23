@@ -130,7 +130,7 @@ def _extractTiledTexture(input, output, width, height, format, swizzlesize, litt
 									if xpos >= width or ypos >= height:
 										continue
 									outpos = (ypos * width + xpos) * 4
-									if format == L4 or format == A4:
+									if format in (L4, A4):
 										shift = xpix * 4
 										if swizzlesize < 0:
 											inpos = ytile * totalx * 32 + xtile * 32 + ysub * 16 + xsub * 8 + yblock * 4 + xblock * 2 + ypix
@@ -147,7 +147,7 @@ def _extractTiledTexture(input, output, width, height, format, swizzlesize, litt
 										if swizzlesize < 0:
 											inpos = (ytile * totalx * 64 + xtile * 64 + ysub * 32 + xsub * 16 + yblock * 8 + xblock * 4 + ypix * 2 + xpix) * pxsize
 										else:
-											inpos = swizzle.getSwizzleOffset(xtile * 8 + xsub * 4 + xblock * 2 + xpix, ytile * 8 + ysub * 4 + yblock * 2 + ypix)
+											inpos = swizzle.getSwizzleOffset(xpos, ypos)
 										if littleendian:
 											if format == RGBA8 or format == RGBA8_SRGB:
 												r = input[inpos]

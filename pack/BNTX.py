@@ -189,7 +189,7 @@ class packBNTX(ClsFunc, TypeWriter):
 		padwidth = 2 ** math.ceil(math.log2(image.width))
 		padheight = 2 ** math.ceil(math.log2(image.height))
 		if texinfo['pixel_format'] in PIXEL_SIZES:
-			return padheight * padwidth * PIXEL_SIZES[texinfo['format']]
+			return padheight * padwidth * PIXEL_SIZES[texinfo['pixel_format']]
 		elif texinfo['pixel_format'] == 'BC4':
 			return (padwidth * padheight) // 2
 		else:
