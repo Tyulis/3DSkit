@@ -3,7 +3,12 @@
 BNTX is a container format for bitmap textures in Switch games.
 It is sometimes embedded into other files like BFFNT fonts.
 
-The only known version is 0.4.0.0
+Two versions are known, on Switch only :
+
+- 0.4.0.0
+- 0.4.1.0
+
+The differences are currently unknown
 
 ## File structure
 ### BNTX header
@@ -120,20 +125,20 @@ This is a structure used by developers to store data in the file to be used by t
 - (Actual data, offset defined above)
     Just a table of values, type and number of elements are defined above
 
-### \-RLT section (ReLocation Table)
+### \_RLT section (ReLocation Table)
 
 - 4s : Magic number ("\_RLT")
-- I  : Offset of the table start
+- I  : Offset of this table
 - I  : Number of sections
 - I  : <unknown>
-- (Table of sections entry, offset and number of entries defined above)
+- (Table of sections entry, number of entries defined above)
     - q : Section pointer, set only at runtime
     - I : Section offset
     - I : Section size
     - I : Entry ID
     - I : Number of entries in the section
 
-- (Section)
+- (Entry, number and offsets defined above)
     - I : Entry offset
     - H : Array count
     - B : Offset count

@@ -74,8 +74,8 @@ class packBNTX(ClsFunc, TypeWriter):
 				self.out.seek(pos)
 		self.pack_textable(self.out, self.brtioffsets)
 		self.pack_brtd(self.out, max(self.brtioffsets), self.meta['textures'], self.images)
-		self.out.seek(0, 2)
-		self.rltoffset = self.filesize = self.out.tell()
+		self.pack_reloc(self.out)
+		self.filesize = self.out.tell()
 		self.pack_header(self.out)
 		self.out.close()
 
@@ -168,11 +168,15 @@ class packBNTX(ClsFunc, TypeWriter):
 		size = self.brtd_offset - self.brtioffsets[-1]
 		self.pack('2I', size, size, self.out)
 
+		self.headerend = 0
 		for texsize, texoffset, brtioffset in zip(texsizes, texoffsets, self.brtioffsets):
 			out.seek(brtioffset + 80)
 			self.pack('I', texsize, out)
 			out.seek(brtioffset + 672)
 			self.pack('I', texoffset, out)
+			alignedpos = out.tell() + (0x10 - (out.tell() % 0x10 or 0x10))
+			if alignedpos > self.headerend:
+				self.headerend = alignedpos
 
 	def pack_texture(self, out, texinfo, image):
 		format = libkit.getTextureFormatId(texinfo['pixel_format'])
@@ -194,6 +198,20 @@ class packBNTX(ClsFunc, TypeWriter):
 			return (padwidth * padheight) // 2
 		else:
 			error.UnsupportedDataFormatError('Texture format %s is not supported yet' % texinfo['format'])
+
+	def pack_reloc(self, out):
+		out.seek(0, 2)
+		self.rltoffset = out.tell()
+		self.pack('4s3I', b'_RLT', self.rltoffset, 2, 0, out)
+		# TODO : check if it is always this
+		self.pack('Q4I', 0, 0, self.headerend, 0, len(self.brtioffsets) + 3, out)
+		self.pack('Q4I', 0, self.brtd_offset, self.rltoffset - self.brtd_offset, 4, 1, out)
+		self.pack('IH2B', 0x28, 2, 1, 45, out)
+		self.pack('IH2B', 0x38, 2, 2, 68, out)
+		self.pack('IH2B', self.dic_offset + 0x10, 2, 1, 1, out)
+		for offset in self.brtioffsets:
+			self.pack('IH2B', offset + 96, 1, 3, 0, out)
+		self.pack('IH2B', 0x30, 2, 1, 138, out)
 
 	def pack_header(self, out):
 		out.seek(0)

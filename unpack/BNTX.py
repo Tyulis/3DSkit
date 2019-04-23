@@ -53,6 +53,8 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 		self.read_container(data)
 		self.read_meta(data)
 		self.read_textable(data)
+		if self.verbose:
+			self.read_reloc(data)
 		texmeta = []
 		self.texturepos = self.brtd_offset + 0x10
 		for brtioffset in self.brtioffsets:
@@ -164,3 +166,19 @@ class extractBNTX (rawutil.TypeReader, ClsFunc):
 			basepos = imageoffset
 			imageoffset += imagesize
 		return node
+
+	def read_reloc(self, data):
+		data.seek(self.reloc_offset)
+		magic, tableoffset, secnum, unknown = self.unpack_from('4s3I', data)
+		if magic != b'_RLT':
+			error.InvalidMagicError('Invalid _RLT magic, found %s' % byterepr(magic))
+		sectable = self.unpack_from('%d[Q4I]' % secnum, data)[0]
+		sections = []
+		for section in sectable:
+			node = {'entry_id': section[3], 'entries': []}
+			sections.append(node)
+			entries = self.unpack_from('%d[IH2B]' % section[4], data)[0]
+			for entry in entries:
+				entrynode = {'offset': entry[0], 'array_count': entry[1], 'offset_count': entry[2], 'padding_size': entry[3]}
+				node['entries'].append(entrynode)
+		self.meta['relocation'] = sections

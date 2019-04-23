@@ -320,9 +320,9 @@ def _extractETC1Texture(input, output, width, height, format):
 def _extractBC4Texture(input, output, width, height, format, swizzlesize, littleendian):
 	twidth = int(np.floor((width + 3) / 4))
 	theight = int(np.floor((height + 3) / 4))
+	print(width, twidth, ':', height, theight)
 	lums = np.zeros(8, dtype=np.uint8)
 	#int offset = 0;
-	print(swizzlesize)
 	swizzle = Swizzle(twidth, BC4_BYTESPERTEXEL, swizzlesize);
 	for ytile in range(theight):
 		for xtile in range(twidth):
@@ -351,6 +351,8 @@ def _extractBC4Texture(input, output, width, height, format, swizzlesize, little
 				for xpix in range(4):
 					ypos = ytile * 4 + ypix
 					xpos = xtile * 4 + xpix
+					if ypos >= height or xpos >= width:
+						continue
 					outpos = (ypos * width + xpos) * 4
 					codeindex = ypix * 4 + xpix
 					if codeindex < 8:
