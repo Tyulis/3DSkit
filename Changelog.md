@@ -467,3 +467,5 @@
 	*	Fixed py3DSkit's BC4 decompression function
 	*	Fixed the debug mode (?!)
 	*	Fixed some typos and language errors in the README
+*	v1.34.76
+	*	Added pack.BFFNT

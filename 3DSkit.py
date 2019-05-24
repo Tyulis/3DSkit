@@ -13,7 +13,7 @@ from io import BytesIO, StringIO
 from util import error
 import util
 
-__version__ = '1.34.75'
+__version__ = '1.34.76'
 
 
 def parse_opts(s):

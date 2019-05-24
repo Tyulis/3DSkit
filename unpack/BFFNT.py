@@ -85,7 +85,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.glyphwidths = {}
 		self.readCWDH(data, self.cwdhoffset - 8)
 		tglp = self.readTGLP(data, self.tglpoffset - 8)
-		meta = {'info': finf, 'glyphmap': self.glyphmap, 'glyphwidths': self.glyphwidths, 'textures': tglp}
+		meta = {'version': self.version, 'version_number': self.vernum, 'info': finf, 'glyphmap': self.glyphmap, 'glyphwidths': self.glyphwidths, 'textures': tglp}
 		write(json.dumps(meta, indent=4), self.filebase + '_meta.json')
 
 	def read_header(self, data):
@@ -98,6 +98,7 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 			error.UnsupportedVersionError('Only versions 4.0.0, 4.1.0 and 3.0.0 are supported, found %d.%d.%d' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF))
 		if self.version is None:
 			self.version = VERSIONS[version]
+		self.vernum = version
 		if self.verbose:
 			print('Version %d.%d.%d (%s)' % (version >> 24, (version >> 16) & 0xFF, version & 0xFFFF, self.version))
 
@@ -108,8 +109,8 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.fonttype, self.height, self.width, self.ascent, self.linefeed, self.alterindex = self.unpack_from('4B2H', data)
 		self.defaultleftwidth, self.defaultglyphwidth, self.defaultcharwidth, self.encoding = self.unpack_from('4B', data)
 		self.tglpoffset, self.cwdhoffset, self.cmapoffset = self.unpack_from('3I', data)
-		node = {'type': self.fonttype, 'ascent': self.ascent, 'line_feed': self.linefeed, 'alter_index': self.alterindex,
-				'defaut_left_width': self.defaultleftwidth, 'default_glyph_width': self.defaultglyphwidth, 'default_char_width': self.defaultcharwidth,
+		node = {'type': self.fonttype, 'height': self.height, 'width': self.width, 'ascent': self.ascent, 'line_feed': self.linefeed, 'alter_index': self.alterindex,
+				'default_left_width': self.defaultleftwidth, 'default_glyph_width': self.defaultglyphwidth, 'default_char_width': self.defaultcharwidth,
 				'encoding': self.encoding}
 		return node
 
@@ -120,8 +121,8 @@ class extractBFFNT (rawutil.TypeReader, ClsFunc):
 		self.cellwidth, self.cellheight, self.sheetcount, self.maxwidth = self.unpack_from('4B', data)
 		self.sheetsize, self.baselinepos, format = self.unpack_from('I2H', data)
 		self.colcount, self.rowcount, self.sheetwidth, self.sheetheight, dataoffset = self.unpack_from('4HI', data)
-		node = {'cell_width': self.cellwidth, 'cell_height': self.cellheight, 'max_width': self.maxwidth,
-				'base_line_position': self.baselinepos}
+		node = {'cell_width': self.cellwidth, 'cell_height': self.cellheight, 'num_sheets': self.sheetcount, 'max_width': self.maxwidth,
+				'base_line_position': self.baselinepos, 'num_columns': self.colcount, 'num_lines': self.rowcount, 'sheet_width': self.sheetwidth, 'sheet_height': self.sheetheight}
 		'''elif self.version == 'CTR':
 			self.cellwidth, self.cellheight, self.baselinepos, self.maxwidth = self.unpack_from('4B', data)
 			self.sheetsize, self.sheetcount, format, self.colcount, self.rowcount = self.unpack_from('I4H', data)

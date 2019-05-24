@@ -59,7 +59,7 @@ This may be used to build the character map with elements like (character : glyp
 - I : Next CMAP offset. If non-null, points to the next CMAP section (see above). If zero, there's no more CMAPs.
 
 - {If mapping method is Direct (0x0000)}
-    - H : Index offset
+    - I : Index offset
     Then for each `code` from the `start code` to the `end code`, the glyph index is `code - start code + index offset`
 - {If mapping method is Table (0x0001)}
     - [H] : Glyph indices
@@ -106,7 +106,7 @@ Contains the actual glyphs sheets, as regular bitmap textures.
 - H  : Base line position
 - H  : Texture format (see TEXTURE FORMATS below)
 - H  : Number of columns
-- H  : Number of lines
+- H  : Number of rows
 - H  : Sheet width (in pixels)
 - H  : Sheets height (in pixels)
 - I  : Texture data offset
