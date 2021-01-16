@@ -150,8 +150,6 @@ class packBFLIM(ClsFunc, TypeWriter):
 										else:
 											rgba = pixels[posx, posy]
 										packed = self.pack_pixel(rgba)
-										if self.byteorder == '<':
-											packed = bytes(reversed(packed))
 										finalx = xpix + (xgroup * 4) + (xsub * 16) + (xtile * 64)
 										finaly = (ypix * 2) + (ygroup * 8) + (ysub * 32) + (ytile * tiles_x * 64)
 										pos = (finalx + finaly) * self.pxsize
@@ -178,13 +176,13 @@ class packBFLIM(ClsFunc, TypeWriter):
 			r = math.ceil(r / 8.225806451612904) << 11
 			g = math.ceil(g / 4.0476190476190474) << 5
 			b = math.ceil(b / 8.225806451612904)
-			return self.pack('H', r + g + b)
+			return self.pack('H', r | g | b)
 		elif self.format == RGBA5551:
 			a = int(a != 0)
 			r = math.ceil(r // 8.225806451612904) << 11
 			g = math.ceil(g // 8.225806451612904) << 6
 			b = math.ceil(b // 8.225806451612904) << 1
-			return self.pack('H', r + g + b + a)
+			return self.pack('H', r | g | b | a)
 		elif self.format == RGBA4:
 			r = (r // 0x11) << 12
 			g = (g // 0x11) << 8
