@@ -21,7 +21,8 @@ class packALYT (ClsFunc, TypeWriter):
 		if len(self.files) == len(filenames):
 			#no _alyt_ folder, aborting
 			error.NeededDataNotFoundError('No _alyt_ folder in the specified directory')
-		self.alyt_folder = [os.path.dirname(name) for name in filenames if os.path.basename(os.path.dirname(name)) == '_alyt_'][0]  # horrible hack;
+		self.alyt_folder = [os.path.dirname(name) for name in filenames if os.path.basename(os.path.dirname(name)) == '_alyt_'][0]  # horrible hack
+		self.basedirectory = os.path.dirname(self.alyt_folder)
 		metadir = self.alyt_folder + os.path.sep
 		try:
 			file = metadir + 'LTBL.bin'
@@ -55,7 +56,7 @@ class packALYT (ClsFunc, TypeWriter):
 	def repack_all(self):
 		if self.verbose:
 			print('Packing SARC')
-		sarc, sarc_endpad = packSARC(self.files, None, self.byteorder, self.verbose, embedded=True)
+		sarc, sarc_endpad = packSARC(self.files, None, self.byteorder, self.verbose, embedded=True, basedirectory=self.basedirectory)
 		if self.verbose:
 			print('Packing ALYT')
 		final = self.alyt + sarc

@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import os
 from io import BytesIO
 from util.rawutil import TypeWriter
 from util.filesystem import bread, bwrite, basedir
@@ -22,7 +23,7 @@ class SFATnode (object):
 
 
 class packSARC (ClsFunc, TypeWriter):
-	def main(self, filenames, outname, endian, verbose, opts={}, embedded=False):
+	def main(self, filenames, outname, endian, verbose, opts={}, embedded=False, basedirectory=""):
 		self.byteorder = endian
 		self.verbose = verbose
 		if 'padding' in opts.keys():
@@ -30,6 +31,7 @@ class packSARC (ClsFunc, TypeWriter):
 		else:
 			self.padding = 0x80
 		self.embedded = embedded  #Used for embedded SARC sections in other files such as ALYT
+		self.basedirectory = basedirectory
 		self.hash_multiplier = 0x65
 		self.outname = outname
 		self.make_nodes(filenames)
@@ -42,9 +44,12 @@ class packSARC (ClsFunc, TypeWriter):
 			if filename.endswith('.noname.bin'):
 				node.has_name = 0
 				node.name = b''
+				node.inputname = filename
 				node.hash = int(filename.lstrip('0x').replace('.noname.bin', ''), 16)
 			else:
 				node.has_name = 1
+				node.inputname = filename
+				filename = filename.replace(self.basedirectory, "").lstrip(os.path.sep).replace(os.path.sep, "/")
 				node.name = filename.encode('utf-8')
 				node.hash = self.calc_hash(filename)
 			self.nodes.append(node)
@@ -77,7 +82,7 @@ class packSARC (ClsFunc, TypeWriter):
 			print('Packing data')
 		datastart = file.tell()
 		for node in self.nodes:
-			filedata = bread(node.name)
+			filedata = bread(node.inputname)
 			if self.padding != 0 and not filedata.startswith((b'FLYT', b'FLAN')):  #Avoiding division by 0 + little hack
 				file.write(bytes(self.padding - (file.tell() % self.padding or self.padding)))
 			node.start = file.tell() - datastart

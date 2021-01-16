@@ -28,6 +28,7 @@ class FATBSubEntry (object):
 		self.start = 0
 		self.end = 0
 		self.length = 0
+		data = b""
 
 
 class packGARC(ClsFunc, TypeWriter):
@@ -35,12 +36,12 @@ class packGARC(ClsFunc, TypeWriter):
 		self.byteorder = endian
 		self.verbose = verbose
 		if 'version' in opts:
-			self.version = int(opts[version]) * 0x100
+			self.version = int(opts['version']) * 0x100
 			if self.version not in (0x0400, 0x0600):
 				error.InvalidOptionValue('You gave an unknown version number')
 		else:
 			self.version = 0x0600
-		if outname.startswith('/'):
+		if outname.startswith(os.path.sep):
 			self.file = open(outname, 'wb')
 		else:
 			self.file = open(_main.basedir + outname, 'wb')
@@ -70,10 +71,10 @@ class packGARC(ClsFunc, TypeWriter):
 			subentry.length = filelen
 			subentry.data = filedata
 			if os.path.sep in name:
-				path = os.path.split(name)
-				folder = int(path[0])
-				file = int(path[1].split('.')[0].strip('dec_'))
-				if int(path[0]) not in self.entries.keys():
+				foldername, _, filename = name.rpartition(os.path.sep)
+				folder = int(foldername.rpartition(os.path.sep)[2])
+				file = int(filename.split('.')[0].strip('dec_'))
+				if folder not in self.entries.keys():
 					entry = FATBEntry()
 					entry.flags = 0
 					entry.subentries = []
@@ -93,19 +94,22 @@ class packGARC(ClsFunc, TypeWriter):
 		
 	def pack_all(self, names):
 		headerlen = HEADER_LENGTHS[self.version]
-		self.pack(GARC_HEADER_STRUCT, b'CRAG', headerlen, 0xfeff, self.version, 4, 0, 0, self.file)
+		self.pack(GARC_HEADER_STRUCT, b'CRAG', headerlen, 0xfeff, self.version, 4, 0, 0, self.file)  # '4sI2H3I'
 		if self.version == 0x0600:
 			self.pack('3I', self.larger_padded, self.larger_unpadded, 4, self.file)
 		elif self.version == 0x0400:
 			self.pack('I', self.larger_unpadded)
+		
 		self.entrycount = len(self.entries)
+		self.subentrycount = sum([len([subentry for subentry in entry.subentries if subentry is not None]) for num, entry in self.entries.items()])
+		
 		self.fatooffset = headerlen
 		self.file.seek(self.fatooffset)
 		self.pack(GARC_FATO_HEADER, b'OTAF', 12, self.entrycount, 0xffff, self.file)
 		self.fatooffset += 12
 		self.fatboffset = (self.entrycount * 4) + headerlen + 12
 		self.file.seek(self.fatboffset)
-		self.pack(GARC_FATB_HEADER, b'BTAF', 12, self.entrycount, self.file)
+		self.pack(GARC_FATB_HEADER, b'BTAF', 12, self.subentrycount, self.file)
 		self.fatboffset += 12
 		self.dataoffset = self.packFAT() + 12
 		self.file.seek(self.dataoffset - 12)
@@ -129,7 +133,7 @@ class packGARC(ClsFunc, TypeWriter):
 			self.file.seek(actfatb)
 			self.pack('I', entry.flags, self.file)
 			actfatb += 4
-			for subentry in entry.subentries:
+			for i, subentry in enumerate(entry.subentries):
 				if subentry is None:
 					continue
 				start = len(self.fimb)
