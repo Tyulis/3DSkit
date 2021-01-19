@@ -26,34 +26,35 @@ def compressLZ11(input, output, insize):
 			ptr += 1
 			bufblk += 1
 			continue
-		idx = input[min: ptr].tostring().find(sub)
+		idx = input[min: ptr + 2].tostring().find(sub)
 		if idx == -1:
 			buf[bufpos] = input[ptr]
 			ptr += 1
 			bufpos += 1
 		else:
 			pos = idx + min
-			disp = ptr - pos
+			disp = ptr - pos - 1
 			size = 3
 			subptr = pos + 3
 			ptr += 3
 			if ptr < insize:
-				prevbyte = input[subptr]
-				newbyte = input[ptr]
-				while prevbyte == newbyte and subptr < insize - 1 and ptr < insize - 1:
+				#prevbyte = input[subptr]
+				#newbyte = input[ptr]
+				# and subptr < insize - 1
+				while input[subptr] == input[ptr] and ptr < insize - 1 and size < 0x10110:
 					subptr += 1
 					ptr += 1
 					size += 1
-					if size >= 0x10110:
-						break
-					prevbyte = input[subptr]
-					newbyte = input[ptr]
-			disp -= 1
+					#if size >= 0x10110:
+					#	break
+					#prevbyte = input[subptr]
+					#newbyte = input[ptr]
+			#disp -= 1
 			if size > 0xff + 0x11:
 				#sh = (1 << 28) | ((size - 0x111) << 12) | (disp - 1)
 				#buf[bufpos: bufpos + 4] = self.uint32(sh)
 				count = size - 0x111
-				byte1 = 0x10 + (count >> 12)
+				byte1 = 0x10 | (count >> 12)
 				byte2 = (count >> 4) & 0xff
 				byte3 = ((count & 0x0f) << 4) | (disp >> 8)
 				byte4 = disp & 0xff
@@ -78,6 +79,7 @@ def compressLZ11(input, output, insize):
 			buf[0] |= 1 << (7 - bufblk)
 		bufblk += 1
 	output[outpos: outpos + bufpos] = buf[:bufpos]
+	outpos += bufpos
 	outpos += 4 - (outpos % 4 or 4)
 	return outpos
 
