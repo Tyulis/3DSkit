@@ -17,8 +17,19 @@ DATA_HEADER_STRUCT = rawutil.Struct(
 )
 
 DATA_FORMATS = {
+	0x02: "RGB565",
+	0x03: "RGB8",
 	0x04: "RGBA8",
+	0x16: "RGBA4",
+	0x17: "RGBA5551",
+	0x23: "LA8",
+	0x24: "HILO8",
+	0x25: "L8",
 	0x26: "A8",
+	0x27: "LA4",
+	0x28: "L4",
+	0x29: "A4",
+	0x2A: "ETC1",
 	0x2B: "ETC1A4",
 }
 

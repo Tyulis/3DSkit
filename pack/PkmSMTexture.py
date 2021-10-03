@@ -19,14 +19,36 @@ DATA_HEADER_STRUCT = rawutil.Struct(
 )
 
 DATA_FORMATS = {
+	"RGB565": 0x02,
+	"RGB8": 0x03,
 	"RGBA8": 0x04,
+	"RGBA4": 0x16,
+	"RGBA5551": 0x17,
+	"LA8": 0x23,
+	"HILO8": 0x24,
+	"L8": 0x25,
 	"A8": 0x26,
+	"LA4": 0x27,
+	"L4": 0x28,
+	"A4": 0x29,
+	"ETC1": 0x2A,
 	"ETC1A4": 0x2B,
 }
 
 PIXEL_SIZES = {
+	"RGB565": 2,
+	"RGB8": 3,
 	"RGBA8": 4,
+	"RGBA4": 2,
+	"RGBA5551": 2,
+	"LA8": 2,
+	"HILO8": 2,
+	"L8": 1,
 	"A8": 1,
+	"LA4": 1,
+	"L4": 0.5,
+	"A4": 0.5,
+	"ETC1": 0.5,
 	"ETC1A4": 1,
 }
 
