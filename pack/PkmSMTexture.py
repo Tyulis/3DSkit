@@ -8,15 +8,8 @@ import py3DSkit as libkit
 import numpy as np
 from PIL import Image
 
-FILE_HEADER_STRUCT = rawutil.Struct(
-	"<4sI8s 2I I 12x n",
-	("magic", "version", "magic_texture", "fullsize", "delimiter", "datasize", "filename")
-)
-
-DATA_HEADER_STRUCT = rawutil.Struct(
-	"<2I 2H 2H",
-	("unk60", "unk64", "width", "height", "format", "swizzle")
-)
+FILE_HEADER_STRUCT = "<4sI8s 2I I 12x n"
+DATA_HEADER_STRUCT = "<2I 2H 2H"
 
 DATA_FORMATS = {
 	"RGB565": 0x02,
@@ -71,9 +64,9 @@ class packPkmSMTexture (ClsFunc):
 		self.width, self.height = img.size
 
 		if 'format' in opts.keys():
-			if 'ETC1' in opts['format'].upper():
-				error.UnsupportedDataFormatWarning('ETC1 is not supported, packing as RGBA8')
-				opts['format'] = 'RGBA8'
+			#if 'ETC1' in opts['format'].upper():
+			#	error.UnsupportedDataFormatWarning('ETC1 is not supported, packing as RGBA8')
+			#	opts['format'] = 'RGBA8'
 			self.format = opts['format'].upper()
 		else:
 			self.format = "RGBA8"
@@ -114,9 +107,9 @@ class packPkmSMTexture (ClsFunc):
 
 	def repackDataHeader(self, image, outfile, swizzle):
 		outfile.seek(DATA_HEADER_OFFSET)
-		DATA_HEADER_STRUCT.pack_file(outfile, 0, 0, image.width, image.height, DATA_FORMATS[self.format], swizzle)
+		rawutil.pack(DATA_HEADER_STRUCT, 0, 0, image.width, image.height, DATA_FORMATS[self.format], swizzle, outfile)
 		outfile.write(b"\xFF" * 16)
 
 	def repackFileHeader(self, image, outfile, filename):
 		outfile.seek(0)
-		FILE_HEADER_STRUCT.pack_file(outfile, MAGIC, VERSION, b"texture\x00", self.filesize - 0x18, 0xFFFFFFFF, self.filesize - 0x80, filename)
+		rawutil.pack(FILE_HEADER_STRUCT, MAGIC, VERSION, b"texture\x00", self.filesize - 0x18, 0xFFFFFFFF, self.filesize - 0x80, filename, outfile)

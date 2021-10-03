@@ -1,20 +1,17 @@
 import os
 import numpy as np
+from collections import namedtuple
 import util.rawutil as rawutil
 from util.utils import ClsFunc, byterepr
 from util import error, libkit
 from PIL import Image
 
 
-FILE_HEADER_STRUCT = rawutil.Struct(
-	"<4sI8s 2I I 12x n",
-	("magic", "version", "magic_texture", "fullsize", "delimiter", "datasize", "filename")
-)
+FILE_HEADER_STRUCT = "<4sI8s 2I I 12x n"
+FILE_HEADER_NAMES = "magic version magic_texture fullsize delimiter datasize filename"
 
-DATA_HEADER_STRUCT = rawutil.Struct(
-	"<2I 2H 2H",
-	("unk60", "unk64", "width", "height", "format", "swizzle")
-)
+DATA_HEADER_STRUCT = "<2I 2H 2H"
+DATA_HEADER_NAMES = "unk60 unk64 width height format swizzle"
 
 DATA_FORMATS = {
 	0x02: "RGB565",
@@ -45,7 +42,7 @@ class extractPkmSMTexture (ClsFunc):
 		self.extract(data)
 
 	def readHeader(self, data):
-		self.fileheader = FILE_HEADER_STRUCT.unpack(data)
+		self.fileheader = rawutil.unpack_from(FILE_HEADER_STRUCT, data, names=FILE_HEADER_NAMES)
 		if self.fileheader.magic_texture != b"texture\x00":
 			error.InvalidMagicError("Invalid magic %s, expected texture\x00" % byterepr(self.fileheader.magic_texture))
 		self.outname = os.path.join(os.path.dirname(self.filename), self.fileheader.filename.decode("utf-8").rpartition(".")[0] + ".png")
@@ -55,7 +52,7 @@ class extractPkmSMTexture (ClsFunc):
 
 	def readDataHeader(self, data):
 		data.seek(DATA_HEADER_OFFSET)
-		self.dataheader = DATA_HEADER_STRUCT.unpack(data)
+		self.dataheader = rawutil.unpack_from(DATA_HEADER_STRUCT, data, names=DATA_HEADER_NAMES)
 		if self.dataheader.format not in DATA_FORMATS:
 			error.UnknownDataFormatError("Unknown texture data format identifier 0x%04X" % self.dataheader.format)
 		print("Color format : %s" % DATA_FORMATS[self.dataheader.format])
