@@ -6,4 +6,5 @@ formats = (
 	'BCSTM', 'BNTX', 'BFFNT',
 	'mini', 'MINI', #avoids error with format.upper()
 	'BFLYT_old',  # temporary
+	"PkmSMTexture", "PKMSMTEXTURE"
 )

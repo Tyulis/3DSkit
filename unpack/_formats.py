@@ -15,6 +15,7 @@ USE_FILE_OBJ = (
 	'ExeFS', 'RomFS', 'GFA', 'NDS', 'ExtHeader',
 	'CBMD', 'BCSTM', 'BFFNT', 'CRO', 'MSBT',
 	'BCGRP', 'BCWAR', 'BCWAV', 'BFLYT', 'BNTX',
+	"PkmSMTexture",
 )
 
 MAGICS = {
@@ -43,6 +44,7 @@ MAGICS = {
 	b'CBNK': 'BCBNK',
 	b'BNTX': 'BNTX',
 	#b'CRO0': 'CRO',
+	b'\x13\x12\x04\x15': 'PkmSMTexture',
 	b'MsgStdBn': 'MSBT',
 	#Fake magics, avoid creating a list of supported formats (MAGICS.values() works)
 	b'---a': 'ExtHeader',
