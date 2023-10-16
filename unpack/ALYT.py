@@ -50,6 +50,9 @@ class extractALYT (rawutil.TypeReader):
 		entries = ltbl[4]
 		final = []
 		for edat in entries:
+			if edat[0] == 0xFFFF:
+				continue
+			
 			entry = OrderedDict()
 			entry['BFLYT'] = self.nametable[edat[0]]
 			entry['unknown'] = edat[3]
