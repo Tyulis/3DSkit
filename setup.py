@@ -1,7 +1,7 @@
 import numpy
 from setuptools import setup, Extension
 
-c3DSkit = Extension('c3DSkit', sources=['c3DSkit.c'], include_dirs=[numpy.get_include()])
+c3DSkit = Extension('c3DSkit', sources=['c3DSkit/c3DSkit.c'], include_dirs=[numpy.get_include()])
 
 setup(
 	name = 'c3DSkit',

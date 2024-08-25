@@ -21,10 +21,9 @@ However, some formats are VERY, very slow to process in pure Python:
 for example, textures, fonts, audio... So if you can, build c3DSkit, that
 computes them much faster (sometimes 10000 times or more).
 
-To install c3DSkit, just go into the c3DSkit directory and run `python3 setup.py install`.
-You need a working C compiler and the Python includes (that should be included in your python installation)
+To build c3DSkit, run `python3 setup.py build_ext --inplace`.
+You need  a working C compiler, numpy, and the Python includes (that should be included in your python installation)
 When you update it, it may be required to remove the `build/` directory.
-If you don't have the admin rights, try `python3 setup.py install --user`.
 
 ## How to use
 
