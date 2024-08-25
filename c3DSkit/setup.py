@@ -1,10 +1,5 @@
-from distutils.core import setup, Extension
-try:
-	import numpy
-except ImportError:
-	import sys
-	print("3DSkit requires numpy to work properly. You can install it by typing pip install numpy")
-	sys.exit(1)
+import numpy
+from setuptools import setup, Extension
 
 c3DSkit = Extension('c3DSkit', sources=['c3DSkit.c'], include_dirs=[numpy.get_include()])
 

@@ -138,14 +138,14 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 												b = input[inpos];
 												a = 0xFF;
 											} else if (format == RGBA5551){
-												r = (input[inpos + 1] >> 3) * 8.225806451612;
-												g = (((input[inpos + 1] & 0x07) << 2) | (input[inpos] >> 6)) * 8.225806451612;
-												b = ((input[inpos] >> 1) & 0x1F) * 8.225806451612;
+												r = (uint8_t)((input[inpos + 1] >> 3) * 8.225806451612);
+												g = (uint8_t)((((input[inpos + 1] & 0x07) << 2) | (input[inpos] >> 6)) * 8.225806451612);
+												b = (uint8_t)(((input[inpos] >> 1) & 0x1F) * 8.225806451612);
 												a = (input[inpos] & 1) * 0xFF;
 											} else if (format == RGB565){
-												r = (input[inpos + 1] >> 3) * 8.225806451612;
-												g = (((input[inpos + 1] & 0x07) << 3) | (input[inpos] >> 5)) * 4.0476190476190;
-												b = (input[inpos] & 0x1F) * 8.225806451612;
+												r = (uint8_t)((input[inpos + 1] >> 3) * 8.225806451612);
+												g = (uint8_t)((((input[inpos + 1] & 0x07) << 3) | (input[inpos] >> 5)) * 4.0476190476190);
+												b = (uint8_t)((input[inpos] & 0x1F) * 8.225806451612);
 												a = 0xFF;
 											} else if (format == RGBA4){
 												r = (input[inpos + 1] >> 4) * 0x11;
@@ -182,14 +182,14 @@ static void _extractTiledTexture(uint8_t* input, uint8_t* output, int width, int
 												b = input[inpos + 2];
 												a = 0xFF;
 											} else if (format == RGBA5551){
-												r = (input[inpos] >> 3) * 8.225806451612;
-												g = (((input[inpos] & 0x07) << 2) | (input[inpos + 1] >> 6)) * 8.225806451612;
-												b = ((input[inpos + 1] >> 1) & 0x1F) * 8.225806451612;
+												r = (uint8_t)((input[inpos] >> 3) * 8.225806451612);
+												g = (uint8_t)((((input[inpos] & 0x07) << 2) | (input[inpos + 1] >> 6)) * 8.225806451612);
+												b = (uint8_t)(((input[inpos + 1] >> 1) & 0x1F) * 8.225806451612);
 												a = (input[inpos + 1] & 1) * 0xFF;
 											} else if (format == RGB565){
-												r = (input[inpos] >> 3) * 8.225806451612;
-												g = (((input[inpos] & 0x07) << 3) | (input[inpos + 1] >> 5)) * 4.0476190476190;
-												b = (input[inpos + 1] & 0x1F) * 8.225806451612;
+												r = (uint8_t)((input[inpos] >> 3) * 8.225806451612);
+												g = (uint8_t)((((input[inpos] & 0x07) << 3) | (input[inpos + 1] >> 5)) * 4.0476190476190);
+												b = (uint8_t)((input[inpos + 1] & 0x1F) * 8.225806451612);
 												a = 0xFF;
 											} else if (format == RGBA4){
 												r = (input[inpos] >> 4) * 0x11;

@@ -269,7 +269,7 @@ static void _generateDSPADPCMcoefs(int16_t* coefsOut, int16_t* source, int sampl
 	int frameSamples;
  
 	int16_t* blockBuffer = (int16_t*)calloc(sizeof(int16_t), 0x3800);
-	int16_t pcmHistBuffer[2][14] = {};
+	int16_t pcmHistBuffer[2][14];
  
 	tvec vec1;
 	tvec vec2;
